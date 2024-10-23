@@ -1,1 +1,0 @@
-// ProfileForm.jsx is a reusable component for handling form inputs and updating user data.
