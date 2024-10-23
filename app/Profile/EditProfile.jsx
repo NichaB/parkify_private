@@ -1,0 +1,1 @@
+// EditProfile.jsx toggles a form (from ProfileForm.jsx) that allows users to edit their profile information.

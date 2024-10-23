@@ -1,0 +1,1 @@
+// page.jsx displays the user's basic information and provides options to edit or delete the account.
