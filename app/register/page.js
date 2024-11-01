@@ -64,7 +64,7 @@ export default function RegisterPage() {
       
       // Redirect to the profile page with user data as query parameters
       // router.push(`/profile?email=${encodeURIComponent(formData.email)}&password=${encodeURIComponent(formData.password)}`);
-      router.push('/profile');
+      router.push('/regisProfile');
       sessionStorage.setItem('userEmail', formData.email);
       sessionStorage.setItem('userPassword', formData.password);
       // router.push({
