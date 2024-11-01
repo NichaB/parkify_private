@@ -4,6 +4,7 @@ import LoginButton from '../components/LoginButton';
 import RegisterButton from '../components/RegisterButton';
 import { useRouter } from 'next/navigation';  // Import the useRouter hook
 
+
 const WelcomePage = () => {
   const router = useRouter();  // Initialize the router
 
@@ -21,11 +22,9 @@ const WelcomePage = () => {
       <img src='logo.png' alt="Parkify Logo" className="w-64 mb-6" />
 
       <LoginButton onClick={handleLoginClick}/>
-      
       {/* Pass the handleRegisterClick function to the RegisterButton */}
       <RegisterButton variant="white" onClick={handleRegisterClick} />
 
-      <a href="/" className="text-customBlue mt-4 hover:underline">Continue as a guest</a>
     </div>
   );
 };
