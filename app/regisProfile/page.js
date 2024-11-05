@@ -9,6 +9,7 @@ export default function RegisterInformationPage() {
   const router = useRouter();
   const email = sessionStorage.getItem('userEmail');
   const password = sessionStorage.getItem('userPassword');
+
  
 
   const [userData, setUserData] = useState({
@@ -17,6 +18,7 @@ export default function RegisterInformationPage() {
     firstName: '',
     lastName: '',
     phoneNumber: '',
+    lineurl: '',
   });
 
   const handleChange = (e) => {
@@ -31,7 +33,7 @@ export default function RegisterInformationPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!userData.email || !userData.password || !userData.firstName || !userData.lastName || !userData.phoneNumber) {
+    if (!userData.email || !userData.password || !userData.firstName || !userData.lastName || !userData.phoneNumber || !userData.lineurl) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -39,9 +41,9 @@ export default function RegisterInformationPage() {
     try {
 
       const { data: existingUser, error: phoneCheckError } = await supabase
-      .from('user_info')
-      .select('user_id')
-      .eq('phone_number', userData.phoneNumber)
+      .from('lessor')
+      .select('lessor_id')
+      .eq('lessor_phone_number', userData.phoneNumber)
       .single();
 
       if (phoneCheckError && phoneCheckError.code !== 'PGRST116') {
@@ -57,16 +59,17 @@ export default function RegisterInformationPage() {
       }
 
       const { data, error } = await supabase
-        .from('user_info')
+        .from('lessor')
         .insert([{
-          first_name: userData.firstName,
-          last_name: userData.lastName,
-          email: userData.email,
-          phone_number: userData.phoneNumber,
-          password: userData.password, // Ensure to hash this in production
+          lessor_firstname: userData.firstName,
+          lessor_lastname: userData.lastName,
+          lessor_email: userData.email,
+          lessor_phone_number: userData.phoneNumber,
+          lessor_password: userData.password,// Ensure to hash this in production
+          lessor_line_url: userData.lineurl,
         }])
-        .select('user_id')
-        .single(); // Retrieves the newly created user_id
+        .select('lessor_id')
+        .single(); 
 
       if (error) {
         toast.error('An error occurred while registering. Please try again.');
@@ -74,10 +77,10 @@ export default function RegisterInformationPage() {
       }
 
       // Store user_id in sessionStorage for the next page
-      sessionStorage.setItem('userId', data.user_id);
+      sessionStorage.setItem('lessorId', data.lessor_id);
 
       toast.success('Registration successful!');
-      router.push('/regisCar'); // Redirect to car registration page
+      router.push('/regisPark'); // Redirect to car registration page
     } catch (error) {
       toast.error('An unexpected error occurred. Please try again later.');
     }
@@ -136,9 +139,20 @@ export default function RegisterInformationPage() {
             />
           </div>
 
+          {/* Line Url*/}
+          <div className="w-11/12">
+            <input
+              type="text"
+              name="lineurl"
+              placeholder="Line URL"
+              value={userData.lineurl}
+              onChange={handleChange}
+              className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
           <div className="flex justify-center mb-4 w-4/5 mx-auto"> 
-            <button type="submit" className="w-full bg-customBlue text-white py-3 rounded-lg hover:bg-blue-100">
+            <button type="submit" className="w-full bg-customBlue text-white py-3 rounded-lg hover:bg-blue-500">
               Get started
             </button>
           </div>

@@ -3,7 +3,7 @@ import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import toast from 'react-hot-toast';
 import supabase from './supabaseClient';
 
-const FileUpload = forwardRef(({ storageBucket, fileName, setFileURL }, ref) => {
+const FileUpload = forwardRef(({ storageBucket, fileName }, ref) => {
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
 
@@ -16,7 +16,7 @@ const FileUpload = forwardRef(({ storageBucket, fileName, setFileURL }, ref) => 
             setUploading(true);
             if (!file) {
                 toast.error('Please select a file');
-                return;
+                return null; // Return null if no file is selected
             }
 
             const fileExt = file.name.split('.').pop();
@@ -39,10 +39,11 @@ const FileUpload = forwardRef(({ storageBucket, fileName, setFileURL }, ref) => 
 
             const publicUrl = urlData.publicUrl;
             toast.success('File uploaded successfully');
-            setFileURL(publicUrl);
+            return publicUrl; // Return the URL after upload
         } catch (error) {
             console.error('Error uploading file:', error);
             toast.error('Failed to upload file');
+            return null; // Return null if upload fails
         } finally {
             setUploading(false);
         }
@@ -71,5 +72,4 @@ const FileUpload = forwardRef(({ storageBucket, fileName, setFileURL }, ref) => 
     );
 });
 
-// Don't forget to export the component
 export default FileUpload;

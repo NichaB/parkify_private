@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FaArrowLeft, FaEdit } from 'react-icons/fa';
 import supabase from '../../config/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
+import BottomNav from '../components/BottomNav';
 
 export default function ParkingLotSetting() {
   const router = useRouter();
@@ -53,69 +54,78 @@ export default function ParkingLotSetting() {
   const handleSave = async (index) => {
     const lot = parkingLots[index];
 
+    // Ensure all required fields are filled in
     if (!lot.location_name || !lot.address || !lot.location_url || !lot.total_slots || !lot.price_per_hour) {
-      toast.error('Please fill in all fields');
-      return;
+        toast.error('Please fill in all fields');
+        return;
     }
 
     try {
-      let newImagePath = lot.location_image;
-      const file = fileUploadRefs.current[index]?.files[0];
+        let newImagePath = lot.location_image;
+        const file = fileUploadRefs.current[index]?.files[0];
 
-      // If a new file is uploaded, handle image upload and deletion
-      if (file) {
-        const fileName = `${uuidv4()}.jpg`;
+        // If a new file is uploaded, handle image upload and deletion
+        if (file) {
+            const fileName = `${uuidv4()}.jpg`;
 
-        // Delete previous image if it exists
-        if (lot.location_image) {
-          const { error: deleteError } = await supabase.storage
-            .from('carpark')
-            .remove([lot.location_image]);
+            // Delete previous image if it exists
+            if (lot.location_image) {
+                const { error: deleteError } = await supabase.storage
+                    .from('carpark')
+                    .remove([lot.location_image]);
 
-          if (deleteError) {
-            console.error('Error deleting previous image:', deleteError);
-            toast.error('Error deleting previous image.');
-          }
+                if (deleteError) {
+                    console.error('Error deleting previous image:', deleteError);
+                    toast.error('Error deleting previous image.');
+                }
+            }
+
+            // Upload new image
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('carpark')
+                .upload(fileName, file);
+
+            if (uploadError) throw uploadError;
+
+            // Retrieve the public URL of the uploaded image
+            const { data: publicUrlData, error: urlError } = supabase.storage
+                .from('carpark')
+                .getPublicUrl(fileName);
+
+            if (urlError) throw urlError;
+
+            newImagePath = publicUrlData.publicUrl;
         }
 
-        // Upload new image
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('carpark')
-          .upload(fileName, file);
+        // Update the parking lot data in Supabase
+        const { error } = await supabase
+            .from('parking_lot')
+            .update({
+                location_name: lot.location_name,
+                address: lot.address,
+                location_url: lot.location_url,
+                total_slots: lot.total_slots,
+                price_per_hour: lot.price_per_hour,
+                location_image: newImagePath, // Store the public URL here
+            })
+            .eq('parking_lot_id', lot.parking_lot_id);
 
-        if (uploadError) throw uploadError;
+        if (error) throw error;
 
-        newImagePath = uploadData.path;
-      }
+        // Update state to reflect the new image immediately
+        setParkingLots((prevData) =>
+            prevData.map((lotItem, i) =>
+                i === index ? { ...lotItem, location_image: newImagePath } : lotItem
+            )
+        );
 
-      // Update the parking lot data in Supabase
-      const { error } = await supabase
-        .from('parking_lot')
-        .update({
-          location_name: lot.location_name,
-          address: lot.address,
-          location_url: lot.location_url,
-          total_slots: lot.total_slots,
-          price_per_hour: lot.price_per_hour,
-          location_image: newImagePath,
-        })
-        .eq('parking_lot_id', lot.parking_lot_id);
-
-      if (error) throw error;
-
-      // Update state to reflect the new image
-      setParkingLots((prevData) =>
-        prevData.map((lotItem, i) =>
-          i === index ? { ...lotItem, location_image: newImagePath } : lotItem
-        )
-      );
-
-      toast.success('Parking lot settings saved!');
+        toast.success('Parking lot settings saved!');
     } catch (error) {
-      toast.error('Error saving data');
-      console.error("Error:", error);
+        toast.error('Error saving data');
+        console.error("Error:", error);
     }
-  };
+};
+
 
   if (loading) {
     return <div>Loading...</div>;
@@ -140,12 +150,12 @@ export default function ParkingLotSetting() {
           <div key={lot.parking_lot_id} className="space-y-6 mb-8 p-6 border rounded-lg shadow-lg w-11/12 mx-auto bg-white">
             {lot.location_image ? (
               <img
-                src={`https://your-supabase-storage-url/${lot.location_image}`}
+                src={`${lot.location_image}`}
                 alt="Parking Lot"
-                className="w-full h-32 object-cover rounded-lg mb-4"
+                className = "w-40 h-40 bg-gray-200 flex items-center justify-center rounded-lg mb-4 mx-auto"
               />
             ) : (
-              <div className="w-full h-32 bg-gray-200 flex items-center justify-center rounded-lg mb-4">
+              <div className="w-32 h-32  bg-gray-200 flex items-center justify-center rounded-lg mb-4">
                 <span className="text-gray-500">No Image Available</span>
               </div>
             )}
@@ -243,14 +253,8 @@ export default function ParkingLotSetting() {
         ))}
       </div>
 
-      <div className="fixed bottom-0 w-full flex justify-around items-center bg-white py-2 border-t border-gray-200">
-        <button onClick={() => router.push('/home')} className="text-gray-500">
-          <img src="/home.png" alt="Home" className="w-6 h-6" />
-        </button>
-        <button onClick={() => router.push('/setting')} className="text-red-500">
-          <img src="/setting_selected.png" alt="Settings" className="w-6 h-6" />
-        </button>
-      </div>
+      <BottomNav />
+
     </div>
   );
 }
