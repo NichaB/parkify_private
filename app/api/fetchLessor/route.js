@@ -12,7 +12,7 @@ export async function GET(req) {
 
   try {
     const lessorResult = await sql`
-      SELECT lessor_firstname, lessor_lastname, lessor_phone_number, lessor_line_url, lessor_image
+      SELECT lessor_id, lessor_firstname, lessor_lastname, lessor_phone_number, lessor_line_url, lessor_image
       FROM lessor
       WHERE lessor_id = ${lessorId}
     `;
@@ -31,31 +31,55 @@ export async function GET(req) {
 
 export async function PUT(req) {
   try {
-    const { lessorId, first_name, last_name, phone_number, line_url, profile_image } = await req.json();
+    const {
+      lessor_id,
+      lessor_firstname,
+      lessor_lastname,
+      lessor_phone_number,
+      lessor_line_url,
+      lessor_image,
+    } = await req.json();
 
-    if (!lessorId || !first_name || !last_name || !phone_number || !line_url || !profile_image) {
-      return new Response(JSON.stringify({ error: 'All fields are required' }), { status: 400 });
+    if (!lessor_id) {
+      return new Response(
+        JSON.stringify({ error: "Lessor ID is required" }),
+        { status: 400 }
+      );
     }
-    
-    
-    const updateResult = await sql`
+
+    const updateData = {};
+    if (lessor_firstname) updateData.lessor_firstname = lessor_firstname;
+    if (lessor_lastname) updateData.lessor_lastname = lessor_lastname;
+    if (lessor_phone_number) updateData.lessor_phone_number = lessor_phone_number;
+    if (lessor_line_url) updateData.lessor_line_url = lessor_line_url;
+    if (lessor_image) updateData.lessor_image = lessor_image;
+
+    if (Object.keys(updateData).length === 0) {
+      return new Response(
+        JSON.stringify({ error: "At least one field must be updated" }),
+        { status: 400 }
+      );
+    }
+
+    await sql`
       UPDATE lessor
-      SET
-        lessor_firstname = ${first_name},
-        lessor_lastname = ${last_name},
-        lessor_phone_number = ${phone_number},
-        total_slots = ${total_slots},
-        line_url = ${line_url},
-        lessor_image = ${profile_image}
-      WHERE lessor_id = ${lessorId}
+      SET ${sql(updateData)}
+      WHERE lessor_id = ${lessor_id}
     `;
 
-    return new Response(JSON.stringify({ message: 'Lessor updated successfully', lessorId: updateResult[0].lessor_id }), { status: 200 });
+    return new Response(
+      JSON.stringify({ message: "Lessor updated successfully" }),
+      { status: 200 }
+    );
   } catch (error) {
-    console.error('Update Error:', error);
-    return new Response(JSON.stringify({ error: 'Error updating data' }), { status: 500 });
+    console.error("Update Error:", error);
+    return new Response(
+      JSON.stringify({ error: "Error updating data" }),
+      { status: 500 }
+    );
   }
 }
+
 
 export async function DELETE(req) {
   const { searchParams } = new URL(req.url);
