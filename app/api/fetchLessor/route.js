@@ -36,6 +36,57 @@ export async function PUT(req) {
     if (!lessorId) {
       return new Response(JSON.stringify({ error: 'Lessor ID is required' }), { status: 400 });
     }
+
+    // Begin building the SQL query with tagged literals
+    let query = sql`UPDATE lessor SET `;
+    const updates = [];
+    
+    // Add fields to update only if they are not undefined or an empty string
+    if (first_name !== undefined && first_name !== "") {
+      updates.push(sql`lessor_firstname = ${first_name}`);
+    }
+    if (last_name !== undefined && last_name !== "") {
+      updates.push(sql`lessor_lastname = ${last_name}`);
+    }
+    if (phone_number !== undefined && phone_number !== "") {
+      updates.push(sql`lessor_phone_number = ${phone_number}`);
+    }
+    if (line_url !== undefined && line_url !== "") {
+      updates.push(sql`lessor_line_url = ${line_url}`);
+    }
+    if (profile_image !== undefined && profile_image !== "") {
+      updates.push(sql`lessor_image = ${profile_image}`);
+    }
+
+    // If no fields to update, return an error
+    if (updates.length === 0) {
+      return new Response(JSON.stringify({ error: 'No fields to update' }), { status: 400 });
+    }
+
+    // Concatenate updates manually
+    query = sql`${query} ${sql`${updates[0]}`} `;
+    for (let i = 1; i < updates.length; i++) {
+      query = sql`${query}, ${sql`${updates[i]}`}`;
+    }
+
+    // Finalize the query with WHERE clause
+    query = sql`${query} WHERE lessor_id = ${lessorId} RETURNING lessor_id`;
+
+    // Execute the SQL update query
+    const updateResult = await query;
+
+    // Check if the update was successful
+    if (updateResult.length === 0) {
+      return new Response(JSON.stringify({ error: 'Failed to update lessor details, no matching record found' }), { status: 404 });
+    }
+
+    // Success response
+    return new Response(JSON.stringify({ message: 'Lessor details updated successfully', lessorId: updateResult[0].lessor_id }), { status: 200 });
+
+  } catch (error) {
+    // Handle any errors
+    console.error('Database Error:', error);
+    return new Response(JSON.stringify({ error: 'Error updating data', details: error.message }), { status: 500 });
   }
 }
   
