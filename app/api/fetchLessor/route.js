@@ -29,66 +29,15 @@ export async function GET(req) {
 }
 
 export async function PUT(req) {
-    try {
-      const data = await req.json();
-      const { lessorId, first_name, last_name, phone_number, line_url, profile_image } = data;
-  
-      if (!lessorId) {
-        return new Response(JSON.stringify({ error: 'Lessor ID is required' }), { status: 400 });
-      }
-  
-      // Initialize an array to store SQL update parts and their values
-      const updates = [];
-      const values = { lessor_id: lessorId };
-  
-      if (first_name !== undefined) {
-        updates.push(sql`lessor_firstname = ${first_name}`);
-        values.lessor_firstname = first_name;
-      }
-      if (last_name !== undefined) {
-        updates.push(sql`lessor_lastname = ${last_name}`);
-        values.lessor_lastname = last_name;
-      }
-      if (phone_number !== undefined) {
-        updates.push(sql`lessor_phone_number = ${phone_number}`);
-        values.lessor_phone_number = phone_number;
-      }
-      if (line_url !== undefined) {
-        updates.push(sql`lessor_line_url = ${line_url}`);
-        values.lessor_line_url = line_url;
-      }
-      if (profile_image !== undefined) {
-        updates.push(sql`lessor_image = ${profile_image}`);
-        values.lessor_image = profile_image;
-      }
-  
-      // If no fields to update, return an error
-      if (updates.length === 0) {
-        return new Response(JSON.stringify({ error: 'No fields to update' }), { status: 400 });
-      }
-  
-      // Log the updates array and values for debugging
-      console.log("Updates to be applied:", updates);
-      console.log("Values object:", values);
-  
-      // Construct and execute the SQL query
-      const updateResult = await sql`
-        UPDATE lessor
-        SET ${sql.join(updates, sql`, `)}
-        WHERE lessor_id = ${lessorId}
-        RETURNING lessor_id
-      `;
-  
-      if (updateResult.length === 0) {
-        return new Response(JSON.stringify({ error: 'Failed to update lessor details' }), { status: 500 });
-      }
-  
-      return new Response(JSON.stringify({ message: 'Lessor details updated successfully' }), { status: 200 });
-    } catch (error) {
-      console.error('Database Error:', error);
-      return new Response(JSON.stringify({ error: 'Error updating data', details: error.message }), { status: 500 });
+  try {
+    const data = await req.json();
+    const { lessorId, first_name, last_name, phone_number, line_url, profile_image } = data;
+
+    if (!lessorId) {
+      return new Response(JSON.stringify({ error: 'Lessor ID is required' }), { status: 400 });
     }
   }
+}
   
   
 export async function DELETE(req) {
