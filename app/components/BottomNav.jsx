@@ -1,27 +1,32 @@
-import { AiFillHome, AiOutlineCalendar, AiOutlineSetting } from "react-icons/ai";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+
+'use client';
+import { AiFillHome, AiOutlineSetting } from "react-icons/ai";
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function BottomNav() {
   const router = useRouter();
-  const [active, setActive] = useState("home"); // Default active button
+  const pathname = usePathname();
 
-  const handleNavigation = (path, button) => {
-    setActive(button); // Set the active button
-    router.push(path); // Navigate to the specified route
+  const navigateToHome = () => {
+    router.push('/home_lessor'); // Replace '/home' with the actual path of your home page
+  };
+
+  const navigateToSettings = () => {
+    router.push('/setting'); // Replace '/settings' with the actual path of your settings page
   };
 
   return (
     <div className="fixed bottom-0 left-0 w-full flex justify-around bg-white py-2 border-t">
       <button
-        className={active === "home" ? "text-red-500" : "text-gray-500"}
-        onClick={() => handleNavigation('/home', 'home')}
+        onClick={navigateToHome}
+        className={pathname === '/home_lessor' ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}
       >
         <AiFillHome size={24} />
       </button>
+
       <button
-        className={active === "calendar" ? "text-red-500" : "text-gray-500"}
-        onClick={() => handleNavigation('/calendar', 'calendar')}
+        onClick={navigateToSettings}
+        className={(pathname === '/setting' || pathname === '/editPark' || pathname === '/editLessorProfile') ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}
       >
         <AiOutlineSetting size={24} />
       </button>

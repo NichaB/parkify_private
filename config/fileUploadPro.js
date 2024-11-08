@@ -2,7 +2,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import toast from 'react-hot-toast';
 
-const FileUpload = forwardRef(({ storageBucket, parkingLotId, oldImagePath }, ref) => {
+const FileUpload = forwardRef(({ storageBucket = 'lessor_image', lessorId, oldImagePath }, ref) => {
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
 
@@ -21,10 +21,10 @@ const FileUpload = forwardRef(({ storageBucket, parkingLotId, oldImagePath }, re
             const formData = new FormData();
             formData.append('file', file);
             formData.append('storageBucket', storageBucket);
-            formData.append('parkingLotId', parkingLotId);
-            if (oldImagePath) formData.append('oldImagePath', oldImagePath);
+            formData.append('lessorId', lessorId); // Pass lessor ID to link the file
+            if (oldImagePath) formData.append('oldImagePath', oldImagePath); // Delete old image if it exists
 
-            const uploadResponse = await fetch('/api/uploadFile', {
+            const uploadResponse = await fetch('/api/uploadParking', {
                 method: 'POST',
                 body: formData,
             });

@@ -1,16 +1,16 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import supabase from '../../config/supabaseClient';
-
+import FileUpload from '../../config/fileUpload';
+import { v4 as uuidv4 } from 'uuid';
 
 export default function RegisterInformationPage() {
   const router = useRouter();
   const email = sessionStorage.getItem('userEmail');
   const password = sessionStorage.getItem('userPassword');
-
- 
+  const fileUploadRef = useRef(null);
 
   const [userData, setUserData] = useState({
     email: email || '',
@@ -29,7 +29,6 @@ export default function RegisterInformationPage() {
     }));
   };
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -38,22 +37,30 @@ export default function RegisterInformationPage() {
       return;
     }
 
-    try {
+    // Check if profile image is uploaded
+    let uploadedProfileImageUrl = null;
+    if (fileUploadRef.current) {
+      uploadedProfileImageUrl = await fileUploadRef.current.handleUpload();
+    }
 
+    if (!uploadedProfileImageUrl) {
+      toast.error('Please upload a profile image.');
+      return;
+    }
+
+    try {
       const { data: existingUser, error: phoneCheckError } = await supabase
-      .from('lessor')
-      .select('lessor_id')
-      .eq('lessor_phone_number', userData.phoneNumber)
-      .single();
+        .from('lessor')
+        .select('lessor_id')
+        .eq('lessor_phone_number', userData.phoneNumber)
+        .single();
 
       if (phoneCheckError && phoneCheckError.code !== 'PGRST116') {
-        // Handle unexpected errors during the phone number check
         toast.error('An error occurred while checking the phone number. Please try again.');
         return;
       }
 
       if (existingUser) {
-        // If a user with this phone number already exists, show an error message
         toast.error('Phone number already exists. Please use a different phone number.');
         return;
       }
@@ -65,27 +72,25 @@ export default function RegisterInformationPage() {
           lessor_lastname: userData.lastName,
           lessor_email: userData.email,
           lessor_phone_number: userData.phoneNumber,
-          lessor_password: userData.password,// Ensure to hash this in production
+          lessor_password: userData.password, // Make sure to hash in production
           lessor_line_url: userData.lineurl,
+          lessor_image: uploadedProfileImageUrl // Set the uploaded image URL
         }])
         .select('lessor_id')
-        .single(); 
+        .single();
 
       if (error) {
         toast.error('An error occurred while registering. Please try again.');
         return;
       }
 
-      // Store user_id in sessionStorage for the next page
       sessionStorage.setItem('lessorId', data.lessor_id);
-
       toast.success('Registration successful!');
-      router.push('/regisPark'); // Redirect to car registration page
+      router.push('/regisPark');
     } catch (error) {
       toast.error('An unexpected error occurred. Please try again later.');
     }
   };
-
 
   return (
     <div className="flex flex-col h-screen bg-white">
@@ -96,15 +101,14 @@ export default function RegisterInformationPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        
+
         <h1 className="text-2xl font-bold text-black text-left w-full px-6 mt-16 py-4">
           Your Information for a <br /> Smooth Reservation Experience
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6 flex flex-col items-center">
           {/* Input fields */}
-           {/* First Name */}
-           <div className="w-11/12">
+          <div className="w-11/12">
             <input
               type="text"
               name="firstName"
@@ -115,7 +119,6 @@ export default function RegisterInformationPage() {
             />
           </div>
 
-          {/* Last Name */}
           <div className="w-11/12">
             <input
               type="text"
@@ -127,7 +130,6 @@ export default function RegisterInformationPage() {
             />
           </div>
 
-          {/* Phone Number */}
           <div className="w-11/12">
             <input
               type="text"
@@ -139,7 +141,6 @@ export default function RegisterInformationPage() {
             />
           </div>
 
-          {/* Line Url*/}
           <div className="w-11/12">
             <input
               type="text"
@@ -151,7 +152,17 @@ export default function RegisterInformationPage() {
             />
           </div>
 
-          <div className="flex justify-center mb-4 w-4/5 mx-auto"> 
+          {/* Profile Image Upload */}
+          <div className="w-11/12">
+            <h2 className="text-gray-600 font-semibold mb-2">Profile Image</h2>
+            <FileUpload
+              ref={fileUploadRef}
+              storageBucket="lessor_image"
+              fileName={`${uuidv4()}.jpg`}
+            />
+          </div>
+
+          <div className="flex justify-center mb-4 w-4/5 mx-auto">
             <button type="submit" className="w-full bg-customBlue text-white py-3 rounded-lg hover:bg-blue-500">
               Get started
             </button>

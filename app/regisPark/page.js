@@ -70,7 +70,7 @@ export default function RegisterInformationPage() {
       }
   
       toast.success('Lessor registration successful!');
-      router.push('/profile');
+      router.push('/home');
     } catch (error) {
       toast.error('An unexpected error occurred. Please try again later.');
     }

@@ -1,260 +1,177 @@
+// EditParking.js
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import { FaArrowLeft, FaEdit } from 'react-icons/fa';
-import supabase from '../../config/supabaseClient';
-import { v4 as uuidv4 } from 'uuid';
+import { FaEdit } from 'react-icons/fa';
 import BottomNav from '../components/BottomNav';
+import BackButton from '../components/BackButton';
+import { v4 as uuidv4 } from 'uuid';
 
-export default function ParkingLotSetting() {
-  const router = useRouter();
+export default function EditParking() {
   const fileUploadRefs = useRef([]);
-
+  const [lessorDetails, setLessorDetails] = useState({});
   const [parkingLots, setParkingLots] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const lessorId = '1'; // Replace with actual lessorId retrieval from sessionStorage if needed
-      if (!lessorId) {
-        toast.error("User ID not found");
-        return;
-      }
-
+    const fetchParkingLots = async () => {
+      const lessorId = '9'; // Update this to fetch lessor ID dynamically if needed
       try {
-        const { data, error } = await supabase
-          .from('parking_lot')
-          .select('parking_lot_id, location_name, address, location_url, total_slots, price_per_hour, location_image')
-          .eq('lessor_id', lessorId);
+        const response = await fetch(`../api/fetchPark?lessorId=${lessorId}`);
+        const data = await response.json();
 
-        if (error) throw error;
+        if (!response.ok) throw new Error(data.error || 'Error fetching data');
 
-        setParkingLots(data || []);
+        setLessorDetails(data.lessorDetails);
+        setParkingLots(data.parkingLots || []);
       } catch (error) {
-        toast.error("Error fetching data");
-        console.error("Error:", error);
+        console.error('Fetch error:', error);
+        toast.error('Error fetching parking lots');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchParkingLots();
   }, []);
 
   const handleChange = (index, e) => {
     const { name, value } = e.target;
-    setParkingLots((prevData) =>
-      prevData.map((lot, i) =>
-        i === index ? { ...lot, [name]: value } : lot
-      )
+    setParkingLots((prev) =>
+      prev.map((lot, i) => (i === index ? { ...lot, [name]: value } : lot))
     );
   };
 
   const handleSave = async (index) => {
     const lot = parkingLots[index];
-
-    // Ensure all required fields are filled in
+    const lessorId = '9';
     if (!lot.location_name || !lot.address || !lot.location_url || !lot.total_slots || !lot.price_per_hour) {
-        toast.error('Please fill in all fields');
-        return;
+      toast.error('Please fill in all fields');
+      return;
     }
-
+  
     try {
-        let newImagePath = lot.location_image;
-        const file = fileUploadRefs.current[index]?.files[0];
-
-        // If a new file is uploaded, handle image upload and deletion
-        if (file) {
-            const fileName = `${uuidv4()}.jpg`;
-
-            // Delete previous image if it exists
-            if (lot.location_image) {
-                const { error: deleteError } = await supabase.storage
-                    .from('carpark')
-                    .remove([lot.location_image]);
-
-                if (deleteError) {
-                    console.error('Error deleting previous image:', deleteError);
-                    toast.error('Error deleting previous image.');
-                }
-            }
-
-            // Upload new image
-            const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('carpark')
-                .upload(fileName, file);
-
-            if (uploadError) throw uploadError;
-
-            // Retrieve the public URL of the uploaded image
-            const { data: publicUrlData, error: urlError } = supabase.storage
-                .from('carpark')
-                .getPublicUrl(fileName);
-
-            if (urlError) throw urlError;
-
-            newImagePath = publicUrlData.publicUrl;
-        }
-
-        // Update the parking lot data in Supabase
-        const { error } = await supabase
-            .from('parking_lot')
-            .update({
-                location_name: lot.location_name,
-                address: lot.address,
-                location_url: lot.location_url,
-                total_slots: lot.total_slots,
-                price_per_hour: lot.price_per_hour,
-                location_image: newImagePath, // Store the public URL here
-            })
-            .eq('parking_lot_id', lot.parking_lot_id);
-
-        if (error) throw error;
-
-        // Update state to reflect the new image immediately
-        setParkingLots((prevData) =>
-            prevData.map((lotItem, i) =>
-                i === index ? { ...lotItem, location_image: newImagePath } : lotItem
-            )
-        );
-
-        toast.success('Parking lot settings saved!');
+      let newImagePath = lot.location_image;
+      const file = fileUploadRefs.current[index]?.files[0];
+  
+      // Handle file upload if a new file is selected
+      if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('storageBucket', 'carpark'); // Replace with actual storage bucket name
+        formData.append('parkingLotId', lot.parking_lot_id); // Link image to this parking lot
+  
+        const uploadResponse = await fetch(`../api/uploadFile`, {
+          method: 'POST',
+          body: formData,
+        });
+        const uploadResult = await uploadResponse.json();
+  
+        if (!uploadResponse.ok) throw new Error(uploadResult.error || 'File upload failed');
+        newImagePath = uploadResult.publicUrl;
+      }
+  
+      const updateResponse = await fetch(`../api/fetchPark`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          parkingLotId: lot.parking_lot_id,
+          location_name: lot.location_name,
+          address: lot.address,
+          location_url: lot.location_url,
+          total_slots: lot.total_slots,
+          price_per_hour: lot.price_per_hour,
+          location_image: newImagePath,
+        }),
+      });
+  
+      const updateResult = await updateResponse.json();
+      if (!updateResponse.ok) throw new Error(updateResult.error || 'Update failed');
+  
+      setParkingLots((prev) =>
+        prev.map((lotItem, i) =>
+          i === index ? { ...lotItem, location_image: newImagePath } : lotItem
+        )
+      );
+      toast.success('Parking lot settings saved!');
     } catch (error) {
-        toast.error('Error saving data');
-        console.error("Error:", error);
+      toast.error('Error saving data');
+      console.error('Save error:', error);
     }
-};
+  };
+  
+  
 
+  const handleDelete = async (index) => {
+    const lot = parkingLots[index];
+    try {
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+      const deleteResponse = await fetch(`../api/fetchPark?parkingLotId=${lot.parking_lot_id}`, {
+        method: 'DELETE',
+      });
+      
+
+      const deleteResult = await deleteResponse.json();
+      if (!deleteResponse.ok) throw new Error(deleteResult.error || 'Delete failed');
+
+      setParkingLots((prev) => prev.filter((_, i) => i !== index));
+      toast.success('Parking lot deleted!');
+    } catch (error) {
+      toast.error('Error deleting parking lot');
+      console.error('Delete error:', error);
+    }
+  };
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="flex flex-col h-screen bg-white">
       <Toaster />
       <div className="relative flex-grow overflow-y-auto p-6">
-        <button 
-          onClick={() => router.push('/setting')} 
-          className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black"
-        >
-          <FaArrowLeft className="w-6 h-6" />
-        </button>
+        <BackButton targetPage="/setting" />
         
-        <h1 className="text-2xl font-bold text-black text-left w-full px-6 mt-16 py-4">
+        <h1 className="text-2xl font-bold text-black text-left w-full px-6 mt-5 py-4">
           Parking Lots Setting
         </h1>
 
         {parkingLots.map((lot, index) => (
           <div key={lot.parking_lot_id} className="space-y-6 mb-8 p-6 border rounded-lg shadow-lg w-11/12 mx-auto bg-white">
             {lot.location_image ? (
-              <img
-                src={`${lot.location_image}`}
-                alt="Parking Lot"
-                className = "w-40 h-40 bg-gray-200 flex items-center justify-center rounded-lg mb-4 mx-auto"
-              />
+              <img src={lot.location_image} alt="Parking Lot" className="w-40 h-40 bg-gray-200 flex items-center justify-center rounded-lg mb-4 mx-auto" />
             ) : (
-              <div className="w-32 h-32  bg-gray-200 flex items-center justify-center rounded-lg mb-4">
+              <div className="w-32 h-32 bg-gray-200 flex items-center justify-center rounded-lg mb-4">
                 <span className="text-gray-500">No Image Available</span>
               </div>
             )}
 
             <form onSubmit={(e) => e.preventDefault()} className="space-y-6 flex flex-col items-center">
-              <div className="w-full relative">
-                <label className="block text-gray-500">Parking Name</label>
-                <div className="flex items-center relative">
-                  <input
-                    type="text"
-                    name="location_name"
-                    value={lot.location_name}
-                    onChange={(e) => handleChange(index, e)}
-                    className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <FaEdit className="absolute right-4 text-gray-400 cursor-pointer" />
+              {['location_name', 'address', 'location_url', 'total_slots', 'price_per_hour'].map((field) => (
+                <div key={field} className="w-full relative">
+                  <label className="block text-gray-500">{field.replace('_', ' ').toUpperCase()}</label>
+                  <div className="flex items-center relative">
+                    <input
+                      type={field.includes('slots') || field.includes('price') ? 'number' : 'text'}
+                      name={field}
+                      value={lot[field]}
+                      onChange={(e) => handleChange(index, e)}
+                      className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <FaEdit className="absolute right-4 text-gray-400 cursor-pointer" />
+                  </div>
                 </div>
-              </div>
-
-              <div className="w-full relative">
-                <label className="block text-gray-500">Address</label>
-                <div className="flex items-center relative">
-                  <input
-                    type="text"
-                    name="address"
-                    value={lot.address}
-                    onChange={(e) => handleChange(index, e)}
-                    className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <FaEdit className="absolute right-4 text-gray-400 cursor-pointer" />
-                </div>
-              </div>
-
-              <div className="w-full relative">
-                <label className="block text-gray-500">Location URL</label>
-                <div className="flex items-center relative">
-                  <input
-                    type="text"
-                    name="location_url"
-                    value={lot.location_url}
-                    onChange={(e) => handleChange(index, e)}
-                    className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <FaEdit className="absolute right-4 text-gray-400 cursor-pointer" />
-                </div>
-              </div>
-
-              <div className="w-full relative">
-                <label className="block text-gray-500">Total Slots</label>
-                <div className="flex items-center relative">
-                  <input
-                    type="number"
-                    name="total_slots"
-                    value={lot.total_slots}
-                    onChange={(e) => handleChange(index, e)}
-                    className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <FaEdit className="absolute right-4 text-gray-400 cursor-pointer" />
-                </div>
-              </div>
-
-              <div className="w-full relative">
-                <label className="block text-gray-500">Price per Hour</label>
-                <div className="flex items-center relative">
-                  <input
-                    type="number"
-                    name="price_per_hour"
-                    value={lot.price_per_hour}
-                    onChange={(e) => handleChange(index, e)}
-                    className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <FaEdit className="absolute right-4 text-gray-400 cursor-pointer" />
-                </div>
-              </div>
-
+              ))}
               <div className="w-full">
                 <label className="block text-gray-500">Location Image</label>
-                <input
-                  ref={(el) => (fileUploadRefs.current[index] = el)}
-                  type="file"
-                  accept="image/*"
-                  className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none"
-                />
+                <input ref={(el) => (fileUploadRefs.current[index] = el)} type="file" accept="image/*" className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none" />
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleSave(index)}
-                className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600"
-              >
-                SAVE
-              </button>
+              <button type="button" onClick={() => handleSave(index)} className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600">SAVE</button>
+              <button type="button" onClick={() => handleDelete(index)} className="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 mt-2">DELETE</button>
             </form>
           </div>
         ))}
       </div>
-
       <BottomNav />
-
     </div>
   );
 }
