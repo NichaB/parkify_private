@@ -1,24 +1,25 @@
-
+// api/uploadLessorPic.js
 import { v4 as uuidv4 } from 'uuid';
 import supabase from '../../../config/supabaseClient';
 import sql from '../../../config/db';
 
 export async function POST(req) {
-  const formData = await req.formData();
-  const file = formData.get('file');
-  const lessorId = formData.get('lessorId');
-  const oldImagePath = formData.get('oldImagePath');
-
-  if (!file || !lessorId) {
-    return new Response(JSON.stringify({ error: 'File and lessor ID are required' }), { status: 400 });
-  }
-
   try {
-    // Delete the old image if it exists
+    const formData = await req.formData();
+    const file = formData.get('file');
+    const storageBucket = 'lessor_image'; // Bucket name for lessor images
+    const lessorId = formData.get('lessorId'); // ID to link the file to a specific lessor
+    const oldImagePath = formData.get('oldImagePath'); // Path of the old image to be deleted
+
+    if (!file || !lessorId) {
+      return new Response(JSON.stringify({ error: 'File and lessor ID are required' }), { status: 400 });
+    }
+
+    // Step 1: Delete the old image if `oldImagePath` is provided
     if (oldImagePath) {
       const { error: deleteError } = await supabase
         .storage
-        .from('lessor_image') // Update with the actual bucket name
+        .from(storageBucket)
         .remove([oldImagePath]);
 
       if (deleteError) {
@@ -27,10 +28,11 @@ export async function POST(req) {
       }
     }
 
-    // Upload the new file
-    const fileName = `${uuidv4()}.${file.name.split('.').pop()}`;
-    const { data, error: uploadError } = await supabase.storage
-      .from('lessor_images')
+    // Step 2: Upload the new file
+    const fileName = `${uuidv4()}.${file.name.split('.').pop()}`; // Generate unique file name
+    const { data, error: uploadError } = await supabase
+      .storage
+      .from(storageBucket)
       .upload(fileName, file);
 
     if (uploadError) {
@@ -38,30 +40,38 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: 'Error uploading file' }), { status: 500 });
     }
 
-    // Get the public URL for the uploaded file
-    const { publicURL, error: urlError } = supabase.storage
-      .from('lessor-images')
+    // Step 3: Generate public URL for the uploaded file
+    const { data: urlData, error: urlError } = supabase
+      .storage
+      .from(storageBucket)
       .getPublicUrl(fileName);
 
     if (urlError) {
       console.error('Error generating public URL:', urlError);
-      return new Response(JSON.stringify({ error: 'Error generating file URL' }), { status: 500 });
+      return new Response(JSON.stringify({ error: 'Failed to generate public URL' }), { status: 500 });
     }
 
-    // Update the database with the new image path
+    const publicUrl = urlData.publicUrl;
+
+    // Step 4: Update the database with the new image URL
     const updateResult = await sql`
       UPDATE lessor
-      SET lessor_image = ${fileName}
+      SET lessor_image = ${publicUrl}
       WHERE lessor_id = ${lessorId}
+      RETURNING lessor_id
     `;
 
-    if (updateResult.count === 0) {
-      throw new Error('Failed to update database with new image path');
+    if (updateResult.length === 0) {
+      throw new Error('Failed to update file metadata in the database');
     }
 
-    return new Response(JSON.stringify({ publicUrl: publicURL }), { status: 200 });
+    return new Response(JSON.stringify({ publicUrl, lessorId: updateResult[0].lessor_id }), {
+      status: 200
+    });
   } catch (error) {
     console.error('Error:', error);
-    return new Response(JSON.stringify({ error: 'Error processing upload' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Error uploading file or saving metadata' }), {
+      status: 500
+    });
   }
 }

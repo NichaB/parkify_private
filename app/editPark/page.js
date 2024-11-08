@@ -61,7 +61,7 @@ export default function EditParking() {
         formData.append('storageBucket', 'carpark'); // Replace with actual storage bucket name
         formData.append('parkingLotId', lot.parking_lot_id); // Link image to this parking lot
   
-        const uploadResponse = await fetch(`../api/uploadFile`, {
+        const uploadResponse = await fetch(`../api/uploadParking`, {
           method: 'POST',
           body: formData,
         });

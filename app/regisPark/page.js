@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import supabase from '../../config/supabaseClient';
-import FileUpload from '../../config/fileUpload';
+import FileUpload from '../../config/fileUploadPark';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function RegisterInformationPage() {

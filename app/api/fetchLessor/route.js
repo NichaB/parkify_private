@@ -5,6 +5,7 @@ import supabase from '../../../config/supabaseClient';
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const lessorId = searchParams.get('lessorId');
+
   if (!lessorId) {
     return new Response(JSON.stringify({ error: 'Lessor ID is required' }), { status: 400 });
   }
@@ -24,73 +25,38 @@ export async function GET(req) {
     return new Response(JSON.stringify({ lessorDetails }), { status: 200 });
   } catch (error) {
     console.error('Database Error:', error);
-    return new Response(JSON.stringify({ error: 'Error fetching data', details: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Error fetching data' }), { status: 500 });
   }
 }
 
 export async function PUT(req) {
   try {
-    const data = await req.json();
-    const { lessorId, first_name, last_name, phone_number, line_url, profile_image } = data;
+    const { lessorId, first_name, last_name, phone_number, line_url, profile_image } = await req.json();
 
-    if (!lessorId) {
-      return new Response(JSON.stringify({ error: 'Lessor ID is required' }), { status: 400 });
+    if (!lessorId || !first_name || !last_name || !phone_number || !line_url || !profile_image) {
+      return new Response(JSON.stringify({ error: 'All fields are required' }), { status: 400 });
     }
-
-    // Begin building the SQL query with tagged literals
-    let query = sql`UPDATE lessor SET `;
-    const updates = [];
     
-    // Add fields to update only if they are not undefined or an empty string
-    if (first_name !== undefined && first_name !== "") {
-      updates.push(sql`lessor_firstname = ${first_name}`);
-    }
-    if (last_name !== undefined && last_name !== "") {
-      updates.push(sql`lessor_lastname = ${last_name}`);
-    }
-    if (phone_number !== undefined && phone_number !== "") {
-      updates.push(sql`lessor_phone_number = ${phone_number}`);
-    }
-    if (line_url !== undefined && line_url !== "") {
-      updates.push(sql`lessor_line_url = ${line_url}`);
-    }
-    if (profile_image !== undefined && profile_image !== "") {
-      updates.push(sql`lessor_image = ${profile_image}`);
-    }
+    
+    const updateResult = await sql`
+      UPDATE lessor
+      SET
+        lessor_firstname = ${first_name},
+        lessor_lastname = ${last_name},
+        lessor_phone_number = ${phone_number},
+        total_slots = ${total_slots},
+        line_url = ${line_url},
+        lessor_image = ${profile_image}
+      WHERE lessor_id = ${lessorId}
+    `;
 
-    // If no fields to update, return an error
-    if (updates.length === 0) {
-      return new Response(JSON.stringify({ error: 'No fields to update' }), { status: 400 });
-    }
-
-    // Concatenate updates manually
-    query = sql`${query} ${sql`${updates[0]}`} `;
-    for (let i = 1; i < updates.length; i++) {
-      query = sql`${query}, ${sql`${updates[i]}`}`;
-    }
-
-    // Finalize the query with WHERE clause
-    query = sql`${query} WHERE lessor_id = ${lessorId} RETURNING lessor_id`;
-
-    // Execute the SQL update query
-    const updateResult = await query;
-
-    // Check if the update was successful
-    if (updateResult.length === 0) {
-      return new Response(JSON.stringify({ error: 'Failed to update lessor details, no matching record found' }), { status: 404 });
-    }
-
-    // Success response
-    return new Response(JSON.stringify({ message: 'Lessor details updated successfully', lessorId: updateResult[0].lessor_id }), { status: 200 });
-
+    return new Response(JSON.stringify({ message: 'Lessor updated successfully', lessorId: updateResult[0].lessor_id }), { status: 200 });
   } catch (error) {
-    // Handle any errors
-    console.error('Database Error:', error);
-    return new Response(JSON.stringify({ error: 'Error updating data', details: error.message }), { status: 500 });
+    console.error('Update Error:', error);
+    return new Response(JSON.stringify({ error: 'Error updating data' }), { status: 500 });
   }
 }
-  
-  
+
 export async function DELETE(req) {
   const { searchParams } = new URL(req.url);
   const lessorId = searchParams.get('lessorId');
@@ -100,13 +66,33 @@ export async function DELETE(req) {
   }
 
   try {
-    // Retrieve the lessor's image URL for deletion
     const imageResult = await sql`
       SELECT lessor_image FROM lessor WHERE lessor_id = ${lessorId}
     `;
     const imagePath = imageResult[0]?.lessor_image;
 
-    // Delete the lessor record
+     // If imagePath exists, attempt to delete from Supabase storage
+     if (imagePath) {
+      console.log('Attempting to delete image from storage:', imagePath);
+      const { error: deleteError } = await supabase
+        .storage
+        .from('lessor_image') // Ensure this matches your actual storage bucket name
+        .remove([imagePath]);
+
+      if (deleteError) {
+        console.error('Error deleting image from storage:', deleteError.message);
+        return new Response(
+          JSON.stringify({
+            error: 'Error deleting image from storage',
+            details: deleteError.message,
+          }),
+          { status: 500 }
+        );
+      }
+    } else {
+      console.log('No image path to delete from storage');
+    }
+
     const deleteResult = await sql`
       DELETE FROM lessor WHERE lessor_id = ${lessorId}
       RETURNING lessor_id
@@ -116,21 +102,15 @@ export async function DELETE(req) {
       return new Response(JSON.stringify({ error: 'Lessor not found or could not be deleted' }), { status: 404 });
     }
 
-    // If there is an image, delete it from Supabase storage
-    if (imagePath) {
-      const { error: deleteError } = await supabase.storage
-        .from('lessor_image') // Replace with your actual storage bucket name
-        .remove([imagePath]);
-
-      if (deleteError) {
-        console.error('Error deleting image from storage:', deleteError.message);
-        return new Response(JSON.stringify({ error: 'Error deleting image from storage', details: deleteError.message }), { status: 500 });
-      }
-    }
-
-    return new Response(JSON.stringify({ message: 'Lessor and associated image deleted successfully' }), { status: 200 });
+    return new Response(JSON.stringify({ message: 'Parking lot and associated image deleted successfully' }), { status: 200 });
   } catch (error) {
-    console.error('Database Error:', error);
-    return new Response(JSON.stringify({ error: 'Error deleting lessor data', details: error.message }), { status: 500 });
+    console.error('Delete Error:', error);
+    return new Response(
+      JSON.stringify({
+        error: 'Error deleting parking lot and image',
+        details: error.message,
+      }),
+      { status: 500 }
+    );
   }
 }
