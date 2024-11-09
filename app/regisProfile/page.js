@@ -2,15 +2,13 @@
 import React, { useState, useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import supabase from '../../config/supabaseClient';
-import FileUpload from '../../config/fileUploadPark';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function RegisterInformationPage() {
   const router = useRouter();
   const email = sessionStorage.getItem('userEmail');
   const password = sessionStorage.getItem('userPassword');
-  const fileUploadRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const [userData, setUserData] = useState({
     email: email || '',
@@ -29,66 +27,54 @@ export default function RegisterInformationPage() {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!userData.email || !userData.password || !userData.firstName || !userData.lastName || !userData.phoneNumber || !userData.lineurl) {
+    if (!userData.firstName || !userData.lastName || !userData.phoneNumber || !userData.lineurl) {
       toast.error('Please fill in all fields');
       return;
     }
 
-    // Check if profile image is uploaded
-    let uploadedProfileImageUrl = null;
-    if (fileUploadRef.current) {
-      uploadedProfileImageUrl = await fileUploadRef.current.handleUpload();
-    }
-
-    if (!uploadedProfileImageUrl) {
+    if (!selectedFile) {
       toast.error('Please upload a profile image.');
       return;
     }
 
     try {
-      const { data: existingUser, error: phoneCheckError } = await supabase
-        .from('lessor')
-        .select('lessor_id')
-        .eq('lessor_phone_number', userData.phoneNumber)
-        .single();
+      const formData = new FormData();
+      formData.append('firstName', userData.firstName);
+      formData.append('lastName', userData.lastName);
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('phoneNumber', userData.phoneNumber);
+      formData.append('lineurl', userData.lineurl);
+      formData.append('profileImage', selectedFile);
 
-      if (phoneCheckError && phoneCheckError.code !== 'PGRST116') {
-        toast.error('An error occurred while checking the phone number. Please try again.');
-        return;
+      const response = await fetch('/api/regisProInfo', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'An error occurred during registration');
       }
 
-      if (existingUser) {
-        toast.error('Phone number already exists. Please use a different phone number.');
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('lessor')
-        .insert([{
-          lessor_firstname: userData.firstName,
-          lessor_lastname: userData.lastName,
-          lessor_email: userData.email,
-          lessor_phone_number: userData.phoneNumber,
-          lessor_password: userData.password, // Make sure to hash in production
-          lessor_line_url: userData.lineurl,
-          lessor_image: uploadedProfileImageUrl // Set the uploaded image URL
-        }])
-        .select('lessor_id')
-        .single();
-
-      if (error) {
-        toast.error('An error occurred while registering. Please try again.');
-        return;
-      }
-
-      sessionStorage.setItem('lessorId', data.lessor_id);
+      sessionStorage.removeItem('userEmail');
+      sessionStorage.removeItem('userPassword');
       toast.success('Registration successful!');
+      sessionStorage.setItem('lessorId', result.lessorId);
       router.push('/regisPark');
     } catch (error) {
-      toast.error('An unexpected error occurred. Please try again later.');
+      toast.error(error.message || 'An unexpected error occurred. Please try again later.');
+      console.error('Registration error:', error);
     }
   };
 
@@ -152,14 +138,9 @@ export default function RegisterInformationPage() {
             />
           </div>
 
-          {/* Profile Image Upload */}
           <div className="w-11/12">
             <h2 className="text-gray-600 font-semibold mb-2">Profile Image</h2>
-            <FileUpload
-              ref={fileUploadRef}
-              storageBucket="lessor_image"
-              fileName={`${uuidv4()}.jpg`}
-            />
+            <input type="file" onChange={handleFileChange} />
           </div>
 
           <div className="flex justify-center mb-4 w-4/5 mx-auto">

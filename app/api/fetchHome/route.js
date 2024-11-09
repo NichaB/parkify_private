@@ -14,7 +14,7 @@ export async function GET(req) {
   try {
     // Query lessor details
     const lessorData = await sql`
-      SELECT lessor_firstname, lessor_image
+      SELECT lessor_firstname, lessor_profile_pic
       FROM lessor
       WHERE lessor_id = ${lessorId}
     `;

@@ -12,7 +12,7 @@ export async function GET(req) {
 
   try {
     const lessorResult = await sql`
-      SELECT lessor_id, lessor_firstname, lessor_lastname, lessor_phone_number, lessor_line_url, lessor_image
+      SELECT lessor_id, lessor_firstname, lessor_lastname, lessor_phone_number, lessor_line_url, lessor_profile_pic
       FROM lessor
       WHERE lessor_id = ${lessorId}
     `;
@@ -37,7 +37,7 @@ export async function PUT(req) {
       lessor_lastname,
       lessor_phone_number,
       lessor_line_url,
-      lessor_image,
+      lessor_profile_pic,
     } = await req.json();
 
     if (!lessor_id) {
@@ -52,7 +52,7 @@ export async function PUT(req) {
     if (lessor_lastname) updateData.lessor_lastname = lessor_lastname;
     if (lessor_phone_number) updateData.lessor_phone_number = lessor_phone_number;
     if (lessor_line_url) updateData.lessor_line_url = lessor_line_url;
-    if (lessor_image) updateData.lessor_image = lessor_image;
+    if (lessor_profile_pic) updateData.lessor_profile_pic = lessor_profile_pic;
 
     if (Object.keys(updateData).length === 0) {
       return new Response(
@@ -91,9 +91,9 @@ export async function DELETE(req) {
 
   try {
     const imageResult = await sql`
-      SELECT lessor_image FROM lessor WHERE lessor_id = ${lessorId}
+      SELECT lessor_profile_pic FROM lessor WHERE lessor_id = ${lessorId}
     `;
-    const imagePath = imageResult[0]?.lessor_image;
+    const imagePath = imageResult[0]?.lessor_profile_pic;
 
      // If imagePath exists, attempt to delete from Supabase storage
      if (imagePath) {

@@ -1,9 +1,10 @@
 'use client';
 import React, { useState } from 'react';
-import { InputField } from '../components/InputField';  
+import { InputField } from '../components/InputField';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import LoginButton from '../components/LoginButton';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -16,20 +17,45 @@ export default function LoginPage() {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form Data:', formData);
+
+    try {
+      const response = await fetch('/api/checkLogin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success('Login successful!');
+        sessionStorage.setItem('lessorId', result.lessor_id);  // Store lessor_id for future use
+        console.log('lesosor id: ', result.lessor_id);
+        router.push('/home_lessor');  // Redirect to the desired page on successful login
+      } else {
+        toast.error(result.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
+    }
   };
 
   return (
     <div className="flex flex-col h-screen bg-white">
-      {/* Back Button (Fixed at the top left corner) */}
+      <Toaster />
+
+      {/* Back Button */}
       <button 
-        onClick={() => router.push('/welcome')} 
+        onClick={() => router.push('/welcomelessor')} 
         className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black"
       >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
@@ -69,15 +95,16 @@ export default function LoginPage() {
               className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
+          {/* Login Button */}
+          <LoginButton type="submit" className="w-full bg-black text-white py-3 rounded-lg">
+            Login
+          </LoginButton>
         </form>
       </div>
 
-      {/* Login Button and Register Redirect */}
+      {/* Register Redirect */}
       <div className="flex flex-col items-center mb-4 w-4/5 mx-auto">
-        <LoginButton onClick={handleSubmit} className="w-full bg-black text-white py-3 rounded-lg">
-          Login
-        </LoginButton>
-        
         <p className="mt-4 text-center text-gray-600">
           Don't have an account?{' '}
           <Link href="/register" className="text-blue-400">

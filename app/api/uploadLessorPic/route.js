@@ -56,7 +56,7 @@ export async function POST(req) {
     // Step 4: Update the database with the new image URL
     const updateResult = await sql`
       UPDATE lessor
-      SET lessor_image = ${publicUrl}
+      SET lessor_profile_pic = ${publicUrl}
       WHERE lessor_id = ${lessorId}
       RETURNING lessor_id
     `;

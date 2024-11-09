@@ -3,21 +3,18 @@
 import React, { useState, useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import supabase from '../../config/supabaseClient';
-import FileUpload from '../../config/fileUploadPark';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function RegisterInformationPage() {
   const router = useRouter();
   const lessorId = sessionStorage.getItem('lessorId'); // Assuming lessor_id is stored here
-  const fileUploadRef = useRef(null);
+  const fileUploadRef = useRef(null); // Ref to capture file input
 
   const [lessorData, setLessorData] = useState({
     locationName: '',
     address: '',
     locationUrl: '',
     totalSlots: '',
-    availableSlots: '',
     pricePerHour: '',
   });
 
@@ -32,47 +29,46 @@ export default function RegisterInformationPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
+    // Validate all fields are filled
     if (!lessorData.locationName || !lessorData.address || !lessorData.locationUrl || !lessorData.totalSlots || !lessorData.pricePerHour) {
       toast.error('Please fill in all fields');
       return;
     }
   
-    const capitalize = (text) => text.replace(/\b\w/g, (char) => char.toUpperCase());
-    const capitalizedLocationName = capitalize(lessorData.locationName);
-  
-    let uploadedFileURL = null;
-    if (fileUploadRef.current) {
-      uploadedFileURL = await fileUploadRef.current.handleUpload(); // Get URL directly
-    }
-  
-    if (!uploadedFileURL) {
-      toast.error('Failed to upload file. Please try again.');
+    // Validate that a file has been uploaded
+    const file = fileUploadRef.current?.files[0];
+    if (!file) {
+      toast.error('Please upload a location image.');
       return;
     }
   
     try {
-      const { data: insertData, error: insertError } = await supabase
-        .from('parking_lot')
-        .insert([{
-          lessor_id: lessorId,
-          location_name: capitalizedLocationName,
-          address: lessorData.address,
-          location_url: lessorData.locationUrl,
-          total_slots: parseInt(lessorData.totalSlots, 10),
-          available_slots: parseInt(lessorData.totalSlots, 10),
-          price_per_hour: parseFloat(lessorData.pricePerHour),
-          location_image: uploadedFileURL,
-        }]);
+      // Create FormData and append all fields and file
+      const formData = new FormData();
+      formData.append('lessorId', lessorId);
+      formData.append('locationName', lessorData.locationName);
+      formData.append('address', lessorData.address);
+      formData.append('locationUrl', lessorData.locationUrl);
+      formData.append('totalSlots', lessorData.totalSlots);
+      formData.append('pricePerHour', lessorData.pricePerHour);
+      formData.append('locationImage', file); // Add file for image upload
   
-      if (insertError) {
-        toast.error('An error occurred while registering. Please try again.');
-        return;
+      // Make the API call
+      const response = await fetch('/api/regisParkInfo', {
+        method: 'POST',
+        body: formData, // Send as form data
+      });
+  
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'An error occurred during registration');
       }
   
       toast.success('Lessor registration successful!');
-      router.push('/home');
+      router.push('/home_lessor'); // Redirect after success
     } catch (error) {
-      toast.error('An unexpected error occurred. Please try again later.');
+      toast.error(error.message || 'An unexpected error occurred. Please try again later.');
+      console.error('Registration error:', error);
     }
   };
 
@@ -90,11 +86,10 @@ export default function RegisterInformationPage() {
         </button>
 
         <h1 className="text-2xl font-bold text-black text-left w-full px-6 mt-16 py-4">
-          Lessor Registration
+          Parking Registration
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6 flex flex-col items-center">
-          {/* Input fields */}
           <div className="w-11/12">
             <input
               type="text"
@@ -106,7 +101,6 @@ export default function RegisterInformationPage() {
               style={{ textTransform: 'capitalize' }}
             />
           </div>
-
 
           <div className="w-11/12">
             <input
@@ -141,7 +135,6 @@ export default function RegisterInformationPage() {
             />
           </div>
 
-
           <div className="w-11/12">
             <input
               type="number"
@@ -155,10 +148,11 @@ export default function RegisterInformationPage() {
 
           <div className="w-11/12">
             <h2 className="text-gray-600 font-semibold mb-2">Location Image</h2>
-            <FileUpload
+            <input
+              type="file"
               ref={fileUploadRef}
-              storageBucket="carpark"
-              fileName={`${uuidv4()}.jpg`}
+              accept="image/*"
+              className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none"
             />
           </div>
 

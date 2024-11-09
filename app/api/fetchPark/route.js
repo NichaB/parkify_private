@@ -12,7 +12,7 @@ export async function GET(req) {
 
   try {
     const lessorResult = await sql`
-      SELECT lessor_firstname, lessor_image
+      SELECT lessor_id, lessor_firstname
       FROM lessor
       WHERE lessor_id = ${lessorId}
     `;
@@ -138,3 +138,26 @@ export async function DELETE(req) {
   }
 }
 
+// New POST method to add a parking lot
+export async function POST(req) {
+  const { lessorId, location_name, address, location_url, total_slots, price_per_hour, location_image } = await req.json();
+
+  if (!lessorId || !location_name || !address || !location_url || !total_slots || !price_per_hour) {
+    return new Response(JSON.stringify({ error: 'All fields are required' }), { status: 400 });
+  }
+
+  try {
+    const insertResult = await sql`
+      INSERT INTO parking_lot (lessor_id, location_name, address, location_url, total_slots, price_per_hour, location_image)
+      VALUES (${lessorId}, ${location_name}, ${address}, ${location_url}, ${total_slots}, ${price_per_hour}, ${location_image})
+      RETURNING parking_lot_id
+    `;
+
+    const newParkingLotId = insertResult[0].parking_lot_id;
+
+    return new Response(JSON.stringify({ parkingLotId: newParkingLotId }), { status: 201 });
+  } catch (error) {
+    console.error('Error creating parking lot:', error);
+    return new Response(JSON.stringify({ error: 'Error creating parking lot' }), { status: 500 });
+  }
+}
