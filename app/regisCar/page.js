@@ -9,8 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default function RegisterInformationPage() {
   const router = useRouter();
-  // const userId = sessionStorage.getItem('userId');
-  const userId = '1';
+  const userId = sessionStorage.getItem('userId');
   const fileUploadRef = useRef(null);
 
   const [carData, setCarData] = useState({
@@ -31,47 +30,52 @@ export default function RegisterInformationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     // Check if required fields are filled
     if (!carData.carModel || !carData.licensePlateNumber || !carData.carColor) {
       toast.error('Please fill in all fields');
       return;
     }
-
+  
     // Trigger file upload
     if (fileUploadRef.current) {
       await fileUploadRef.current.handleUpload();
     }
-
+  
     // Ensure fileURL is set before proceeding with insertion
     if (!fileURL) {
       toast.error('Please upload an image');
       return;
     }
-
-    // Proceed with inserting car data into the database
+  
+    // Proceed with inserting car data into the database via the API
     try {
-      const { data: insertData, error: insertError } = await supabase
-        .from('car')
-        .insert([{
-          user_id: userId,
-          car_model: carData.carModel,
-          car_color: carData.carColor,
-          license_plate: carData.licensePlateNumber,
-          car_image: fileURL,  // Use the uploaded file's URL
-        }]);
-
-      if (insertError) {
-        toast.error('An error occurred while registering. Please try again.');
-        return;
+      const response = await fetch('/api/registerCar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          carModel: carData.carModel,
+          carColor: carData.carColor,
+          licensePlateNumber: carData.licensePlateNumber,
+          fileURL,
+        }),
+      });
+  
+      const result = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(result.error || 'An error occurred while registering the car.');
       }
-
-      toast.success('Car registration successful!');
-      router.push('/profile');
+  
+      toast.success(result.message || 'Car registration successful!');
+      router.push('setting'); // Redirect to the profile page
     } catch (error) {
-      toast.error('An unexpected error occurred. Please try again later.');
+      toast.error(error.message);
+      console.error('Registration error:', error);
     }
   };
+  
 
   return (
     <div className="flex flex-col h-screen bg-white">

@@ -30,58 +30,36 @@ export default function RegisterInformationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!userData.email || !userData.password || !userData.firstName || !userData.lastName || !userData.phoneNumber) {
       toast.error('Please fill in all fields');
       return;
     }
-
+  
     try {
-
-      const { data: existingUser, error: phoneCheckError } = await supabase
-      .from('user_info')
-      .select('user_id')
-      .eq('phone_number', userData.phoneNumber)
-      .single();
-
-      if (phoneCheckError && phoneCheckError.code !== 'PGRST116') {
-        // Handle unexpected errors during the phone number check
-        toast.error('An error occurred while checking the phone number. Please try again.');
-        return;
+      const response = await fetch('/api/registerPro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+  
+      const result = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(result.error || 'An error occurred while registering. Please try again.');
       }
-
-      if (existingUser) {
-        // If a user with this phone number already exists, show an error message
-        toast.error('Phone number already exists. Please use a different phone number.');
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('user_info')
-        .insert([{
-          first_name: userData.firstName,
-          last_name: userData.lastName,
-          email: userData.email,
-          phone_number: userData.phoneNumber,
-          password: userData.password, // Ensure to hash this in production
-        }])
-        .select('user_id')
-        .single(); // Retrieves the newly created user_id
-
-      if (error) {
-        toast.error('An error occurred while registering. Please try again.');
-        return;
-      }
-
+  
       // Store user_id in sessionStorage for the next page
-      sessionStorage.setItem('userId', data.user_id);
-
+      sessionStorage.setItem('userId', result.userId);
+  
       toast.success('Registration successful!');
       router.push('/regisCar'); // Redirect to car registration page
     } catch (error) {
-      toast.error('An unexpected error occurred. Please try again later.');
+      toast.error(error.message);
+      console.error('Registration error:', error);
     }
   };
+  
 
 
   return (

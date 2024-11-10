@@ -5,7 +5,6 @@ import toast, { Toaster } from 'react-hot-toast';
 import RegisterButton from '../components/RegisterButton';
 import { InputField } from '../components/InputField';
 import Link from 'next/link';
-import supabase from '../../config/supabaseClient'; // Import your Supabase client instance
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -38,43 +37,27 @@ export default function RegisterPage() {
     }
 
     try {
-      // Check if the email already exists
-      const { data: emailCheckData, error: emailCheckError } = await supabase
-        .from('user_info') // Ensure this matches your table name
-        .select('email')
-        .eq('email', formData.email)
-        .single(); // Retrieve a single row
-
-      // Handle errors from the email check
-      if (emailCheckError && emailCheckError.code !== 'PGRST116') { // Ignore error for no rows found
-        console.error('Error checking email:', emailCheckError.message);
-        toast.error('An error occurred while checking the email. Please try again.');
-        return;
+      // Step 1: Check email availability
+      const response = await fetch('/api/checkEmail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email }),
+      });
+  
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Email check failed');
       }
-
-      // If email already exists, notify the user
-      if (emailCheckData) {
-        toast.error('Email already exists. Please use a different email.');
-        return;
-      }
-      
-      // Proceed with registration logic if email does not exist
-      console.log('Email is not registered. Proceed with registration.');
-
-      
-      // Redirect to the profile page with user data as query parameters
-      // router.push(`/profile?email=${encodeURIComponent(formData.email)}&password=${encodeURIComponent(formData.password)}`);
-      router.push('/regisProfile');
+  
+      // Step 2: Temporarily store email and password for later use in profile registration
       sessionStorage.setItem('userEmail', formData.email);
       sessionStorage.setItem('userPassword', formData.password);
-      // router.push({
-      //   pathname: '/profile',
-      //   query: { email: formData.email, password: formData.password },  // Pass email to the profile page
-      // });
-
+  
+      // Redirect to the profile page
+      router.push('/regisProfile');
     } catch (error) {
-      console.error('Unexpected error:', error.message);
-      toast.error('An unexpected error occurred. Please try again later.');
+      toast.error(error.message || 'An unexpected error occurred. Please try again.');
+      console.error('Email check error:', error);
     }
   };
 

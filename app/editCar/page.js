@@ -14,9 +14,10 @@ export default function EditCar() {
 
   // Fetch userId from sessionStorage on client side
   useEffect(() => {
-    const storedUserId = sessionStorage.getItem("userId");
-    if (storedUserId) {
-      setUserId(storedUserId);
+    
+    const storedRenterId = sessionStorage.getItem("userId");
+    if (storedRenterId) {
+      setUserId(storedRenterId);
     } else {
       toast.error("User ID not found");
     }
@@ -174,7 +175,7 @@ export default function EditCar() {
     <div className="flex flex-col h-screen bg-white">
       <Toaster />
       <div className="relative flex-grow overflow-y-auto p-6">
-        <BackButton targetPage="/settings" />
+        <BackButton targetPage="/setting" />
         <div className="flex items-center justify-between w-full px-6 mt-5 py-4">
           <h1 className="text-2xl font-bold text-black text-left">
             Car Management
