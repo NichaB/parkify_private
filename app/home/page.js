@@ -1,71 +1,122 @@
-// pages/index.js
-"use client"
+"use client";
 
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import Header from "../components/Header";
-import SearchBar from "../components/SearchBar";
-import PlaceCard from "../components/PlaceCard";
-import BottomNav from "../components/BottomNav";
-import { supabase } from "../../config/supabaseClient"; // Correct path for your supabaseClient
+import { supabase } from "../../config/supabaseClient"; // Ensure this path is correct
+import { useRouter } from "next/navigation"; // For Next.js 13+ with app directory
 
-export default function HomePage() {
-  const [userName, setUserName] = useState("");
+const IssueCard = ({ issue }) => (
+  <div className="bg-gray-50 p-4 mb-4 rounded-lg shadow-sm border border-gray-300 flex items-center">
+    <div className='mr-4 text-center'>
+      <p className='text-gray-500 text-sm mb-1'>Issue ID: {issue.issue_id}</p>
+      <img src='/images/exclamation.png' alt='Exclamation' className='w-8 h-8' />
+    </div>
+    <div className='flex-1 text-center'>
+      <h2 className="text-lg font-bold mb-1">{issue.issue_header}</h2>
+      <p className="text-gray-600">Reported by: {issue.reported_by || "Unknown"}</p>
+    </div>
+    <div className="flex flex-col items-end">
+      <Link href={`/issue/${issue.issue_id}`} className="text-black hover:text-blue-600">
+        <span className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 hover:bg-gray-200">
+          <img src='/images/zoom.png' alt='Search' className='w-5 h-5' />
+        </span>
+      </Link>
+      <p
+        className={`font-semibold mb-2 ${
+          issue.status === "Not Started"
+            ? "text-red-500"
+            : issue.status === "In Progress"
+            ? "text-yellow-500"
+            : "text-green-500"
+        }`}
+      >
+        Status: {issue.status}
+      </p>
+    </div>
+  </div>
+);
+
+const IssueReportPage = () => {
+  const router = useRouter();
+  const [issues, setIssues] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const fetchUserName = async () => {
+    const fetchIssues = async () => {
       try {
         const { data, error } = await supabase
-          .from("lessor") // Replace with your actual table name
-          .select("lessor_firstname")
-          .eq("lessor_id", 1)
-          .single(); // Fetch a single record with lessor_id = 1
-  
+          .from("issue")
+          .select("issue_id, issue_detail, status, issue_header");
         if (error) {
-          console.error("Error fetching user name:", error.message || error);
-        } else if (data) {
-          // Combine first and last name
-          setUserName(`${data.lessor_firstname}`);
+          console.error("Error fetching data:", error);
+          setError("Failed to fetch issues. Check console for details.");
         } else {
-          console.warn("No data returned from Supabase.");
+          setIssues(data);
         }
       } catch (err) {
-        console.error("Unexpected error fetching data from Supabase:", err);
+        console.error("Unexpected error:", err);
+        setError("An unexpected error occurred.");
+      } finally {
+        setLoading(false);
       }
     };
-  
-    fetchUserName();
+
+    fetchIssues();
   }, []);
-  
+
+  const handleLogout = () => {
+    router.push("/start");
+  };
+
+  const filteredIssues = searchTerm
+    ? issues.filter(issue =>
+        issue.issue_header.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : issues;
 
   return (
-    <div className="min-h-screen bg-white p-6 pb-20">
-      {/* Header */}
-      <Header userName={userName} />
+    <div className="p-4 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">Issue Report</h1>
 
-      {/* Search Bar */}
-      <SearchBar />
-
-      {/* Recent Places Section */}
-      <div className="mt-8">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Places</h2>
-        
-        {/* Horizontal Scroll Container */}
-        <div className="flex overflow-x-auto space-x-4 pb-2">
-          <Link href="/search?place=Yaowarat">
-            <PlaceCard imageSrc="/images/yaowarat.jpg" name="Yaowarat" />
-          </Link>
-          <Link href="/search?place=Siam">
-            <PlaceCard imageSrc="/images/siam.jpg" name="Siam" />
-          </Link>
-          <Link href="/search?place=Don Muang">
-            <PlaceCard imageSrc="/images/donmuang.jpg" name="Don Muang" />
-          </Link>
-        </div>
+      <div className="relative mb-4">
+        <input
+          type="text"
+          placeholder="Search"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300"
+        />
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm("")}
+            className="absolute right-2 top-2 text-gray-500 hover:text-black"
+          >
+            ×
+          </button>
+        )}
       </div>
-
-      {/* Bottom Navigation */}
-      <BottomNav />
+      {loading ? (
+        <p className="text-center">Loading issues...</p>
+      ) : error ? (
+        <p className="text-center text-red-500">Error: {error}</p>
+      ) : filteredIssues.length === 0 ? (
+        <p className="text-center">No issues found.</p>
+      ) : (
+        filteredIssues.map(issue => <IssueCard key={issue.issue_id} issue={issue} />)
+      )}
+     <div className="mt-auto pt-4">
+         <button
+          className="fixed bottom-10 right-10 w-30 mt-auto bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          onClick={handleLogout}>
+            Logout
+         </button>
+     </div>
     </div>
+
+    
   );
-}
+};
+
+export default IssueReportPage;
