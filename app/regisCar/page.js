@@ -9,7 +9,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default function RegisterInformationPage() {
   const router = useRouter();
-  const userId = sessionStorage.getItem('userId');
+  // const userId = sessionStorage.getItem('userId');
+  const userId = '1';
   const fileUploadRef = useRef(null);
 
   const [carData, setCarData] = useState({
@@ -102,7 +103,7 @@ export default function RegisterInformationPage() {
             <input
               type="text"
               name="carColor"
-              placeholder="Black"
+              placeholder="Car Color"
               value={carData.carColor}
               onChange={handleChange}
               className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

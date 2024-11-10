@@ -15,6 +15,15 @@ const LandingPage = () => {
     router.push('/welcomerentor');
   };
 
+  const handleAdminClick = () => {
+    router.push('/welcomeadmin');
+  };
+
+  // Function to handle the Renter button click
+  const handleDevClick = () => {
+    router.push('/welcomedev');
+  };
+
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-4">
       <img src='logo.png' alt="Parkify Logo" className="w-64 mb-6 md:w-80" /> {/* Logo size adjusts for medium screens */}
@@ -31,10 +40,26 @@ const LandingPage = () => {
 
         <button
           onClick={handleRenterClick}
-          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1" // Takes equal space
+          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-4 sm:mb-0" // Takes equal space
         >
           <img src="renter.png" alt="Renter Icon" className="w-12 mb-2" />
           <span className="text-lg font-semibold">Renter</span>
+        </button>
+
+        <button
+          onClick={handleAdminClick}
+          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-4 sm:mb-0" // Takes equal space
+        >
+          <img src="admin.png" alt="Renter Icon" className="w-12 mb-2" />
+          <span className="text-lg font-semibold">Admin</span>
+        </button>
+
+        <button
+          onClick={handleLessorClick}
+          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1  mb-10 sm:mb-0" // Takes equal space
+        >
+          <img src="dev.png" alt="Lessor Icon" className="w-12 mb-2" />
+          <span className="text-lg font-semibold">Developer</span>
         </button>
 
       </div>
