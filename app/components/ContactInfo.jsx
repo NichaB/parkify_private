@@ -1,7 +1,7 @@
 // src/components/ContactInfo.js
 "use client";
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../../config/supabaseClient';
 
 const ContactInfo = () => {
     const [contact, setContact] = useState(null);
