@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import { InputField } from '../components/InputField';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,10 @@ export default function LoginPage() {
 
   const router = useRouter();
 
+  useEffect(() => {
+    sessionStorage.clear();
+  }, []);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -24,24 +28,26 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.email || !formData.password) {
+      toast.error('Please enter both email and password.');
+      return;
+    }
+
     try {
       const response = await fetch('/api/checkLogin', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
       const result = await response.json();
 
-      if (response.ok) {
-        toast.success('Login successful!');
-        sessionStorage.setItem('lessorId', result.lessor_id);  // Store lessor_id for future use
-        console.log('lesosor id: ', result.lessor_id);
-        router.push('/home_lessor');  // Redirect to the desired page on successful login
-      } else {
+      if (!response.ok) {
         toast.error(result.error || 'Login failed');
+      } else {
+        sessionStorage.setItem('lessorId', result.lessor_id); // Store lessor_id for future use
+        toast.success('Login successful!');
+        router.push('/home_lessor'); // Redirect to the desired page on successful login
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -107,7 +113,7 @@ export default function LoginPage() {
       <div className="flex flex-col items-center mb-4 w-4/5 mx-auto">
         <p className="mt-4 text-center text-gray-600">
           Don't have an account?{' '}
-          <Link href="/register" className="text-blue-400">
+          <Link href="/register_lessor" className="text-blue-400">
             Register Now
           </Link>
         </p>

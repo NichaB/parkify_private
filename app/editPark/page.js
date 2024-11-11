@@ -4,8 +4,11 @@ import toast, { Toaster } from "react-hot-toast";
 import { FaEdit, FaPlus } from "react-icons/fa";
 import BottomNav from "../components/BottomNav";
 import BackButton from "../components/BackButton";
+import { useRouter } from "next/navigation";
+
 
 export default function EditParking() {
+  const router = useRouter();
   const fileUploadRefs = useRef([]);
   const [lessorId, setLessorId] = useState(null); // State to store lessorId
   const [lessorDetails, setLessorDetails] = useState({});
@@ -20,6 +23,7 @@ export default function EditParking() {
       setLessorId(storedLessorId);
     } else {
       toast.error("Lessor ID not found");
+      router.push("/login_lessor");
     }
   }, []);
 

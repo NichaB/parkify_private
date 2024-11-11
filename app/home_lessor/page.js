@@ -19,7 +19,7 @@ export default function HomePage() {
       setLessorId(storedLessorId); // Set lessorId in state
     } else {
       toast.error("Lessor ID not found");
-      router.push('/login'); // Redirect if no lessorId is found
+      router.push('/login_lessor'); // Redirect if no lessorId is found
     }
   }, []);
 

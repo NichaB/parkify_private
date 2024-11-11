@@ -15,13 +15,13 @@ export default function EditLessor() {
 
   // Retrieve lessorId from sessionStorage on client side
   useEffect(() => {
-    // const storedLessorId = sessionStorage.getItem("lessorId");
-    const storedLessorId = "17";
+    const storedLessorId = sessionStorage.getItem("lessorId");
+    // const storedLessorId = "17";
     if (storedLessorId) {
       setLessorId(storedLessorId);
     } else {
       toast.error("Lessor ID not found");
-      router.push("/login");
+      router.push("/login_lessor");
     }
   }, []);
 
