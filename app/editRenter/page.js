@@ -23,7 +23,7 @@ export default function EditRenter() {
       setRenterId(storedRenterId);
     } else {
       toast.error("Renter ID not found");
-      router.push("/login");
+      router.push("/login_renter");
     }
   }, []);
 

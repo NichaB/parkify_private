@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { InputField } from '../components/InputField';  
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -109,7 +109,7 @@ export default function LoginPage() {
         
         <p className="mt-4 text-center text-gray-600">
           Don't have an account?{' '}
-          <Link href="/register" className="text-blue-400">
+          <Link href="/register_renter" className="text-blue-400">
             Register Now
           </Link>
         </p>

@@ -16,7 +16,7 @@ const LandingPage = () => {
 
   // Function to handle the Renter button click
   const handleRenterClick = () => {
-    router.push('/welcomerentor');
+    router.push('/welcomerenter');
   };
 
   const handleAdminClick = () => {

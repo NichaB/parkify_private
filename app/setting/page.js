@@ -1,16 +1,25 @@
 'use client';
-import React from 'react';
-import { useRouter } from 'next/navigation';
+import React , {useEffect} from 'react';
+import { useRouter} from 'next/navigation';
 import { AiOutlineLogout, AiOutlineUser, AiOutlineCar, AiOutlineCustomerService } from 'react-icons/ai';
 import toast, { Toaster } from 'react-hot-toast';
 import BottomNav from '../components/BottomNav';
 import BackButton from '../components/BackButton';
 
 export default function SettingsPage() {
-  const storedRenterId = sessionStorage.getItem("userId");
+ 
   const router = useRouter();
-  console.log(storedRenterId);
+ 
+  useEffect(() => {
+    // Check for sessionStorage only on the client side
+    const storedUserId = sessionStorage.getItem('userId');
   
+    if (!storedUserId) {
+      toast.error("User ID not found");
+      router.push('/login_renter'); // Redirect if no lessorId is found
+    }
+  }, []);
+
   const handleLogout = () => {
     toast((t) => (
       <div>
@@ -96,7 +105,7 @@ export default function SettingsPage() {
 
         {/* Customer Support Section */}
         <div
-          onClick={() => router.push('/customerSupport')}
+          onClick={() => router.push('/renterCustomerSupport')}
           className="flex justify-between items-center p-4 bg-gray-100 rounded-lg cursor-pointer shadow mt-5"
         >
           <span className="text-lg flex items-center">

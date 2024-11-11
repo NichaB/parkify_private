@@ -11,43 +11,49 @@ const FileUpload = forwardRef(({ storageBucket, fileName, setFileURL }, ref) => 
         setFile(e.target.files[0]);
     };
 
-    const handleUpload = async () => {
-        try {
+    const handleUpload = () => {
+        return new Promise(async (resolve, reject) => {
+          try {
             setUploading(true);
+      
             if (!file) {
-                toast.error('Please select a file');
-                return;
+              toast.error('Please select a file');
+              reject('No file selected');
+              return;
             }
-
+      
             const fileExt = file.name.split('.').pop();
             const generatedFileName = fileName || `${Math.random()}.${fileExt}`;
             const filePath = `${generatedFileName}`;
-
+      
             const { data, error } = await supabase
-                .storage
-                .from(storageBucket)
-                .upload(filePath, file);
-
+              .storage
+              .from(storageBucket)
+              .upload(filePath, file);
+      
             if (error) throw error;
-
+      
             const { data: urlData, error: urlError } = supabase
-                .storage
-                .from(storageBucket)
-                .getPublicUrl(filePath);
-
+              .storage
+              .from(storageBucket)
+              .getPublicUrl(filePath);
+      
             if (urlError) throw urlError;
-
+      
             const publicUrl = urlData.publicUrl;
             toast.success('File uploaded successfully');
             setFileURL(publicUrl);
-        } catch (error) {
+            resolve(); // Resolve once fileURL is set
+          } catch (error) {
             console.error('Error uploading file:', error);
             toast.error('Failed to upload file');
-        } finally {
+            reject(error); // Reject on error
+          } finally {
             setUploading(false);
-        }
-    };
-
+          }
+        });
+      };
+      
     // Expose handleUpload to the parent component via ref
     useImperativeHandle(ref, () => ({
         handleUpload,

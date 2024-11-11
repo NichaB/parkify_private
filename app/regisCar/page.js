@@ -31,24 +31,25 @@ export default function RegisterInformationPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
-    // Check if required fields are filled
     if (!carData.carModel || !carData.licensePlateNumber || !carData.carColor) {
       toast.error('Please fill in all fields');
       return;
     }
   
-    // Trigger file upload
-    if (fileUploadRef.current) {
-      await fileUploadRef.current.handleUpload();
+    if (!fileURL && fileUploadRef.current) {
+      try {
+        await fileUploadRef.current.handleUpload();
+      } catch (error) {
+        // Stop submission if file upload fails
+        return;
+      }
     }
   
-    // Ensure fileURL is set before proceeding with insertion
     if (!fileURL) {
       toast.error('Please upload an image');
       return;
     }
   
-    // Proceed with inserting car data into the database via the API
     try {
       const response = await fetch('/api/registerCar', {
         method: 'POST',
@@ -69,12 +70,15 @@ export default function RegisterInformationPage() {
       }
   
       toast.success(result.message || 'Car registration successful!');
-      router.push('setting'); // Redirect to the profile page
+      router.push('/setting');
     } catch (error) {
       toast.error(error.message);
       console.error('Registration error:', error);
     }
   };
+  
+  
+  
   
 
   return (

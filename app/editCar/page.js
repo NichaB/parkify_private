@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React, { useState, useEffect, useRef } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { FaEdit, FaPlus } from "react-icons/fa";
@@ -10,22 +10,20 @@ export default function EditCar() {
   const router = useRouter();
   const fileUploadRefs = useRef([]);
   const [userId, setUserId] = useState(null); // State to store userId
-  const [cars, setCars] = useState([]);
+  const [cars, setCars] = useState([]); // Ensure cars is initialized as an array
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
 
-   // Retrieve RenterId from sessionStorage on client side
-   useEffect(() => {
-    const storedRenterId = sessionStorage.getItem("userId"); 
-    // Hardcoded for testing; replace with session storage if needed
-    if (storedRenterId) {
-      setRenterId(storedRenterId);
+  // Retrieve RenterId from sessionStorage on client side
+  useEffect(() => {
+    const storedUserId = sessionStorage.getItem("userId"); 
+    if (storedUserId) {
+      setUserId(storedUserId);
     } else {
       toast.error("Renter ID not found");
-      router.push("/login");
+      router.push("/login_renter");
     }
   }, []);
-
 
   const fetchCars = async () => {
     if (!userId) return;
@@ -36,7 +34,7 @@ export default function EditCar() {
 
       if (!response.ok) throw new Error(data.error || "Error fetching data");
 
-      setCars(data.cars);
+      setCars(data.cars || []); // Ensure cars is always set to an array
     } catch (error) {
       console.error("Fetch error:", error);
       toast.error("Error fetching cars");
@@ -76,80 +74,77 @@ export default function EditCar() {
     const isNewCar = typeof car.car_id === "number";
 
     if (!car.car_model || !car.car_color || !car.license_plate) {
-        toast.error("Please fill in all fields");
-        return;
+      toast.error("Please fill in all fields");
+      return;
     }
 
     try {
-        let newImagePath = car.car_image;
-        const fileInput = fileUploadRefs.current[index];
+      let newImagePath = car.car_image;
+      const fileInput = fileUploadRefs.current[index];
 
-        let carId = car.car_id;
-        if (isNewCar) {
-            const payload = {
-                userId,
-                car_model: car.car_model,
-                car_color: car.car_color,
-                license_plate: car.license_plate,
-                car_image: "",
-            };
+      let carId = car.car_id;
+      if (isNewCar) {
+        const payload = {
+          userId,
+          car_model: car.car_model,
+          car_color: car.car_color,
+          license_plate: car.license_plate,
+          car_image: "",
+        };
 
-            const createResponse = await fetch("/api/fetchCar", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-            const createResult = await createResponse.json();
-            if (!createResponse.ok) throw new Error(createResult.error || "Failed to create car");
-
-            carId = createResult.carId;
-            setCars((prev) =>
-                prev.map((carItem, i) =>
-                    i === index ? { ...carItem, car_id: carId } : carItem
-                )
-            );
-        }
-
-        // Ensure carId is set before file upload
-        if (fileInput && fileInput.files[0] && carId) {
-            const file = fileInput.files[0];
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("storageBucket", "car_image");
-            formData.append("car_id", carId);  // Match key to API
-
-            const uploadResponse = await fetch("/api/uploadCarImage", {
-                method: "POST",
-                body: formData,
-            });
-            const uploadResult = await uploadResponse.json();
-            if (!uploadResponse.ok) throw new Error(uploadResult.error || "File upload failed");
-
-            newImagePath = uploadResult.publicUrl;
-        }
-
-        // Update car details in the database
-        await fetch("/api/fetchCar", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                carId,
-                car_model: car.car_model,
-                car_color: car.car_color,
-                license_plate: car.license_plate,
-                car_image: newImagePath,
-            }),
+        const createResponse = await fetch("/api/fetchCar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         });
+        const createResult = await createResponse.json();
+        if (!createResponse.ok) throw new Error(createResult.error || "Failed to create car");
 
-        await fetchCars();
-        setIsAdding(false);
-        toast.success("Car saved successfully!");
+        carId = createResult.carId;
+        setCars((prev) =>
+          prev.map((carItem, i) =>
+            i === index ? { ...carItem, car_id: carId } : carItem
+          )
+        );
+      }
+
+      if (fileInput && fileInput.files[0] && carId) {
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("storageBucket", "car_image");
+        formData.append("car_id", carId);
+
+        const uploadResponse = await fetch("/api/uploadCarImage", {
+          method: "POST",
+          body: formData,
+        });
+        const uploadResult = await uploadResponse.json();
+        if (!uploadResponse.ok) throw new Error(uploadResult.error || "File upload failed");
+
+        newImagePath = uploadResult.publicUrl;
+      }
+
+      await fetch("/api/fetchCar", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          carId,
+          car_model: car.car_model,
+          car_color: car.car_color,
+          license_plate: car.license_plate,
+          car_image: newImagePath,
+        }),
+      });
+
+      await fetchCars();
+      setIsAdding(false);
+      toast.success("Car saved successfully!");
     } catch (error) {
-        toast.error("Error saving car");
-        console.error("Save error:", error);
+      toast.error("Error saving car");
+      console.error("Save error:", error);
     }
-};
-
+  };
 
   const handleDelete = async (index) => {
     const car = cars[index];

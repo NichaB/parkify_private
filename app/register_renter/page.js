@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
 import RegisterButton from '../components/RegisterButton';
@@ -14,6 +14,11 @@ export default function RegisterPage() {
   });
 
   const router = useRouter();
+
+  useEffect(() => {
+    sessionStorage.clear();
+  }, []);
+
 
   const handleChange = (e) => {
     setFormData({
@@ -67,7 +72,7 @@ export default function RegisterPage() {
 
       {/* Back Button */}
       <button 
-        onClick={() => router.push('/welcome')} 
+        onClick={() => router.push('/welcomerenter')} 
         className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black"
       >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
@@ -123,7 +128,7 @@ export default function RegisterPage() {
         
         <p className="mt-4 text-center text-gray-600">
           Already have an account?{' '}
-          <Link href="/login" className="text-blue-400">
+          <Link href="/login_renter" className="text-blue-400">
             Login Now
           </Link>
         </p>
