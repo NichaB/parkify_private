@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { AiOutlineLogout } from 'react-icons/ai';
+import { AiOutlineLogout, AiOutlineUser, AiOutlineCar, AiOutlineCustomerService } from 'react-icons/ai';
 import toast, { Toaster } from 'react-hot-toast';
 import BottomNav from '../components/BottomNav';
 import BackButton from '../components/BackButton';
@@ -10,6 +10,7 @@ export default function SettingsPage() {
   const storedRenterId = sessionStorage.getItem("userId");
   const router = useRouter();
   console.log(storedRenterId);
+  
   const handleLogout = () => {
     toast((t) => (
       <div>
@@ -39,9 +40,8 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col h-screen bg-white p-6">
       <Toaster />
-      {/* Relative container to position back button and heading */}
-      <div className="relative flex-grow overflow-y-auto p-6">
 
+      <div className="relative flex-grow overflow-y-auto p-6">
         {/* Back Button */}
         <BackButton targetPage="/home_renter" />
 
@@ -55,7 +55,9 @@ export default function SettingsPage() {
           onClick={() => router.push('/editRenter')}
           className="flex justify-between items-center p-4 bg-gray-100 rounded-lg cursor-pointer shadow mt-5"
         >
-          <span className="text-lg">My Profile</span>
+          <span className="text-lg flex items-center">
+            <AiOutlineUser className="mr-2 text-gray-700" /> My Profile
+          </span>
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -70,12 +72,36 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* My Parking Lots Section */}
+        {/* My Car Section */}
         <div
           onClick={() => router.push('/editCar')}
           className="flex justify-between items-center p-4 bg-gray-100 rounded-lg cursor-pointer shadow mt-5"
         >
-          <span className="text-lg">My Car</span>
+          <span className="text-lg flex items-center">
+            <AiOutlineCar className="mr-2 text-gray-700" /> My Car
+          </span>
+          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-4 h-4 text-gray-700"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Customer Support Section */}
+        <div
+          onClick={() => router.push('/customerSupport')}
+          className="flex justify-between items-center p-4 bg-gray-100 rounded-lg cursor-pointer shadow mt-5"
+        >
+          <span className="text-lg flex items-center">
+            <AiOutlineCustomerService className="mr-2 text-gray-700" /> Customer Support
+          </span>
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow">
             <svg
               xmlns="http://www.w3.org/2000/svg"

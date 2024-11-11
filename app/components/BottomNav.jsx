@@ -36,7 +36,7 @@ export default function BottomNav() {
 
       <button
         onClick={navigateToSettings}
-        className={(pathname === '/setting' || pathname === '/editPark' || pathname === '/editRenterProfile') ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}
+        className={(pathname === '/setting' || pathname === '/editPark' || pathname === '/editRenterProfile' || pathname === '/customerSupport') ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}
       >
         <AiOutlineSetting size={24} />
       </button>

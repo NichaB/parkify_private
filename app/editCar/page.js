@@ -4,24 +4,28 @@ import toast, { Toaster } from "react-hot-toast";
 import { FaEdit, FaPlus } from "react-icons/fa";
 import BottomNav from "../components/BottomNav";
 import BackButton from "../components/BackButton";
+import { useRouter } from "next/navigation";
 
 export default function EditCar() {
+  const router = useRouter();
   const fileUploadRefs = useRef([]);
   const [userId, setUserId] = useState(null); // State to store userId
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
 
-  // Fetch userId from sessionStorage on client side
-  useEffect(() => {
-    
-    const storedRenterId = sessionStorage.getItem("userId");
+   // Retrieve RenterId from sessionStorage on client side
+   useEffect(() => {
+    const storedRenterId = sessionStorage.getItem("userId"); 
+    // Hardcoded for testing; replace with session storage if needed
     if (storedRenterId) {
-      setUserId(storedRenterId);
+      setRenterId(storedRenterId);
     } else {
-      toast.error("User ID not found");
+      toast.error("Renter ID not found");
+      router.push("/login");
     }
   }, []);
+
 
   const fetchCars = async () => {
     if (!userId) return;
