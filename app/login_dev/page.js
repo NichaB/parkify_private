@@ -12,12 +12,11 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      // Query the Supabase table to check if the email and password match
-      const { data, error } = await supabase
-        .from("developer")
-        .select("*")
-        .eq("email", email)
-        .eq("password", password);
+      // Call the raw SQL function in Supabase to check user login
+      const { data, error } = await supabase.rpc('check_user_login', {
+        user_email: email,
+        user_password: password
+      });
 
       if (error) {
         console.error("Error querying Supabase:", error);
@@ -27,7 +26,7 @@ const LoginPage = () => {
 
       if (data && data.length > 0) {
         // Login successful
-        router.push("/home"); // Navigate to the issue report page
+        router.push("/home_dev"); // Navigate to the issue report page
       } else {
         // Login failed
         alert("Invalid email or password. Please try again.");

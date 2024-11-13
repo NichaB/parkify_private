@@ -7,7 +7,7 @@ const StartPage = () => {
   const router = useRouter();
 
   const handleStart = () => {
-    router.push("/login"); // Navigate to the login page
+    router.push("/login_dev"); // Navigate to the login page
   };
 
   return (

@@ -5,20 +5,21 @@ import Link from "next/link";
 import { supabase } from "../../config/supabaseClient"; // Ensure this path is correct
 import { useRouter } from "next/navigation"; // For Next.js 13+ with app directory
 
+// Component for displaying individual issue details in a card format
 const IssueCard = ({ issue }) => (
   <div className="bg-gray-50 p-4 mb-4 rounded-lg shadow-sm border border-gray-300 flex items-center">
-    <div className='mr-4 text-center'>
-      <p className='text-gray-500 text-sm mb-1'>Issue ID: {issue.issue_id}</p>
-      <img src='/images/exclamation.png' alt='Exclamation' className='w-8 h-8' />
+    <div className="mr-4 text-center">
+      <p className="text-gray-500 text-sm mb-1">Issue ID: {issue.issue_id}</p>
+      <img src="/images/exclamation.png" alt="Exclamation" className="w-8 h-8" />
     </div>
-    <div className='flex-1 text-center'>
+    <div className="flex-1 text-center">
       <h2 className="text-lg font-bold mb-1">{issue.issue_header}</h2>
       <p className="text-gray-600">Reported by: {issue.reported_by || "Unknown"}</p>
     </div>
     <div className="flex flex-col items-end">
-      <Link href={`/issue/${issue.issue_id}`} className="text-black hover:text-blue-600">
+      <Link href={`/issue_dev/${issue.issue_id}`} className="text-black hover:text-blue-600">
         <span className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 hover:bg-gray-200">
-          <img src='/images/zoom.png' alt='Search' className='w-5 h-5' />
+          <img src="/images/zoom.png" alt="Search" className="w-5 h-5" />
         </span>
       </Link>
       <p
@@ -46,13 +47,15 @@ const IssueReportPage = () => {
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        const { data, error } = await supabase
-          .from("issue")
-          .select("issue_id, issue_detail, status, issue_header");
+        // Call the stored procedure get_all_issues using supabase.rpc
+        const { data, error } = await supabase.rpc("get_all_issues");
+
+        // Check if there was an error
         if (error) {
-          console.error("Error fetching data:", error);
+          console.error("Error fetching data:", error.message || error);
           setError("Failed to fetch issues. Check console for details.");
         } else {
+          console.log("Fetched data:", data); // Log data to confirm structure
           setIssues(data);
         }
       } catch (err) {
@@ -62,14 +65,15 @@ const IssueReportPage = () => {
         setLoading(false);
       }
     };
-
     fetchIssues();
   }, []);
 
+  // Function to handle user logout
   const handleLogout = () => {
     router.push("/start");
   };
 
+  // Filter issues based on search term
   const filteredIssues = searchTerm
     ? issues.filter(issue =>
         issue.issue_header.toLowerCase().includes(searchTerm.toLowerCase())
@@ -106,16 +110,15 @@ const IssueReportPage = () => {
       ) : (
         filteredIssues.map(issue => <IssueCard key={issue.issue_id} issue={issue} />)
       )}
-     <div className="mt-auto pt-4">
-         <button
+      <div className="mt-auto pt-4">
+        <button
           className="fixed bottom-10 right-10 w-30 mt-auto bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-          onClick={handleLogout}>
-            Logout
-         </button>
-     </div>
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
+      </div>
     </div>
-
-    
   );
 };
 
