@@ -1,41 +1,51 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import { supabase } from "../../config/supabaseClient"; // Ensure this path is correct
 import { useRouter } from "next/navigation"; // For Next.js 13+ with app directory
+import { toast } from "react-hot-toast"; // Import toast from react-hot-toast
 
-// Component for displaying individual issue details in a card format
-const IssueCard = ({ issue }) => (
-  <div className="bg-gray-50 p-4 mb-4 rounded-lg shadow-sm border border-gray-300 flex items-center">
-    <div className="mr-4 text-center">
-      <p className="text-gray-500 text-sm mb-1">Issue ID: {issue.issue_id}</p>
-      <img src="/images/exclamation.png" alt="Exclamation" className="w-8 h-8" />
+const IssueCard = ({ issue }) => {
+  const router = useRouter();
+
+  // Function to handle the click event and navigate without displaying the ID in the URL
+  const handleIssueClick = () => {
+    // Store the issue_id in session storage
+    sessionStorage.setItem("issue_id", issue.issue_id);
+
+    // Navigate to the next page
+    router.push("/issue_dev");
+  };
+
+  return (
+    <div
+      className="bg-gray-50 p-4 mb-4 rounded-lg shadow-sm border border-gray-300 flex items-center cursor-pointer"
+      onClick={handleIssueClick}
+    >
+      <div className="mr-4 text-center">
+        <p className="text-gray-500 text-sm mb-1">Issue ID: {issue.issue_id}</p>
+        <img src="/images/exclamation.png" alt="Exclamation" className="w-8 h-8" />
+      </div>
+      <div className="flex-1 text-center">
+        <h2 className="text-lg font-bold mb-1">{issue.issue_header}</h2>
+        <p className="text-gray-600">Reported by: {issue.reported_by || "Unknown"}</p>
+      </div>
+      <div className="flex flex-col items-end">
+        <p
+          className={`font-semibold mb-2 ${
+            issue.status === "Not Started"
+              ? "text-red-500"
+              : issue.status === "In Progress"
+              ? "text-yellow-500"
+              : "text-green-500"
+          }`}
+        >
+          Status: {issue.status}
+        </p>
+      </div>
     </div>
-    <div className="flex-1 text-center">
-      <h2 className="text-lg font-bold mb-1">{issue.issue_header}</h2>
-      <p className="text-gray-600">Reported by: {issue.reported_by || "Unknown"}</p>
-    </div>
-    <div className="flex flex-col items-end">
-      <Link href={`/issue_dev/${issue.issue_id}`} className="text-black hover:text-blue-600">
-        <span className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-gray-300 hover:bg-gray-200">
-          <img src="/images/zoom.png" alt="Search" className="w-5 h-5" />
-        </span>
-      </Link>
-      <p
-        className={`font-semibold mb-2 ${
-          issue.status === "Not Started"
-            ? "text-red-500"
-            : issue.status === "In Progress"
-            ? "text-yellow-500"
-            : "text-green-500"
-        }`}
-      >
-        Status: {issue.status}
-      </p>
-    </div>
-  </div>
-);
+  );
+};
 
 const IssueReportPage = () => {
   const router = useRouter();
@@ -43,19 +53,30 @@ const IssueReportPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [developerId, setDeveloperId] = useState(null);
+
+  useEffect(() => {
+    // Retrieve developer_id from session storage
+    const id = sessionStorage.getItem("developer_id");
+    if (id) {
+      setDeveloperId(id);
+    } else {
+      // Redirect to login if developer_id is not found
+      toast.error("Please log in to access issues.");
+      router.push("/login_dev");
+    }
+  }, [router]);
 
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        // Call the stored procedure get_all_issues using supabase.rpc
         const { data, error } = await supabase.rpc("get_all_issues");
 
-        // Check if there was an error
         if (error) {
           console.error("Error fetching data:", error.message || error);
           setError("Failed to fetch issues. Check console for details.");
         } else {
-          console.log("Fetched data:", data); // Log data to confirm structure
+          console.log("Fetched data:", data);
           setIssues(data);
         }
       } catch (err) {
@@ -68,12 +89,6 @@ const IssueReportPage = () => {
     fetchIssues();
   }, []);
 
-  // Function to handle user logout
-  const handleLogout = () => {
-    router.push("/start");
-  };
-
-  // Filter issues based on search term
   const filteredIssues = searchTerm
     ? issues.filter(issue =>
         issue.issue_header.toLowerCase().includes(searchTerm.toLowerCase())
@@ -82,7 +97,7 @@ const IssueReportPage = () => {
 
   return (
     <div className="p-4 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Issue Report</h1>
+      <h1 className="text-3xl font-bold mb-6 mt-10">Issue Report</h1>
 
       <div className="relative mb-4">
         <input
@@ -108,16 +123,11 @@ const IssueReportPage = () => {
       ) : filteredIssues.length === 0 ? (
         <p className="text-center">No issues found.</p>
       ) : (
-        filteredIssues.map(issue => <IssueCard key={issue.issue_id} issue={issue} />)
+        filteredIssues.map(issue => (
+          <IssueCard key={issue.issue_id} issue={issue} />
+        ))
       )}
-      <div className="mt-auto pt-4">
-        <button
-          className="fixed bottom-10 right-10 w-30 mt-auto bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-          onClick={handleLogout}
-        >
-          Logout
-        </button>
-      </div>
+      {/* ToastContainer is not needed in React Hot Toast */}
     </div>
   );
 };

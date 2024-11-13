@@ -7,6 +7,7 @@ const StartPage = () => {
   const router = useRouter();
 
   const handleStart = () => {
+    sessionStorage.clear(); // Clear all session
     router.push("/login_dev"); // Navigate to the login page
   };
 
@@ -22,7 +23,7 @@ const StartPage = () => {
         </div>
       </div>
       <button
-        className="bg-gray-800 text-white py-4 px-24 rounded-md text-lg hover:bg-gray-600"
+        className="bg-gray-800 text-white py-4 px-24 rounded-md text-lg hover:bg-gray-600 mb-36"
         onClick={handleStart}
       >
         Start
