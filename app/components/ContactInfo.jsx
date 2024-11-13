@@ -1,7 +1,7 @@
 // src/components/ContactInfo.js
 "use client";
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../../config/supabaseClient';
+import supabase from '../../config/supabaseClient';
 
 const ContactInfo = () => {
     const [contact, setContact] = useState(null);
@@ -10,9 +10,9 @@ const ContactInfo = () => {
         // Fetch contact information from Supabase
         const fetchContact = async () => {
             const { data, error } = await supabase
-                .from('lessor') // replace with your actual table name
-                .select('lessor_firstname, lessor_phone_number')
-                .eq('lessor_id', 1) // adjust the condition based on your requirements
+                .from('lessor')
+                .select('lessor_firstname, lessor_lastname, lessor_phone_number, lessor_profile_pic')
+                .eq('lessor_id', 99) // Adjust this ID as per your needs
                 .single();
 
             if (error) {
@@ -29,16 +29,21 @@ const ContactInfo = () => {
         <div className="bg-gray-100 p-4 rounded-lg mb-4">
             <div className="flex items-center mb-2">
                 <img
-                    src="user_icon.png" // Replace with actual profile picture URL
+                    src={contact ? contact.lessor_profile_pic : 'default_image.png'} // Use the fetched image URL or a default
                     alt="Contact"
                     className="w-12 h-12 rounded-full mr-4"
                 />
                 <div>
                     <h3 className="text-lg font-semibold text-black">
-                        {contact ? contact.name : 'Loading...'}
+                        {contact ? (
+                            <>
+                                <span>{contact.lessor_firstname}</span>
+                                <span className="ml-2">{contact.lessor_lastname}</span> {/* Adjust `ml-2` as needed */}
+                            </>
+                        ) : 'Loading...'}
                     </h3>
                     <p className="text-gray-500">
-                        {contact ? contact.phone : 'Loading...'}
+                        {contact ? contact.lessor_phone_number : 'Loading...'}
                     </p>
                 </div>
             </div>

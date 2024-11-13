@@ -1,9 +1,70 @@
 // src/components/PaymentSuccess.js
-import React from 'react';
-import ActionButtons from './ActionButtons';
-
+import React, { useEffect, useState } from 'react';
+import supabase from '../../config/supabaseClient';
 
 const PaymentSuccess = ({ onClose, startDate, endDate, startTime, endTime }) => {
+    const [bookerName, setBookerName] = useState('Loading...');
+    const [location, setLocation] = useState('Loading...');
+    const [totalPayment, setTotalPayment] = useState(0);
+
+    useEffect(() => {
+        // Fetch data from Supabase
+        const fetchData = async () => {
+            try {
+                // Fetch booker name
+                const { data: userInfoData, error: userInfoError } = await supabase
+                    .from('user_info')
+                    .select('first_name, last_name')
+                    .eq('user_id', 28)
+                    .single();
+
+                if (userInfoError) {
+                    console.error('Error fetching booker name:', userInfoError);
+                } else {
+                    setBookerName(`${userInfoData.first_name} ${userInfoData.last_name}`);
+                }
+
+                // Fetch location name and price per hour
+                const { data: parkingData, error: parkingError } = await supabase
+                    .from('parking_lot')
+                    .select('location_name, price_per_hour')
+                    .eq('parking_lot_id', 1)
+                    .single();
+
+                if (parkingError) {
+                    console.error('Error fetching parking location and price:', parkingError);
+                } else {
+                    setLocation(parkingData.parking_name);
+                    const pricePerHour = parkingData.price_per_hour;
+
+                    // Log fetched price per hour
+                    console.log('Fetched price_per_hour:', pricePerHour);
+
+                    // Calculate the total hours
+                    const start = new Date(`${startDate}T${startTime}`);
+                    const end = new Date(`${endDate}T${endTime}`);
+                    const totalHours = Math.abs((end - start) / (1000 * 60 * 60));
+
+                    // Log calculated total hours
+                    console.log('Calculated totalHours:', totalHours);
+
+                    // Calculate the total payment if totalHours and pricePerHour are valid
+                    if (!isNaN(totalHours) && pricePerHour) {
+                        const calculatedPayment = pricePerHour * totalHours;
+                        setTotalPayment(calculatedPayment);
+                        console.log('Calculated total payment:', calculatedPayment);
+                    } else {
+                        console.error('Invalid totalHours or pricePerHour');
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        fetchData();
+    }, [startDate, endDate, startTime, endTime]);
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center">
             <div className="bg-black text-white rounded-lg w-100 p-6 relative">
@@ -15,7 +76,7 @@ const PaymentSuccess = ({ onClose, startDate, endDate, startTime, endTime }) => 
 
                 <div className="flex justify-between items-center bg-gray-800 py-4 px-6 rounded-lg mb-6">
                     <p className="text-gray-400 text-lg">Total Payment</p>
-                    <p className="text-2xl font-bold">THB 70</p>
+                    <p className="text-2xl font-bold">THB {totalPayment.toFixed(2)}</p>
                     <div className="bg-green-500 w-6 h-6 rounded-full flex items-center justify-center ml-2">
                         <span>✔</span>
                     </div>
@@ -24,7 +85,7 @@ const PaymentSuccess = ({ onClose, startDate, endDate, startTime, endTime }) => 
                 <div className="space-y-3">
                     <div className="flex justify-between">
                         <p className="text-gray-400 font-semibold">Location</p>
-                        <p className="font-semibold">Yaowarat</p>
+                        <p className="font-semibold">{location}</p>
                     </div>
                     <div className="flex justify-between">
                         <p className="text-gray-400 font-semibold">Date & Time Reservation</p>
@@ -35,7 +96,7 @@ const PaymentSuccess = ({ onClose, startDate, endDate, startTime, endTime }) => 
                     </div>
                     <div className="flex justify-between">
                         <p className="text-gray-400 font-semibold">Booker Name</p>
-                        <p>Pokpong Songmuang</p>
+                        <p>{bookerName}</p>
                     </div>
                     <div className="flex justify-between">
                         <p className="text-gray-400 font-semibold">Ref Number</p>
