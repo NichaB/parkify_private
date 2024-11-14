@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { FaCalendarAlt, FaPen, FaSearch, FaClock, FaMoneyBillWave, FaUserAlt, FaPhoneAlt } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import supabase from "../../config/supabaseClient";
 import { Toaster, toast } from "react-hot-toast";
 
 // Utility function to convert UTC time to Thai time (UTC+7)
@@ -17,18 +16,19 @@ const Reservations = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // Fetch reservations from Supabase
+  // Fetch reservations from custom API route
   useEffect(() => {
     const fetchReservations = async () => {
-      const { data, error } = await supabase
-        .from("reservation")
-        .select("reservation_id, user_id, start_time, end_time, total_price");
-
-      if (error) {
+      try {
+        const response = await fetch(`/api/adFetchRes`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch reservations");
+        }
+        const { reservationDetails } = await response.json();
+        setReservations(reservationDetails);
+      } catch (error) {
         console.error("Error fetching reservations:", error);
         toast.error("Failed to fetch reservations.");
-      } else {
-        setReservations(data);
       }
     };
 
@@ -125,7 +125,9 @@ const Reservations = () => {
                         </div>
                         <div className="flex items-center text-gray-700 mt-2">
                           <FaMoneyBillWave className="mr-2" />
-                          <span>Total Price: {reservation.total_price.toFixed(2)}฿</span>
+                          <span>
+                            Total Price: {reservation.total_price ? Number(reservation.total_price).toFixed(2) : "0.00"}฿
+                          </span>
                         </div>
                       </div>
 

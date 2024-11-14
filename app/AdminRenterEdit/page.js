@@ -1,8 +1,6 @@
-"use client";
-
+'use client'
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import supabase from "../../config/supabaseClient";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -21,59 +19,73 @@ const EditUser = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userId = sessionStorage.getItem("user_id");
-    if (!userId) {
-      router.push("/"); // Redirect if user_id is missing
-      return;
-    }
-
     const fetchUserData = async () => {
-      const { data, error } = await supabase
-        .from("user_info")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching user data:", error);
-        router.push("/");
-      } else {
-        setFormData({
-          userId: data.user_id,
-          firstName: data.first_name,
-          lastName: data.last_name,
-          phoneNumber: data.phone_number,
-          username: data.username,
-          email: data.email,
-          password: data.password,
-        });
+      const userId = sessionStorage.getItem("user_id");
+      if (!userId) {
+        toast.error("User ID is missing. Redirecting...");
+        router.push("/AdminRenter");
+        return;
       }
-      setLoading(false);
+  
+      try {
+        const response = await fetch(`/api/adFetchRenter?userId=${userId}`);
+        
+        if (!response.ok) {
+          const errorDetails = await response.json();
+          throw new Error(`Error ${response.status}: ${errorDetails.error}`);
+        }
+  
+        const { renterDetails } = await response.json();
+  
+        setFormData({
+          userId: renterDetails[0].user_id,
+          firstName: renterDetails[0].first_name,
+          lastName: renterDetails[0].last_name,
+          phoneNumber: renterDetails[0].phone_number,
+          username: renterDetails[0].username,
+          email: renterDetails[0].email,
+          password: "", // Password should generally be hidden or managed separately
+        });
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching user data:", error.message);
+        toast.error(`Failed to fetch user data: ${error.message}`);
+        router.push("/AdminRenter");
+      }
     };
-
+  
     fetchUserData();
   }, [router]);
+  
 
   const handleEditClick = () => setIsEditing(true);
 
   const handleSaveClick = async () => {
-    const { error } = await supabase
-      .from("user_info")
-      .update({
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        phone_number: formData.phoneNumber,
-      })
-      .eq("user_id", formData.userId);
-
-    if (error) {
-      console.error("Error updating user data:", error);
-      toast.error("Failed to update user information.");
-    } else {
+    try {
+      const response = await fetch(`/api/adFetchRenter`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: formData.userId,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phoneNumber: formData.phoneNumber,
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorDetails = await response.json();
+        throw new Error(`Failed to update user: ${errorDetails.error}`);
+      }
+  
       toast.success("User information updated successfully");
       setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating user data:", error.message);
+      toast.error(`Failed to update user: ${error.message}`);
     }
   };
+  
 
   const handleDeleteClick = () => {
     toast.warn(
@@ -106,29 +118,39 @@ const EditUser = () => {
 
   const confirmDelete = async (isConfirmed) => {
     if (isConfirmed) {
-      const { error } = await supabase
-        .from("user_info")
-        .delete()
-        .eq("user_id", formData.userId);
-
-      if (error) {
-        console.error("Error deleting user:", error);
-        toast.error("Failed to delete user.");
-      } else {
+      try {
+        const response = await fetch(`/api/adFetchRenter?userId=${formData.userId}`, {
+          method: "DELETE",
+        });
+  
+        // Log response status and potential errors
+        console.log("DELETE response status:", response.status);
+  
+        if (!response.ok) {
+          const errorDetails = await response.json();
+          console.error("Error deleting user:", errorDetails.error);
+          throw new Error(`Failed to delete user: ${errorDetails.error}`);
+        }
+  
         toast.success("User deleted successfully");
         router.push("/AdminRenter");
+      } catch (error) {
+        console.error("Error deleting user:", error.message);
+        toast.error(`Failed to delete user: ${error.message}`);
       }
     } else {
       toast.dismiss("delete-confirm-toast");
     }
   };
-
+  
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
   if (loading) return <p>Loading...</p>;
+
 
   return (
     <div className="p-6 max-w-md mx-auto">
@@ -153,7 +175,7 @@ const EditUser = () => {
         </svg>
       </button>
 
-      <div className="flex justify-between mb-4 mt-16">
+      <div className="flex justify-between mb-4 mt-20">
         <button
           onClick={handleDeleteClick}
           className="bg-red-500 text-white px-4 py-2 rounded"

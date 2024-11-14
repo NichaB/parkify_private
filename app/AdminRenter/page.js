@@ -12,22 +12,24 @@ const Renters = () => {
   const router = useRouter();
 
   // Fetch users from Supabase
-  useEffect(() => {
+// Replace existing fetching logic in useEffect with this:
+useEffect(() => {
     const fetchRenters = async () => {
-      const { data, error } = await supabase
-        .from("user_info")
-        .select("user_id, first_name, last_name");
-
-      if (error) {
+      try {
+        const response = await fetch(`/api/adFetchRenter`);
+        if (!response.ok) throw new Error("Failed to fetch renters");
+        
+        const { renterDetails } = await response.json();
+        setRenters(renterDetails);
+      } catch (error) {
         console.error("Error fetching renters:", error);
         toast.error("Failed to fetch renters.");
-      } else {
-        setRenters(data);
       }
     };
-
+  
     fetchRenters();
   }, []);
+  
 
   // Filter renters based on search query
   const filteredRenters = renters.filter((renter) =>

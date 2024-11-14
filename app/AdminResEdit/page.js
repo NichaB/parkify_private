@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import supabase from "../../config/supabaseClient";
 import toast, { Toaster } from 'react-hot-toast';
 
 // Function to convert to Thai time (Asia/Bangkok)
@@ -38,29 +37,42 @@ const EditReservation = () => {
     }
 
     const fetchReservationData = async () => {
-      const { data, error } = await supabase
-        .from("reservation")
-        .select("*")
-        .eq("reservation_id", reservationId)
-        .single();
-
-      if (error) {
+      try {
+        console.log(`Fetching data for reservationId: ${reservationId}`);
+        const response = await fetch(`/api/adFetchRes?reservationId=${reservationId}`);
+        
+        if (!response.ok) {
+          console.error("Response Error:", await response.json());
+          throw new Error("Failed to fetch reservation data");
+        }
+        
+        const { reservationDetails } = await response.json();
+        console.log("Fetched Data:", reservationDetails); // Log fetched data
+        
+        // Extract the first item in the array if reservationDetails is an array
+        const reservation = Array.isArray(reservationDetails) ? reservationDetails[0] : reservationDetails;
+        
+        if (!reservation) {
+          throw new Error("No reservation data found");
+        }
+        
+        // Populate formData with fetched data
+        setFormData({
+          reservation_id: reservation.reservation_id || "",
+          parking_lot_id: reservation.parking_lot_id || "",
+          user_id: reservation.user_id || "",
+          start_datetime: reservation.start_time ? formatToThaiDatetime(reservation.start_time) : "",
+          end_datetime: reservation.end_time ? formatToThaiDatetime(reservation.end_time) : "",
+          total_price: reservation.total_price || "",
+          duration_hour: reservation.duration_hour || 0,
+          duration_day: reservation.duration_day || 0,
+          car_id: reservation.car_id || ""
+        });
+        setLoading(false);
+      } catch (error) {
         console.error("Error fetching reservation data:", error);
         toast.error("Failed to fetch reservation data.");
         router.push("/AdminReservation");
-      } else {
-        setFormData({
-          reservation_id: data.reservation_id,
-          parking_lot_id: data.parking_lot_id,
-          user_id: data.user_id,
-          start_datetime: data.start_time ? formatToThaiDatetime(data.start_time) : "",
-          end_datetime: data.end_time ? formatToThaiDatetime(data.end_time) : "",
-          total_price: data.total_price || "",
-          duration_hour: data.duration_hour || 0,
-          duration_day: data.duration_day || 0,
-          car_id: data.car_id || ""
-        });
-        setLoading(false);
       }
     };
 
@@ -71,27 +83,28 @@ const EditReservation = () => {
 
   const handleSaveClick = async () => {
     try {
-      const { error } = await supabase
-        .from("reservation")
-        .update({
+      const response = await fetch(`/api/adFetchRes`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reservation_id: formData.reservation_id,
           start_time: formData.start_datetime,
           end_time: formData.end_datetime,
           total_price: formData.total_price,
           duration_hour: formData.duration_hour,
           duration_day: formData.duration_day
         })
-        .eq("reservation_id", formData.reservation_id);
-
-      if (error) {
-        console.error("Error updating reservation data:", error);
-        toast.error("Failed to update reservation information.");
-      } else {
-        toast.success("Reservation information updated successfully");
-        setIsEditing(false);
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to update reservation");
       }
+
+      toast.success("Reservation information updated successfully");
+      setIsEditing(false);
     } catch (error) {
-      console.error("Save error:", error);
-      toast.error("Error saving data");
+      console.error("Error updating reservation:", error);
+      toast.error("Failed to update reservation information.");
     }
   };
 
@@ -125,17 +138,20 @@ const EditReservation = () => {
 
   const confirmDelete = async (isConfirmed, toastId) => {
     if (isConfirmed) {
-      const { error } = await supabase
-        .from("reservation")
-        .delete()
-        .eq("reservation_id", formData.reservation_id);
+      try {
+        const response = await fetch(`/api/adFetchRes?reservationId=${formData.reservation_id}`, {
+          method: "DELETE"
+        });
+        
+        if (!response.ok) {
+          throw new Error("Failed to delete reservation");
+        }
 
-      if (error) {
-        console.error("Error deleting reservation:", error);
-        toast.error("Failed to delete reservation.");
-      } else {
         toast.success("Reservation deleted successfully");
         router.push("/AdminReservation");
+      } catch (error) {
+        console.error("Error deleting reservation:", error);
+        toast.error("Failed to delete reservation.");
       }
     }
     toast.dismiss(toastId);
@@ -200,7 +216,7 @@ const EditReservation = () => {
         </svg>
       </button>
 
-      <div className="flex justify-between mb-4 mt-16">
+      <div className="flex justify-between mb-4 mt-20">
         <button onClick={handleDeleteClick} className="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
         {isEditing ? (
           <button onClick={handleSaveClick} className="bg-green-500 text-white px-4 py-2 rounded">Save</button>
