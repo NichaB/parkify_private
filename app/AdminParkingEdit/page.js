@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import supabase from "../../config/supabaseClient";
-import toast, { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from "react-hot-toast";
 import { FaEdit } from "react-icons/fa";
 
 const EditParkingLot = () => {
@@ -18,10 +17,9 @@ const EditParkingLot = () => {
     location_url: "",
     total_slots: "",
     price_per_hour: "",
-    location_image: ""
+    location_image: "",
   });
   const [loading, setLoading] = useState(true);
-
 
   // Fetch parking lot data
   useEffect(() => {
@@ -33,17 +31,12 @@ const EditParkingLot = () => {
     }
 
     const fetchParkingLotData = async () => {
-      const { data, error } = await supabase
-        .from("parking_lot")
-        .select("*")
-        .eq("parking_lot_id", parkingLotId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching parking lot data:", error);
-        toast.error("Failed to fetch parking lot data.");
-        router.push("/AdminParking");
-      } else {
+      try {
+        const response = await fetch(`/api/adFetchPark?parkingLotId=${parkingLotId}`);
+        if (!response.ok) throw new Error("Failed to fetch parking lot data");
+        const { parkingLotDetails } = await response.json();
+        const data = parkingLotDetails[0];
+        
         setFormData({
           parking_lot_id: data.parking_lot_id,
           location_name: data.location_name,
@@ -51,9 +44,13 @@ const EditParkingLot = () => {
           location_url: data.location_url,
           total_slots: data.total_slots,
           price_per_hour: data.price_per_hour,
-          location_image: data.location_image || ""
+          location_image: data.location_image || "",
         });
         setLoading(false);
+      } catch (error) {
+        console.error("Error fetching parking lot data:", error);
+        toast.error("Failed to fetch parking lot data.");
+        router.push("/AdminParking");
       }
     };
 
@@ -71,7 +68,7 @@ const EditParkingLot = () => {
         const file = fileInput.files[0];
         const formDataUpload = new FormData();
         formDataUpload.append("file", file);
-        formDataUpload.append("storageBucket", "carpark"); // Replace with your storage bucket name
+        formDataUpload.append("storageBucket", "carpark");
         formDataUpload.append("parkingLotId", formData.parking_lot_id);
 
         const uploadResponse = await fetch("/api/uploadParking", {
@@ -79,84 +76,81 @@ const EditParkingLot = () => {
           body: formDataUpload,
         });
 
-        if (!uploadResponse.ok) {
-          throw new Error("File upload failed");
-        }
-
+        if (!uploadResponse.ok) throw new Error("File upload failed");
+        
         const uploadResult = await uploadResponse.json();
         newImagePath = uploadResult.publicUrl;
       }
 
-      const { error } = await supabase
-        .from("parking_lot")
-        .update({
-          location_name: formData.location_name,
+      const response = await fetch("/api/adFetchPark", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parkingLotId: formData.parking_lot_id,
+          locationName: formData.location_name,
           address: formData.address,
-          location_url: formData.location_url,
-          total_slots: formData.total_slots,
-          price_per_hour: formData.price_per_hour,
-          location_image: newImagePath
-        })
-        .eq("parking_lot_id", formData.parking_lot_id);
+          locationUrl: formData.location_url,
+          totalSlots: formData.total_slots,
+          pricePerHour: formData.price_per_hour,
+          locationImage: newImagePath,
+        }),
+      });
 
-      if (error) {
-        console.error("Error updating parking lot data:", error);
-        toast.error("Failed to update parking lot information.");
-      } else {
-        toast.success("Parking lot information updated successfully");
-        setFormData(prevState => ({ ...prevState, location_image: newImagePath }));
-        setIsEditing(false);
-      }
+      if (!response.ok) throw new Error("Failed to update parking lot information");
+
+      toast.success("Parking lot information updated successfully");
+      setFormData((prevState) => ({ ...prevState, location_image: newImagePath }));
+      setIsEditing(false);
     } catch (error) {
-      console.error("Save error:", error);
-      toast.error("Error saving data");
+      console.error("Error updating parking lot data:", error);
+      toast.error("Failed to update parking lot information.");
     }
   };
 
   const handleDeleteClick = () => {
     const toastId = toast(
-        <div>
-            <p>Are you sure you want to delete this parking lot?</p>
-            <div className="flex justify-between mt-2">
-                <button
-                    onClick={() => confirmDelete(true, toastId)}
-                    className="bg-red-500 text-white px-3 py-1 rounded mr-2"
-                >
-                    Yes
-                </button>
-                <button
-                    onClick={() => toast.dismiss(toastId)} // Dismiss the specific toast
-                    className="bg-gray-500 text-white px-3 py-1 rounded"
-                >
-                    No
-                </button>
-            </div>
-        </div>,
-        {
-            position: "top-center",
-            autoClose: false,
-            closeOnClick: false,
-            draggable: false,
-        }
+      <div>
+        <p>Are you sure you want to delete this parking lot?</p>
+        <div className="flex justify-between mt-2">
+          <button
+            onClick={() => confirmDelete(true, toastId)}
+            className="bg-red-500 text-white px-3 py-1 rounded mr-2"
+          >
+            Yes
+          </button>
+          <button
+            onClick={() => toast.dismiss(toastId)}
+            className="bg-gray-500 text-white px-3 py-1 rounded"
+          >
+            No
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+      }
     );
   };
 
   const confirmDelete = async (isConfirmed, toastId) => {
     if (isConfirmed) {
-        const { error } = await supabase
-            .from("parking_lot")
-            .delete()
-            .eq("parking_lot_id", formData.parking_lot_id);
+      try {
+        const response = await fetch(`/api/adFetchPark?parkingLotId=${formData.parking_lot_id}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) throw new Error("Failed to delete parking lot");
 
-        if (error) {
-            console.error("Error deleting parking lot:", error);
-            toast.error("Failed to delete parking lot.");
-        } else {
-            toast.success("Parking lot deleted successfully");
-            router.push("/AdminParking");
-        }
+        toast.success("Parking lot deleted successfully");
+        router.push("/AdminParking");
+      } catch (error) {
+        console.error("Error deleting parking lot:", error);
+        toast.error("Failed to delete parking lot.");
+      }
     }
-    toast.dismiss(toastId); // Dismiss the confirmation toast after handling "Yes" or "No"
+    toast.dismiss(toastId);
   };
 
   const handleChange = (e) => {
@@ -181,13 +175,18 @@ const EditParkingLot = () => {
           stroke="currentColor"
           className="w-6 h-6"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15 19l-7-7 7-7"
+          />
         </svg>
       </button>
 
-      {/* Display the current image */}
+
+
       {formData.location_image && (
-        <div className="mb-4">
+        <div className="mb-4 mt-20">
           <img
             src={formData.location_image}
             alt="Current location"
@@ -197,7 +196,6 @@ const EditParkingLot = () => {
       )}
 
       <div className="flex justify-between mb-4 mt-16">
-        <Toaster position="top-center" />
         <button onClick={handleDeleteClick} className="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
         {isEditing ? (
           <button onClick={handleSaveClick} className="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
@@ -206,7 +204,6 @@ const EditParkingLot = () => {
         )}
       </div>
 
-      {/* Parking Lot Details */}
       <div className="mb-4">
         <label className="block text-gray-500 mb-1">Parking Lot ID</label>
         <input

@@ -1,19 +1,28 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import supabase from "../../config/supabaseClient";
 import { toast, Toaster } from "react-hot-toast";
-import { FaExclamationCircle } from "react-icons/fa"; // Import the issue icon
+import { FaExclamationCircle, FaHome, FaExclamationTriangle, FaPlus } from "react-icons/fa";
 
 const AddIssuePage = () => {
   const router = useRouter();
+  const pathname = usePathname(); // Get the current path
   const [formData, setFormData] = useState({
     issue_header: "",
     issue_detail: "",
     status: "Not Started",
   });
   const [adminId, setAdminId] = useState(null);
+
+  // Function to navigate to the specified page
+  const handleNavigate = (path) => {
+    router.push(path);
+  };
+
+  // Check if the current path matches a specific route
+  const isActive = (path) => pathname === path;
 
   useEffect(() => {
     const storedAdminId = sessionStorage.getItem("admin_id");
@@ -55,7 +64,7 @@ const AddIssuePage = () => {
   };
 
   return (
-    <div className="p-6 max-w-md mx-auto">
+    <div className="max-w-md mx-auto mt-20 p-6">
       <Toaster position="top-center" />
 
       {/* Large Icon at the Top */}
@@ -102,9 +111,31 @@ const AddIssuePage = () => {
           type="submit"
           className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
         >
-          Add Issue
+          Send Issue to Developer
         </button>
       </form>
+
+{/* Bottom Navigation */}
+<div className="fixed bottom-0 left-0 right-0 w-screen bg-white border-t border-gray-300 py-3">
+  <div className="flex justify-around items-center">
+    {/* Home Button - Red when in /AdminMenu or /AdminAddIssue */}
+    <button
+      onClick={() => handleNavigate("/AdminMenu")}
+      className={(isActive("/AdminMenu") || isActive("/AdminAddIssue")) ? "text-red-500" : "text-gray-500"}
+    >
+      <FaHome className="text-2xl" />
+    </button>
+
+    {/* Customer Complaint Button */}
+    <button
+      onClick={() => handleNavigate("/CustomerComplaint")}
+      className={isActive("/CustomerComplaint") ? "text-red-500" : "text-gray-500"}
+    >
+      <FaExclamationTriangle className="text-2xl" />
+    </button>
+
+  </div>
+</div>
     </div>
   );
 };

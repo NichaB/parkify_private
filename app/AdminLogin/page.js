@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import supabase from "../../config/supabaseClient";
+import { toast, Toaster } from "react-hot-toast";
 
 const AdminLogin = () => {
   const router = useRouter();
@@ -12,29 +13,39 @@ const AdminLogin = () => {
   const [lockoutTimeLeft, setLockoutTimeLeft] = useState(null);
 
   useEffect(() => {
-    // Clear session storage when landing on this page
-    sessionStorage.clear();
 
-    // Check lockout status from localStorage
-    const lockoutEnd = localStorage.getItem("lockoutEnd");
-    if (lockoutEnd) {
-      const timeLeft = parseInt(lockoutEnd) - Date.now();
-      if (timeLeft > 0) {
-        setLockoutTimeLeft(timeLeft);
-        const timer = setInterval(() => {
-          const timeRemaining = parseInt(lockoutEnd) - Date.now();
-          if (timeRemaining <= 0) {
-            clearInterval(timer);
-            localStorage.removeItem("lockoutEnd");
-            setLockoutTimeLeft(null);
+        // Initialize lockout time immediately on mount
+        const lockoutEnd = localStorage.getItem("lockoutEnd");
+        if (lockoutEnd) {
+          const timeLeft = parseInt(lockoutEnd) - Date.now();
+          if (timeLeft > 0) {
+            setLockoutTimeLeft(timeLeft); // Set initial countdown without refresh
           } else {
-            setLockoutTimeLeft(timeRemaining);
+            // Clear lockout if expired
+            localStorage.removeItem("lockoutEnd");
+            localStorage.setItem("failedAttempts", 0); // Reset failed attempts
+          }
+        }
+    
+        // Start countdown if lockout is active
+        const timer = setInterval(() => {
+          const lockoutEnd = localStorage.getItem("lockoutEnd");
+          if (lockoutEnd) {
+            const timeLeft = parseInt(lockoutEnd) - Date.now();
+            if (timeLeft <= 0) {
+              clearInterval(timer);
+              localStorage.removeItem("lockoutEnd");
+              localStorage.setItem("failedAttempts", 0); // Reset failed attempts after lockout
+              setLockoutTimeLeft(null);
+            } else {
+              setLockoutTimeLeft(timeLeft);
+            }
           }
         }, 1000);
+    
         return () => clearInterval(timer);
-      }
-    }
-  }, []);
+      }, []);
+    
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -44,43 +55,53 @@ const AdminLogin = () => {
     if (lockoutTimeLeft) return;
 
     try {
-      // Call Supabase to get user data
-      const { data, error } = await supabase
-        .from("admin")
-        .select("admin_id, email, password")
-        .eq("email", email)
-        .single();
+      const response = await fetch("/api/adLogin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-      if (error || !data || data.password !== password) {
-        setErrorMessage("Invalid email or password.");
+      const result = await response.json();
+
+      if (!response.ok) {
+        setErrorMessage(result.error || "Invalid email or password.");
+        toast.error(result.error || "Invalid email or password.");
+
+        // Increment failed attempts counter
         const failedAttempts = parseInt(localStorage.getItem("failedAttempts")) || 0;
         const newFailedAttempts = failedAttempts + 1;
         localStorage.setItem("failedAttempts", newFailedAttempts);
 
+        // Lockout after 3 failed attempts
         if (newFailedAttempts >= 3) {
           const lockoutDuration = 30 * 1000; // 30 seconds
           const lockoutEnd = Date.now() + lockoutDuration;
           localStorage.setItem("lockoutEnd", lockoutEnd);
           setLockoutTimeLeft(lockoutDuration);
+          toast.error("Too many failed attempts. Try again in 30 seconds.");
         }
       } else {
         // Login successful
         setErrorMessage("");
         localStorage.removeItem("failedAttempts");
         localStorage.removeItem("lockoutEnd");
-        sessionStorage.setItem("admin_id", data.admin_id);
+        sessionStorage.setItem("admin_id", result.admin_id);
+        toast.success("Login successful!");
         router.push("/AdminMenu");
       }
     } catch (err) {
       console.error("Error during login:", err);
       setErrorMessage("An error occurred. Please try again.");
+      toast.error("An error occurred. Please try again.");
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+      <Toaster position="top-center" reverseOrder={false} />
+
       <div className="w-80 text-center">
-        <img src="admin-logo.png" alt="Parkify Logo" className="mx-auto mb-4 w-50 h-50" />
+        <img src="admin-logo.png" alt="Parkify Logo" className="mx-auto mb-2 w-50 h-50" />
 
         <div className="mt-8">
           <div className="mb-4">
@@ -114,20 +135,16 @@ const AdminLogin = () => {
 
           {errorMessage && <p className="text-red-500 mb-4">{errorMessage}</p>}
 
-          {lockoutTimeLeft ? (
-            <p className="text-red-500 mb-4">
-              Too many failed attempts. Please wait for {Math.ceil(lockoutTimeLeft / 1000)} seconds to try again.
-            </p>
-          ) : null}
-
           <button
             onClick={handleLogin}
             className={`w-full ${
               lockoutTimeLeft ? "bg-gray-400" : "bg-gray-900"
-            } text-white py-3 rounded-lg font-semibold mb-10`}
+            } text-white py-3 rounded-lg font-semibold mb-14`}
             disabled={lockoutTimeLeft}
           >
-            Login
+            {lockoutTimeLeft
+              ? `Try again in ${Math.ceil(lockoutTimeLeft / 1000)}s`
+              : "Login"}
           </button>
         </div>
       </div>

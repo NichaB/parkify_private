@@ -13,6 +13,12 @@ const Lessors = () => {
 
   // Fetch lessors from Supabase
   useEffect(() => {
+
+    if (!sessionStorage.getItem("admin_id")) {
+        toast.error("Admin ID not found. Please log in.");
+        router.push("/AdminLogin");
+        return;
+      }
     const fetchLessors = async () => {
       const { data, error } = await supabase
         .from("lessor")

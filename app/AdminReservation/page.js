@@ -16,8 +16,13 @@ const Reservations = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // Fetch reservations from custom API route
   useEffect(() => {
+    if (!sessionStorage.getItem("admin_id")) {
+      toast.error("Admin ID not found. Please log in.");
+      router.push("/AdminLogin");
+      return;
+    }
+    
     const fetchReservations = async () => {
       try {
         const response = await fetch(`/api/adFetchRes`);
@@ -31,9 +36,10 @@ const Reservations = () => {
         toast.error("Failed to fetch reservations.");
       }
     };
-
+  
     fetchReservations();
-  }, []);
+  }, [router]);
+  
 
   // Filter reservations based on search query for User ID
   const filteredReservations = reservations.filter((reservation) => {

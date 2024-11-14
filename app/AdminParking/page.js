@@ -13,18 +13,23 @@ const ParkingLots = () => {
 
   // Fetch parking lots from Supabase
   useEffect(() => {
-    const fetchParkingLots = async () => {
-      const { data, error } = await supabase
-        .from("parking_lot") // Ensure this table name matches your database
-        .select("parking_lot_id, lessor_id, location_name, address, location_image");
 
-      if (error) {
-        console.error("Error fetching parking lots:", error);
-        toast.error("Failed to fetch parking lots.");
-      } else {
-        setParkingLots(data);
+    if (!sessionStorage.getItem("admin_id")) {
+        toast.error("Admin ID not found. Please log in.");
+        router.push("/AdminLogin");
+        return;
       }
-    };
+      const fetchParkingLots = async () => {
+        try {
+          const response = await fetch(`/api/adFetchPark`);
+          if (!response.ok) throw new Error("Failed to fetch parking lots");
+          const { parkingLotDetails } = await response.json();
+          setParkingLots(parkingLotDetails);
+        } catch (error) {
+          console.error("Error fetching parking lots:", error);
+          toast.error("Failed to fetch parking lots.");
+        }
+      };
 
     fetchParkingLots();
   }, []);

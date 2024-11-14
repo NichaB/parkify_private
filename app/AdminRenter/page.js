@@ -14,6 +14,12 @@ const Renters = () => {
   // Fetch users from Supabase
 // Replace existing fetching logic in useEffect with this:
 useEffect(() => {
+
+    if (!sessionStorage.getItem("admin_id")) {
+        toast.error("Admin ID not found. Please log in.");
+        router.push("/AdminLogin");
+        return;
+      }
     const fetchRenters = async () => {
       try {
         const response = await fetch(`/api/adFetchRenter`);

@@ -13,6 +13,12 @@ const Issues = () => {
 
   // Fetch issues from Supabase
   useEffect(() => {
+
+    if (!sessionStorage.getItem("admin_id")) {
+        toast.error("Admin ID not found. Please log in.");
+        router.push("/AdminLogin");
+        return;
+      }
     const fetchIssues = async () => {
       const { data, error } = await supabase
         .from("issue")
