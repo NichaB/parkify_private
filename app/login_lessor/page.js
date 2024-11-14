@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState, useEffect } from 'react'; 
 import { InputField } from '../components/InputField';
 import Link from 'next/link';
@@ -11,11 +12,34 @@ export default function LoginPage() {
     email: '',
     password: '',
   });
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutTimeLeft, setLockoutTimeLeft] = useState(null);  // Time left for lockout in seconds
+  const [timer, setTimer] = useState(null);  // To hold the interval id
 
   const router = useRouter();
 
   useEffect(() => {
     sessionStorage.clear();
+
+    // Check if we are in lockout state and start a countdown if needed
+    const lockoutEnd = localStorage.getItem('lockoutEnd');
+    if (lockoutEnd) {
+      const timeLeft = parseInt(lockoutEnd) - Date.now();
+      if (timeLeft > 0) {
+        setLockoutTimeLeft(Math.ceil(timeLeft / 1000));  // Set remaining time in seconds
+        const interval = setInterval(() => {
+          setLockoutTimeLeft((prev) => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              localStorage.removeItem('lockoutEnd');
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        setTimer(interval);
+      }
+    }
   }, []);
 
   const handleChange = (e) => {
@@ -27,6 +51,11 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (lockoutTimeLeft > 0) {
+      toast.error(`Too many attempts. Please wait for ${lockoutTimeLeft} seconds.`);
+      return;
+    }
 
     if (!formData.email || !formData.password) {
       toast.error('Please enter both email and password.');
@@ -43,7 +72,28 @@ export default function LoginPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        toast.error(result.error || 'Login failed');
+        setFailedAttempts(prev => prev + 1);
+
+        if (failedAttempts + 1 >= 3) {
+          const lockoutDuration = 30 * 1000; // 30 seconds lockout duration
+          const lockoutEndTime = Date.now() + lockoutDuration;
+          localStorage.setItem('lockoutEnd', lockoutEndTime);
+          setLockoutTimeLeft(Math.ceil(lockoutDuration / 1000));
+
+          const interval = setInterval(() => {
+            setLockoutTimeLeft((prev) => {
+              if (prev <= 1) {
+                clearInterval(interval);
+                localStorage.removeItem('lockoutEnd');
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+          toast.error(`Too many failed attempts. Please wait for 30 seconds.`);
+        } else {
+          toast.error(result.error || 'Login failed');
+        }
       } else {
         sessionStorage.setItem('lessorId', result.lessor_id); // Store lessor_id for future use
         toast.success('Login successful!');
@@ -101,6 +151,13 @@ export default function LoginPage() {
               className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
+          {/* Countdown Timer */}
+          {lockoutTimeLeft > 0 && (
+            <p className="text-red-500 mb-4">
+              Too many failed attempts. Please wait for {lockoutTimeLeft} seconds to try again.
+            </p>
+          )}
 
           {/* Login Button */}
           <LoginButton type="submit" className="w-full bg-black text-white py-3 rounded-lg">
