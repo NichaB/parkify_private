@@ -1,45 +1,44 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { FaUser, FaPen, FaSearch } from "react-icons/fa";
+import { FaCar, FaPen, FaSearch } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import supabase from "../../config/supabaseClient";
 import { Toaster, toast } from "react-hot-toast";
 
-const Renters = () => {
-  const [renters, setRenters] = useState([]);
+const Cars = () => {
+  const [cars, setCars] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // Fetch users from Supabase
+  // Fetch cars from Supabase
   useEffect(() => {
-    const fetchRenters = async () => {
+    const fetchCars = async () => {
       const { data, error } = await supabase
-        .from("user_info")
-        .select("user_id, first_name, last_name");
+        .from("car")
+        .select("car_id, car_model, car_color, license_plate");
 
       if (error) {
-        console.error("Error fetching renters:", error);
-        toast.error("Failed to fetch renters.");
+        console.error("Error fetching cars:", error);
+        toast.error("Failed to fetch cars.");
+        router.push("/AdminLogin");
       } else {
-        setRenters(data);
+        setCars(data);
       }
     };
 
-    fetchRenters();
+    fetchCars();
   }, []);
 
-  // Filter renters based on search query
-  const filteredRenters = renters.filter((renter) =>
-    `${renter.user_id} ${renter.first_name} ${renter.last_name}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
+  // Filter cars based on search query for license_plate
+  const filteredCars = cars.filter((car) =>
+    car.license_plate.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Handle navigation to edit page
-  const handleEditClick = (userId) => {
-    sessionStorage.setItem("user_id", userId); // Store user_id in sessionStorage
-    router.push("/AdminRenterEdit"); // Redirect to edit page without user_id in the URL
+  const handleEditClick = (carId) => {
+    sessionStorage.setItem("car_id", carId); // Store car_id in sessionStorage
+    router.push("/AdminCarEdit"); // Redirect to edit page without car_id in the URL
   };
 
   return (
@@ -67,38 +66,38 @@ const Renters = () => {
         </button>
 
         <h1 className="text-2xl font-bold text-black text-left w-full px-6 mt-16 py-4">
-          Renters
+          Cars
         </h1>
 
         {/* Search Bar */}
-        <div className="relative mb-4 ">
+        <div className="relative mb-4">
           <button className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-grey-100 rounded-full p-2">
             <FaSearch className="text-gray-500" />
           </button>
 
           <input
             type="text"
-            placeholder="Search by id or name"
+            placeholder="Search by License Plate"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-12 p-2 rounded-md border border-gray-300"
           />
         </div>
 
-        {/* Display Filtered Renters */}
-        {filteredRenters.map((renter) => (
+        {/* Display Filtered Cars */}
+        {filteredCars.map((car) => (
           <div
-            key={renter.user_id}
+            key={car.car_id}
             className="flex items-center justify-between bg-gray-100 p-4 rounded-lg mb-4"
           >
             <div className="flex items-center">
-              <FaUser className="text-xl mr-3 text-black" />
+              <FaCar className="text-xl mr-3 text-black" />
               <span className="font-semibold text-black">
-                {renter.first_name} {renter.last_name}
+                {car.license_plate} ({car.car_model} - {car.car_color})
               </span>
             </div>
             <button
-              onClick={() => handleEditClick(renter.user_id)}
+              onClick={() => handleEditClick(car.car_id)}
               className="flex items-center text-black"
             >
               <FaPen className="text-xl mr-2" />
@@ -111,4 +110,4 @@ const Renters = () => {
   );
 };
 
-export default Renters;
+export default Cars;

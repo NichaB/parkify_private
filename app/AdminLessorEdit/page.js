@@ -1,0 +1,249 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import supabase from "../../config/supabaseClient";
+import toast, { Toaster } from 'react-hot-toast';
+
+const EditLessor = () => {
+  const router = useRouter();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    lessor_id: "",
+    lessor_firstname: "",
+    lessor_lastname: "",
+    lessor_phone_number: "",
+    lessor_line_url: "",
+    lessor_email: "",
+    lessor_profile_pic: ""
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Fetch lessor data
+  useEffect(() => {
+    const lessorId = sessionStorage.getItem("lessor_id");
+    if (!lessorId) {
+      toast.error("Lessor ID not found");
+      router.push("/AdminLessor");
+      return;
+    }
+
+    const fetchLessorData = async () => {
+      const { data, error } = await supabase
+        .from("lessor")
+        .select("*")
+        .eq("lessor_id", lessorId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching lessor data:", error);
+        toast.error("Failed to fetch lessor data.");
+        router.push("/AdminLessor");
+      } else {
+        setFormData({
+          lessor_id: data.lessor_id,
+          lessor_firstname: data.lessor_firstname,
+          lessor_lastname: data.lessor_lastname,
+          lessor_phone_number: data.lessor_phone_number,
+          lessor_line_url: data.lessor_line_url,
+          lessor_email: data.lessor_email,
+          lessor_profile_pic: data.lessor_profile_pic || ""
+        });
+        setLoading(false);
+      }
+    };
+
+    fetchLessorData();
+  }, [router]);
+
+  const handleEditClick = () => setIsEditing(true);
+
+  const handleSaveClick = async () => {
+    try {
+      const { error } = await supabase
+        .from("lessor")
+        .update({
+          lessor_firstname: formData.lessor_firstname,
+          lessor_lastname: formData.lessor_lastname,
+          lessor_phone_number: formData.lessor_phone_number,
+          lessor_line_url: formData.lessor_line_url
+        })
+        .eq("lessor_id", formData.lessor_id);
+
+      if (error) {
+        console.error("Error updating lessor data:", error);
+        toast.error("Failed to update lessor information.");
+      } else {
+        toast.success("Lessor information updated successfully");
+        setIsEditing(false);
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error("Error saving data");
+    }
+  };
+
+  const handleDeleteClick = () => {
+    const toastId = toast(
+      <div>
+        <p>Are you sure you want to delete this lessor?</p>
+        <div className="flex justify-between mt-2">
+          <button
+            onClick={() => confirmDelete(true, toastId)}
+            className="bg-red-500 text-white px-3 py-1 rounded mr-2"
+          >
+            Yes
+          </button>
+          <button
+            onClick={() => toast.dismiss(toastId)} // Dismiss the specific toast
+            className="bg-gray-500 text-white px-3 py-1 rounded"
+          >
+            No
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+      }
+    );
+  };
+
+  const confirmDelete = async (isConfirmed, toastId) => {
+    if (isConfirmed) {
+      const { error } = await supabase
+        .from("lessor")
+        .delete()
+        .eq("lessor_id", formData.lessor_id);
+
+      if (error) {
+        console.error("Error deleting lessor:", error);
+        toast.error("Failed to delete lessor.");
+      } else {
+        toast.success("Lessor deleted successfully");
+        router.push("/AdminLessor");
+      }
+    }
+    toast.dismiss(toastId); // Dismiss the confirmation toast after handling "Yes" or "No"
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  if (loading) return <p>Loading...</p>;
+
+  return (
+    <div className="p-6 max-w-md mx-auto">
+      <Toaster />
+      <button
+        onClick={() => router.push("/AdminLessor")}
+        className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-6 h-6"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      {/* Display the profile picture */}
+      {formData.lessor_profile_pic && (
+        <div className="mb-2 mt-20">
+          <img
+            src={formData.lessor_profile_pic}
+            alt="Lessor Profile"
+            className="w-full h-48 object-cover rounded-lg"
+          />
+        </div>
+      )}
+
+      <div className="flex justify-between mb-2 mt-8">
+        <Toaster position="top-center" />
+        <button onClick={handleDeleteClick} className="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
+        {isEditing ? (
+          <button onClick={handleSaveClick} className="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
+        ) : (
+          <button onClick={handleEditClick} className="bg-blue-500 text-white px-4 py-2 rounded">Edit</button>
+        )}
+      </div>
+
+      {/* Lessor Details */}
+      <div className="mb-4">
+        <label className="block text-gray-500 mb-1">Lessor ID</label>
+        <input
+          type="text"
+          name="lessor_id"
+          value={formData.lessor_id}
+          readOnly
+          className="w-full p-2 rounded border border-gray-300 bg-gray-100"
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-gray-500 mb-1">First Name</label>
+        <input
+          type="text"
+          name="lessor_firstname"
+          value={formData.lessor_firstname}
+          onChange={handleChange}
+          readOnly={!isEditing}
+          className={`w-full p-2 rounded border ${isEditing ? 'border-blue-400' : 'border-gray-300'}`}
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-gray-500 mb-1">Last Name</label>
+        <input
+          type="text"
+          name="lessor_lastname"
+          value={formData.lessor_lastname}
+          onChange={handleChange}
+          readOnly={!isEditing}
+          className={`w-full p-2 rounded border ${isEditing ? 'border-blue-400' : 'border-gray-300'}`}
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-gray-500 mb-1">Phone Number</label>
+        <input
+          type="text"
+          name="lessor_phone_number"
+          value={formData.lessor_phone_number}
+          onChange={handleChange}
+          readOnly={!isEditing}
+          className={`w-full p-2 rounded border ${isEditing ? 'border-blue-400' : 'border-gray-300'}`}
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-gray-500 mb-1">LINE URL</label>
+        <input
+          type="text"
+          name="lessor_line_url"
+          value={formData.lessor_line_url}
+          onChange={handleChange}
+          readOnly={!isEditing}
+          className={`w-full p-2 rounded border ${isEditing ? 'border-blue-400' : 'border-gray-300'}`}
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-gray-500 mb-1">Email</label>
+        <input
+          type="email"
+          name="lessor_email"
+          value={formData.lessor_email}
+          readOnly
+          className="w-full p-2 rounded border border-gray-300 bg-gray-100"
+        />
+      </div>
+    </div>
+  );
+};
+
+export default EditLessor;

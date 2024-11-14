@@ -6,40 +6,41 @@ import { useRouter } from "next/navigation";
 import supabase from "../../config/supabaseClient";
 import { Toaster, toast } from "react-hot-toast";
 
-const Renters = () => {
-  const [renters, setRenters] = useState([]);
+const Lessors = () => {
+  const [lessors, setLessors] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // Fetch users from Supabase
+  // Fetch lessors from Supabase
   useEffect(() => {
-    const fetchRenters = async () => {
+    const fetchLessors = async () => {
       const { data, error } = await supabase
-        .from("user_info")
-        .select("user_id, first_name, last_name");
+        .from("lessor")
+        .select("lessor_id, lessor_firstname, lessor_lastname");
 
       if (error) {
-        console.error("Error fetching renters:", error);
-        toast.error("Failed to fetch renters.");
+        console.error("Error fetching lessors:", error);
+        toast.error("Failed to fetch lessors.");
+        router.push("/AdminLogin");
       } else {
-        setRenters(data);
+        setLessors(data);
       }
     };
 
-    fetchRenters();
+    fetchLessors();
   }, []);
 
-  // Filter renters based on search query
-  const filteredRenters = renters.filter((renter) =>
-    `${renter.user_id} ${renter.first_name} ${renter.last_name}`
+  // Filter lessors based on search query
+  const filteredLessors = lessors.filter((lessor) =>
+    `${lessor.lessor_firstname} ${lessor.lessor_lastname}`
       .toLowerCase()
       .includes(searchQuery.toLowerCase())
   );
 
   // Handle navigation to edit page
-  const handleEditClick = (userId) => {
-    sessionStorage.setItem("user_id", userId); // Store user_id in sessionStorage
-    router.push("/AdminRenterEdit"); // Redirect to edit page without user_id in the URL
+  const handleEditClick = (lessorId) => {
+    sessionStorage.setItem("lessor_id", lessorId); // Store lessor_id in sessionStorage
+    router.push("/AdminLessorEdit"); // Redirect to edit page without lessor_id in the URL
   };
 
   return (
@@ -67,38 +68,38 @@ const Renters = () => {
         </button>
 
         <h1 className="text-2xl font-bold text-black text-left w-full px-6 mt-16 py-4">
-          Renters
+          Lessors
         </h1>
 
         {/* Search Bar */}
-        <div className="relative mb-4 ">
+        <div className="relative mb-4">
           <button className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-grey-100 rounded-full p-2">
             <FaSearch className="text-gray-500" />
           </button>
 
           <input
             type="text"
-            placeholder="Search by id or name"
+            placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-12 p-2 rounded-md border border-gray-300"
           />
         </div>
 
-        {/* Display Filtered Renters */}
-        {filteredRenters.map((renter) => (
+        {/* Display Filtered Lessors */}
+        {filteredLessors.map((lessor) => (
           <div
-            key={renter.user_id}
+            key={lessor.lessor_id}
             className="flex items-center justify-between bg-gray-100 p-4 rounded-lg mb-4"
           >
             <div className="flex items-center">
               <FaUser className="text-xl mr-3 text-black" />
               <span className="font-semibold text-black">
-                {renter.first_name} {renter.last_name}
+                {lessor.lessor_firstname} {lessor.lessor_lastname}
               </span>
             </div>
             <button
-              onClick={() => handleEditClick(renter.user_id)}
+              onClick={() => handleEditClick(lessor.lessor_id)}
               className="flex items-center text-black"
             >
               <FaPen className="text-xl mr-2" />
@@ -111,4 +112,4 @@ const Renters = () => {
   );
 };
 
-export default Renters;
+export default Lessors;

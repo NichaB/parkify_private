@@ -1,45 +1,45 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { FaUser, FaPen, FaSearch } from "react-icons/fa";
+import { FaMapMarkerAlt, FaPen, FaSearch } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import supabase from "../../config/supabaseClient";
 import { Toaster, toast } from "react-hot-toast";
 
-const Renters = () => {
-  const [renters, setRenters] = useState([]);
+const ParkingLots = () => {
+  const [parkingLots, setParkingLots] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // Fetch users from Supabase
+  // Fetch parking lots from Supabase
   useEffect(() => {
-    const fetchRenters = async () => {
+    const fetchParkingLots = async () => {
       const { data, error } = await supabase
-        .from("user_info")
-        .select("user_id, first_name, last_name");
+        .from("parking_lot") // Ensure this table name matches your database
+        .select("parking_lot_id, lessor_id, location_name, address, location_image");
 
       if (error) {
-        console.error("Error fetching renters:", error);
-        toast.error("Failed to fetch renters.");
+        console.error("Error fetching parking lots:", error);
+        toast.error("Failed to fetch parking lots.");
       } else {
-        setRenters(data);
+        setParkingLots(data);
       }
     };
 
-    fetchRenters();
+    fetchParkingLots();
   }, []);
 
-  // Filter renters based on search query
-  const filteredRenters = renters.filter((renter) =>
-    `${renter.user_id} ${renter.first_name} ${renter.last_name}`
+  // Filter parking lots based on search query
+  const filteredParkingLots = parkingLots.filter((lot) =>
+    `${lot.location_name} ${lot.address}`
       .toLowerCase()
       .includes(searchQuery.toLowerCase())
   );
 
   // Handle navigation to edit page
-  const handleEditClick = (userId) => {
-    sessionStorage.setItem("user_id", userId); // Store user_id in sessionStorage
-    router.push("/AdminRenterEdit"); // Redirect to edit page without user_id in the URL
+  const handleEditClick = (lotId) => {
+    sessionStorage.setItem("parking_lot_id", lotId); // Store parking_lot_id in sessionStorage
+    router.push("/AdminParkingEdit"); // Redirect to edit page without parking_lot_id in the URL
   };
 
   return (
@@ -67,38 +67,39 @@ const Renters = () => {
         </button>
 
         <h1 className="text-2xl font-bold text-black text-left w-full px-6 mt-16 py-4">
-          Renters
+          Parking Lots
         </h1>
 
         {/* Search Bar */}
-        <div className="relative mb-4 ">
+        <div className="relative mb-4">
           <button className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-grey-100 rounded-full p-2">
             <FaSearch className="text-gray-500" />
           </button>
 
           <input
             type="text"
-            placeholder="Search by id or name"
+            placeholder="Search by location or address"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-12 p-2 rounded-md border border-gray-300"
           />
         </div>
 
-        {/* Display Filtered Renters */}
-        {filteredRenters.map((renter) => (
+        {/* Display Filtered Parking Lots */}
+        {filteredParkingLots.map((lot) => (
           <div
-            key={renter.user_id}
+            key={lot.parking_lot_id}
             className="flex items-center justify-between bg-gray-100 p-4 rounded-lg mb-4"
           >
             <div className="flex items-center">
-              <FaUser className="text-xl mr-3 text-black" />
-              <span className="font-semibold text-black">
-                {renter.first_name} {renter.last_name}
-              </span>
+              <FaMapMarkerAlt className="text-xl mr-3 text-black" />
+              <div className="font-semibold text-black">
+                <div>{lot.location_name}</div>
+                <div className="text-sm text-gray-500">{lot.address}</div>
+              </div>
             </div>
             <button
-              onClick={() => handleEditClick(renter.user_id)}
+              onClick={() => handleEditClick(lot.parking_lot_id)}
               className="flex items-center text-black"
             >
               <FaPen className="text-xl mr-2" />
@@ -111,4 +112,4 @@ const Renters = () => {
   );
 };
 
-export default Renters;
+export default ParkingLots;
