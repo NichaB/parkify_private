@@ -10,11 +10,11 @@ const WelcomePage = () => {
 
   // Function to handle the Register button click
   const handleRegisterClick = () => {
-    router.push('/register');  // Navigate to the register page
+    router.push('/register_lessor');  // Navigate to the register page
   };
   
   const handleLoginClick = () => {
-    router.push('/login');  // Navigate to the register page
+    router.push('/login_lessor');  // Navigate to the register page
   };
 
   return (

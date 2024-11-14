@@ -1,5 +1,6 @@
 'use client';
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react'; 
 import { InputField } from '../components/InputField';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -11,8 +12,35 @@ export default function LoginPage() {
     email: '',
     password: '',
   });
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutTimeLeft, setLockoutTimeLeft] = useState(null);  // Time left for lockout in seconds
+  const [timer, setTimer] = useState(null);  // To hold the interval id
 
   const router = useRouter();
+
+  useEffect(() => {
+    sessionStorage.clear();
+
+    // Check if we are in lockout state and start a countdown if needed
+    const lockoutEnd = localStorage.getItem('lockoutEnd');
+    if (lockoutEnd) {
+      const timeLeft = parseInt(lockoutEnd) - Date.now();
+      if (timeLeft > 0) {
+        setLockoutTimeLeft(Math.ceil(timeLeft / 1000));  // Set remaining time in seconds
+        const interval = setInterval(() => {
+          setLockoutTimeLeft((prev) => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              localStorage.removeItem('lockoutEnd');
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        setTimer(interval);
+      }
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -24,24 +52,52 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (lockoutTimeLeft > 0) {
+      toast.error(`Too many attempts. Please wait for ${lockoutTimeLeft} seconds.`);
+      return;
+    }
+
+    if (!formData.email || !formData.password) {
+      toast.error('Please enter both email and password.');
+      return;
+    }
+
     try {
       const response = await fetch('/api/checkLogin', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
       const result = await response.json();
 
-      if (response.ok) {
-        toast.success('Login successful!');
-        sessionStorage.setItem('lessorId', result.lessor_id);  // Store lessor_id for future use
-        console.log('lesosor id: ', result.lessor_id);
-        router.push('/home_lessor');  // Redirect to the desired page on successful login
+      if (!response.ok) {
+        setFailedAttempts(prev => prev + 1);
+
+        if (failedAttempts + 1 >= 3) {
+          const lockoutDuration = 30 * 1000; // 30 seconds lockout duration
+          const lockoutEndTime = Date.now() + lockoutDuration;
+          localStorage.setItem('lockoutEnd', lockoutEndTime);
+          setLockoutTimeLeft(Math.ceil(lockoutDuration / 1000));
+
+          const interval = setInterval(() => {
+            setLockoutTimeLeft((prev) => {
+              if (prev <= 1) {
+                clearInterval(interval);
+                localStorage.removeItem('lockoutEnd');
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+          toast.error(`Too many failed attempts. Please wait for 30 seconds.`);
+        } else {
+          toast.error(result.error || 'Login failed');
+        }
       } else {
-        toast.error(result.error || 'Login failed');
+        sessionStorage.setItem('lessorId', result.lessor_id); // Store lessor_id for future use
+        toast.success('Login successful!');
+        router.push('/home_lessor'); // Redirect to the desired page on successful login
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -96,6 +152,13 @@ export default function LoginPage() {
             />
           </div>
 
+          {/* Countdown Timer */}
+          {lockoutTimeLeft > 0 && (
+            <p className="text-red-500 mb-4">
+              Too many failed attempts. Please wait for {lockoutTimeLeft} seconds to try again.
+            </p>
+          )}
+
           {/* Login Button */}
           <LoginButton type="submit" className="w-full bg-black text-white py-3 rounded-lg">
             Login
@@ -107,7 +170,7 @@ export default function LoginPage() {
       <div className="flex flex-col items-center mb-4 w-4/5 mx-auto">
         <p className="mt-4 text-center text-gray-600">
           Don't have an account?{' '}
-          <Link href="/register" className="text-blue-400">
+          <Link href="/register_lessor" className="text-blue-400">
             Register Now
           </Link>
         </p>

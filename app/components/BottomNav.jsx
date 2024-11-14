@@ -1,6 +1,5 @@
-
 'use client';
-import { AiFillHome, AiOutlineSetting } from "react-icons/ai";
+import { AiFillHome, AiOutlineCalendar, AiOutlineSetting } from "react-icons/ai";
 import { useRouter, usePathname } from 'next/navigation';
 
 export default function BottomNav() {
@@ -8,11 +7,15 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   const navigateToHome = () => {
-    router.push('/home_lessor'); // Replace '/home' with the actual path of your home page
+    router.push('/home_lessor');
+  };
+
+  const navigateToCalendar = () => {
+    router.push('/calendar'); // Replace '/calendar' with the actual path of your calendar page
   };
 
   const navigateToSettings = () => {
-    router.push('/setting'); // Replace '/settings' with the actual path of your settings page
+    router.push('/setting');
   };
 
   return (
@@ -25,8 +28,15 @@ export default function BottomNav() {
       </button>
 
       <button
+        onClick={navigateToCalendar}
+        className={pathname === '/calendar' ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}
+      >
+        <AiOutlineCalendar size={24} />
+      </button>
+
+      <button
         onClick={navigateToSettings}
-        className={(pathname === '/setting' || pathname === '/editPark' || pathname === '/editLessorProfile') ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}
+        className={(pathname === '/setting' || pathname === '/editPark' || pathname === '/editRenterProfile' || pathname === '/lessorCustomerSupport') ? 'text-red-500' : 'text-gray-500 hover:text-red-500'}
       >
         <AiOutlineSetting size={24} />
       </button>

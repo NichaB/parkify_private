@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; 
 import { useRouter } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
 import RegisterButton from '../components/RegisterButton';
@@ -16,6 +16,11 @@ export default function RegisterPage() {
 
   const router = useRouter();
 
+  useEffect(() => {
+    sessionStorage.clear();
+  }, []);
+
+    
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -125,7 +130,7 @@ export default function RegisterPage() {
         
         <p className="mt-4 text-center text-gray-600">
           Already have an account?{' '}
-          <Link href="/login" className="text-blue-400">
+          <Link href="/login_lessor" className="text-blue-400">
             Login Now
           </Link>
         </p>
