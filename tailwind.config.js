@@ -5,7 +5,6 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-<<<<<<< HEAD
     extend: {
       colors: {
         background: "var(--background)",
@@ -13,9 +12,6 @@ module.exports = {
         customBlue: '#22A2E3',
       },
     },
-=======
-    extend: {},
->>>>>>> login-developer
   },
   plugins: [],
 };

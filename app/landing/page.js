@@ -34,7 +34,7 @@ const LandingPage = () => {
 
   // Function to handle the Developer button click
   const handleDevClick = () => {
-    router.push("/welcomedev");
+    router.push("start_dev");
   };
 
   // Start playing the audio when the speaker icon is clicked

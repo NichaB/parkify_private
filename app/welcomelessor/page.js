@@ -18,7 +18,20 @@ const WelcomePage = () => {
   };
 
   return (
+
+    
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
+
+            {/* Back Button */}
+      <button 
+        onClick={() => router.push('/landing')} 
+        className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
       <img src='logo.png' alt="Parkify Logo" className="w-64 mb-6" />
 
       <LoginButton onClick={handleLoginClick}/>
