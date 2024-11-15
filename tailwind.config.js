@@ -1,6 +1,7 @@
-/** @type {import('tailwindcss').Config} */
+// tailwind.config.js
 module.exports = {
   content: [
+<<<<<<< HEAD
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
@@ -14,6 +15,13 @@ module.exports = {
         customBlue: '#22A2E3',
       },
     },
+=======
+    "./app/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+>>>>>>> origin/home
   },
   plugins: [],
 };
