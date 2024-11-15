@@ -31,7 +31,7 @@ const EditLessor = () => {
       }
   
       try {
-        const response = await fetch(`/api/Fetchlessor?lessor_id=${lessor_id}`);
+        const response = await fetch(`/api/adFetchLessor?lessor_id=${lessor_id}`);
         
         if (!response.ok) {
           const errorDetails = await response.json();
@@ -63,7 +63,7 @@ const EditLessor = () => {
 
   const handleSaveClick = async () => {
     try {
-      const response = await fetch(`/api/Fetchlessor`, {
+      const response = await fetch(`/api/adFetchLessor`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -118,7 +118,7 @@ const EditLessor = () => {
 
   const confirmDelete = async (isConfirmed, toastId) => {
     if (isConfirmed) {
-      const response = await fetch('/api/Fetchlessor', {
+      const response = await fetch('/api/adFetchLessor', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lessor_id: formData.lessor_id }),

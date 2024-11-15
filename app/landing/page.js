@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { AiOutlineSound, AiFillSound } from "react-icons/ai"; // Import React Icons for sound
+import { AiOutlineSound, AiFillSound } from "react-icons/ai";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -15,26 +15,23 @@ const LandingPage = () => {
     // Create the audio element on component mount
     const audioElement = new Audio("/RaceCar.mp3");
     audioElement.loop = true;
-    setAudio(audioElement); // Set the audio element
+    setAudio(audioElement);
+
+    // Cleanup function to stop the audio when navigating away
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.currentTime = 0; // Reset the audio playback
+      }
+    };
   }, []);
 
-  // Handle the Lessor button click
-  const handleLessorClick = () => {
-    router.push("/welcomelessor");
-  };
-
-  // Handle the Renter button click
-  const handleRenterClick = () => {
-    router.push("/welcomerentor");
-  };
-
-  const handleAdminClick = () => {
-    router.push("/welcomeadmin");
-  };
-
-  // Function to handle the Developer button click
-  const handleDevClick = () => {
-    router.push("start_dev");
+  const navigateWithAudioStop = (path) => {
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0; // Reset audio playback
+    }
+    router.push(path);
   };
 
   // Start playing the audio when the speaker icon is clicked
@@ -81,7 +78,7 @@ const LandingPage = () => {
 
       <div className="flex flex-col sm:flex-row sm:space-x-4 w-full max-w-md mx-auto justify-center items-center z-20 mb-20">
         <button
-          onClick={handleLessorClick}
+          onClick={() => navigateWithAudioStop("/welcomelessor")}
           className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-4 sm:mb-0"
         >
           <img src="lessor.png" alt="Lessor Icon" className="w-12 mb-2" />
@@ -89,7 +86,7 @@ const LandingPage = () => {
         </button>
 
         <button
-          onClick={handleRenterClick}
+          onClick={() => navigateWithAudioStop("/welcomerentor")}
           className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-4 sm:mb-0"
         >
           <img src="renter.png" alt="Renter Icon" className="w-12 mb-2" />
@@ -97,7 +94,7 @@ const LandingPage = () => {
         </button>
 
         <button
-          onClick={handleAdminClick}
+          onClick={() => navigateWithAudioStop("/welcomeadmin")}
           className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-4 sm:mb-0"
         >
           <img src="admin.png" alt="Admin Icon" className="w-12 mb-2" />
@@ -105,7 +102,7 @@ const LandingPage = () => {
         </button>
 
         <button
-          onClick={handleDevClick}
+          onClick={() => navigateWithAudioStop("start_dev")}
           className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-10 sm:mb-0"
         >
           <img src="dev.png" alt="Developer Icon" className="w-12 mb-2" />

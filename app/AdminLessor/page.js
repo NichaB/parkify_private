@@ -22,7 +22,7 @@ const Lessors = () => {
       }
     const fetchLessors = async () => {
       try {
-        const response = await fetch(`/api/Fetchlessor`);
+        const response = await fetch(`/api/adFetchLessor`);
         if (!response.ok) 
           {throw new Error("Failed to fetch lessor.", response.error);
          }
