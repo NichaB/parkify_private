@@ -49,7 +49,7 @@ export default function LocationPage({ params }) {
   // Function to handle click on a parking lot
   const handleParkingClick = (parkingLotId) => {
     sessionStorage.setItem("parkingLotId", parkingLotId); // Store parking lot ID in sessionStorage
-    router.push(`/parkingDetails/${parkingLotId}`); // Redirect to a parking lot details page
+    router.push(`/reservation`); // Redirect to a generic parkingDetails page
   };
 
   // Function to get the image URL for a location
@@ -118,7 +118,6 @@ export default function LocationPage({ params }) {
               
               {/* ID and Custom Parking Icon */}
               <div className="flex items-center space-x-2">
-                <span className="text-xs font-semibold text-gray-500 bg-gray-200 rounded-full px-2 py-1">{spot.parking_lot_id}</span>
                 <img
                   src="/images/parking-icon.png" // Adjust the path based on your actual file location
                   alt="Parking Icon"
