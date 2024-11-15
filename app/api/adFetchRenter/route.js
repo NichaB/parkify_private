@@ -7,7 +7,6 @@ export async function GET(req) {
 
   try {
     let renterResult;
-
     // If userId is provided, fetch a single renter; otherwise, fetch all renters
     if (userId) {
       renterResult = await sql`

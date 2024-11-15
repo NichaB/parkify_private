@@ -13,22 +13,22 @@ const Issues = () => {
 
   // Fetch issues from Supabase
   useEffect(() => {
-    const fetchIssues = async () => {
-      const { data, error } = await supabase
-        .from("issue")
-        .select("issue_id, issue_header, issue_detail, admin_id, status, resolved_by");
+    const fetchIssue = async () => {
+      try {
+        const { data, error } = await supabase.rpc("get_all_issues");
 
-      if (error) {
-        console.error("Error fetching issues:", error);
-        toast.error("Failed to fetch issues.");
-        router.push("/AdminLogin");
-      } else {
+        if (error) throw error;
+
         setIssues(data);
+      } catch (error) {
+        console.error("Error fetching cars:", error);
+        toast.error("Failed to fetch cars.");
+        router.push("/AdminLogin");
       }
     };
 
-    fetchIssues();
-  }, []);
+    fetchIssue();
+  }, [router]);
 
   // Filter issues based on search query for issue_header
   const filteredIssues = issues.filter((issue) =>

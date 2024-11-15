@@ -40,19 +40,27 @@ const AddIssuePage = () => {
       return;
     }
 
-    const { error } = await supabase.from("issue").insert({
-      ...formData,
+    console.log("Admin ID:", adminId); // Debug adminId
+    console.log("Form Data:", formData); // Debug formData
+
+    // Call the stored procedure
+    const { data, error } = await supabase.rpc("add_issue", {
+      issue_header: formData.issue_header,
+      issue_detail: formData.issue_detail,
+      status: formData.status,
       admin_id: adminId,
     });
 
     if (error) {
-      console.error("Error adding issue:", error);
-      toast.error("Failed to add issue.");
+      console.error("Error adding issue:", error.message || error);
+      toast.error("Failed to add issue. Check console for details.");
     } else {
+      console.log("Data returned:", data);
       toast.success("Issue added successfully.");
       router.push("/AdminIssue");
     }
   };
+
 
   return (
     <div className="p-6 max-w-md mx-auto">

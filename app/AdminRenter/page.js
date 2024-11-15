@@ -11,8 +11,8 @@ const Renters = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // Fetch users from Supabase
-// Replace existing fetching logic in useEffect with this:
+// Fetch users from Supabase
+// Replace existing fetching logic in useEffect with this
 useEffect(() => {
     const fetchRenters = async () => {
       try {

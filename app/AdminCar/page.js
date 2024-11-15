@@ -12,23 +12,24 @@ const Cars = () => {
   const router = useRouter();
 
   // Fetch cars from Supabase
+  
   useEffect(() => {
     const fetchCars = async () => {
-      const { data, error } = await supabase
-        .from("car")
-        .select("car_id, car_model, car_color, license_plate");
+      try {
+        const { data, error } = await supabase.rpc("fetch_cars");
 
-      if (error) {
+        if (error) throw error;
+
+        setCars(data);
+      } catch (error) {
         console.error("Error fetching cars:", error);
         toast.error("Failed to fetch cars.");
         router.push("/AdminLogin");
-      } else {
-        setCars(data);
       }
     };
 
     fetchCars();
-  }, []);
+  }, [router]);
 
   // Filter cars based on search query for license_plate
   const filteredCars = cars.filter((car) =>
