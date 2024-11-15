@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import supabase from "../../config/supabaseClient";
 import toast, { Toaster } from 'react-hot-toast';
 
+
+
+
 const EditCar = () => {
   const router = useRouter();
 
@@ -28,58 +31,71 @@ const EditCar = () => {
       return;
     }
 
-    const fetchCarData = async () => {
-      const { data, error } = await supabase
-        .from("car")
-        .select("*")
-        .eq("car_id", carId)
-        .single();
 
-      if (error) {
-        console.error("Error fetching car data:", error);
-        toast.error("Failed to fetch car data.");
-        router.push("/AdminCar");
-      } else {
-        setFormData({
-          car_id: data.car_id,
-          user_id: data.user_id,
-          car_model: data.car_model,
-          car_color: data.car_color,
-          license_plate: data.license_plate,
-          car_image: data.car_image || ""
-        });
-        setLoading(false);
-      }
-    };
+    const fetchCar = async () => {
+      try {
+        const { data, error } = await supabase.rpc("fetch_car_by_id", { car_id_input: parseInt(carId) });
 
-    fetchCarData();
+        if (error) {
+          console.error("Error fetching car data:", error);
+          toast.error("Failed to fetch car data.");
+          router.push("/AdminCar");
+        } 
+        
+        else if (data && data.length > 0) {
+          const car = data[0];
+          setFormData({
+            car_id: car.car_id,
+            user_id: car.user_id,
+            car_model: car.car_model,
+            car_color: car.car_color,
+            license_plate: car.license_plate,
+            car_image: car.car_image || ""
+          });
+          setLoading(false);
+        } else {
+          toast.error("Car not found.");
+          router.push("/AdminCar");
+        }
+      } catch (error) {
+        console.error("Error in fetchCar:", error);
+      }};
+
+    fetchCar();
   }, [router]);
 
   const handleEditClick = () => setIsEditing(true);
 
+
   const handleSaveClick = async () => {
     try {
-      const { error } = await supabase
-        .from("car")
-        .update({
+      const response = await fetch(`/api/updateCar`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          car_id: formData.car_id,
           car_model: formData.car_model,
           car_color: formData.car_color,
-          license_plate: formData.license_plate
-        })
-        .eq("car_id", formData.car_id);
-
-      if (error) {
-        console.error("Error updating car data:", error);
-        toast.error("Failed to update car information.");
-      } else {
-        toast.success("Car information updated successfully");
-        setIsEditing(false);
+          license_plate: formData.license_plate,
+        }),
+      });
+  
+      // Check if the response is OK and that it has JSON content
+      if (!response.ok) {
+        throw new Error(`Failed to update car: ${errorDetails.error}`);
       }
-    } catch (error) {
-      console.error("Save error:", error);
-      toast.error("Error saving data");
-    }
+  
+      // If response is OK and JSON, proceed
+      const data = await response.json();
+      toast.success(data.message || "Car information updated successfully");
+      setIsEditing(false);
+    } catch (error) {}
   };
+
+
+  
+  
+  
 
   const handleDeleteClick = () => {
     const toastId = toast(
@@ -109,23 +125,23 @@ const EditCar = () => {
     );
   };
 
-  const confirmDelete = async (isConfirmed, toastId) => {
+ const confirmDelete = async (isConfirmed, toastId) => {
     if (isConfirmed) {
-      const { error } = await supabase
-        .from("car")
-        .delete()
-        .eq("car_id", formData.car_id);
-
-      if (error) {
-        console.error("Error deleting car:", error);
-        toast.error("Failed to delete car.");
-      } else {
-        toast.success("Car deleted successfully");
-        router.push("/AdminCar");
+      const response = await fetch('/api/updateCar', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ car_id: formData.car_id }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to delete car: ${errorDetails.error}`);
       }
+      const data = await response.json();
+      toast.success(data.message || "Car information delete successfully");
+      router.push("/AdminCar");
     }
-    toast.dismiss(toastId); // Dismiss the confirmation toast after handling "Yes" or "No"
   };
+  
 
   const handleChange = (e) => {
     const { name, value } = e.target;

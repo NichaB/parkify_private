@@ -1,13 +1,13 @@
-"use client";
-
+'use client'
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import supabase from "../../config/supabaseClient";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import toast, { Toaster } from 'react-hot-toast';
+import supabase from "../../config/supabaseClient";
 
 const EditIssue = () => {
   const router = useRouter();
-
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     issue_id: "",
@@ -18,76 +18,80 @@ const EditIssue = () => {
     resolved_by: ""
   });
   const [loading, setLoading] = useState(true);
+  const [issues, setIssues] = useState([]);
+  const [error, setError] = useState(null);
 
-  // Fetch issue data
+
+  
   useEffect(() => {
     const issueId = sessionStorage.getItem("issue_id");
-    if (!issueId) {
-      toast.error("Issue ID not found");
-      router.push("/AdminIssue");
-      return;
-    }
+    const fetchIssueById = async (issueId) => {
+      try {
+        const { data, error } = await supabase.rpc("get_issue", { issue_id_input: parseInt(issueId) });
 
-    const fetchIssueData = async () => {
-      const { data, error } = await supabase
-        .from("issue")
-        .select("*")
-        .eq("issue_id", issueId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching issue data:", error);
-        toast.error("Failed to fetch issue data.");
-        router.push("/AdminIssue");
-      } else {
-        setFormData({
-          issue_id: data.issue_id,
-          admin_id: data.admin_id,
-          issue_header: data.issue_header,
-          issue_detail: data.issue_detail,
-          status: data.status || "Not Started",
-          resolved_by: data.resolved_by || ""
-        });
+        if (error) {
+          console.error("Error fetching issue:", error);
+          setError("Failed to fetch issue details.");
+        } else {
+          const issueData = data[0]; // Assuming data is an array
+          setFormData({
+            issue_id: issueData.issue_id,
+            admin_id: issueData.admin_id,
+            issue_header: issueData.issue_header,
+            issue_detail: issueData.issue_detail,
+            status: issueData.status || "Not Started",
+            resolved_by: issueData.resolved_by || "",
+          });
+          console.log("Fetched issue:", issueData);
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        setError("An unexpected error occurred.");
+      } finally {
         setLoading(false);
       }
     };
-
-    fetchIssueData();
+    fetchIssueById(issueId);
   }, [router]);
 
   const handleEditClick = () => setIsEditing(true);
 
+ 
   const handleSaveClick = async () => {
-    if ((formData.status === "In Progress" || formData.status === "Done") && !formData.resolved_by) {
-      toast.error("Resolved By field cannot be empty for In Progress or Done status.");
-      return;
-    }
-
     try {
-      const { error } = await supabase
-        .from("issue")
-        .update({
+      const response = await fetch(`/api/fetchissue`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          issue_id: formData.issue_id,
           admin_id: formData.admin_id,
           issue_header: formData.issue_header,
           issue_detail: formData.issue_detail,
           status: formData.status,
-          resolved_by: formData.resolved_by || null
-        })
-        .eq("issue_id", formData.issue_id);
-
-      if (error) {
-        console.error("Error updating issue data:", error);
-        toast.error("Failed to update issue information.");
-      } else {
-        toast.success("Issue information updated successfully");
-        setIsEditing(false);
+          resolved_by: formData.resolved_by || null,
+        }),
+      });
+  
+      if (!response.ok) {
+        let errorDetails;
+        try {
+          errorDetails = await response.json();
+        } catch (jsonError) {
+          // Fallback if response is not JSON
+          throw new Error("Failed to update issue: Unexpected error occurred");
+        }
+        throw new Error(`Failed to update issue: ${errorDetails.error}`);
       }
+  
+      toast.success("Issue information updated successfully");
+      setIsEditing(false);
     } catch (error) {
       console.error("Save error:", error);
-      toast.error("Error saving data");
+      toast.error(error.message || "Error saving data");
     }
   };
-
+  
+  
   const handleDeleteClick = () => {
     const toastId = toast(
       <div>
@@ -116,23 +120,34 @@ const EditIssue = () => {
     );
   };
 
-  const confirmDelete = async (isConfirmed, toastId) => {
+  const confirmDelete = async (isConfirmed) => {
     if (isConfirmed) {
-      const { error } = await supabase
-        .from("issue")
-        .delete()
-        .eq("issue_id", formData.issue_id);
-
-      if (error) {
-        console.error("Error deleting issue:", error);
-        toast.error("Failed to delete issue.");
-      } else {
-        toast.success("Issue deleted successfully");
+      try {
+        const response = await fetch(`/api/fetchissue?issue_id=${formData.issue_id}`, {
+          method: "DELETE",
+        });
+  
+        // Log response status and potential errors
+        console.log("DELETE response status:", response.status);
+  
+        if (!response.ok) {
+          const errorDetails = await response.json();
+          console.error("Error deleting user:", errorDetails.error);
+          throw new Error(`Failed to delete user: ${errorDetails.error}`);
+        }
+  
+        toast.success("User deleted successfully");
         router.push("/AdminIssue");
+      } catch (error) {
+        console.error("Error deleting user:", error.message);
+        toast.error(`Failed to delete user: ${error.message}`);
       }
+    } else {
+      toast.dismiss("delete-confirm-toast");
     }
-    toast.dismiss(toastId); // Dismiss the confirmation toast after handling "Yes" or "No"
   };
+
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;

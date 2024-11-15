@@ -20,27 +20,26 @@ const EditLessor = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // Fetch lessor data
   useEffect(() => {
-    const lessorId = sessionStorage.getItem("lessor_id");
-    if (!lessorId) {
-      toast.error("Lessor ID not found");
-      router.push("/AdminLessor");
-      return;
-    }
-
     const fetchLessorData = async () => {
-      const { data, error } = await supabase
-        .from("lessor")
-        .select("*")
-        .eq("lessor_id", lessorId)
-        .single();
+      const lessor_id = sessionStorage.getItem("lessor_id");
 
-      if (error) {
-        console.error("Error fetching lessor data:", error);
-        toast.error("Failed to fetch lessor data.");
+      if (!lessor_id) {
+        toast.error("User ID is missing. Redirecting...");
         router.push("/AdminLessor");
-      } else {
+        return;
+      }
+  
+      try {
+        const response = await fetch(`/api/Fetchlessor?lessor_id=${lessor_id}`);
+        
+        if (!response.ok) {
+          const errorDetails = await response.json();
+          throw new Error(`Error ${response.status}: ${errorDetails.error}`);
+        }
+  
+        const { lessorDetails } = await response.json();
+        const data = lessorDetails[0]; 
         setFormData({
           lessor_id: data.lessor_id,
           lessor_firstname: data.lessor_firstname,
@@ -51,37 +50,41 @@ const EditLessor = () => {
           lessor_profile_pic: data.lessor_profile_pic || ""
         });
         setLoading(false);
+      } catch (error) {
+        console.error("Error fetching lessor data:", error.message);
+        toast.error(`Failed to fetch lessor data: ${error.message}`);
+        router.push("/AdminLessor");
       }
     };
-
     fetchLessorData();
   }, [router]);
 
-  const handleEditClick = () => setIsEditing(true);
+  const handleEditClick = () => setIsEditing(true); 
 
   const handleSaveClick = async () => {
     try {
-      const { error } = await supabase
-        .from("lessor")
-        .update({
+      const response = await fetch(`/api/Fetchlessor`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lessor_id: formData.lessor_id,
           lessor_firstname: formData.lessor_firstname,
           lessor_lastname: formData.lessor_lastname,
           lessor_phone_number: formData.lessor_phone_number,
           lessor_line_url: formData.lessor_line_url
-        })
-        .eq("lessor_id", formData.lessor_id);
-
-      if (error) {
-        console.error("Error updating lessor data:", error);
-        toast.error("Failed to update lessor information.");
-      } else {
-        toast.success("Lessor information updated successfully");
-        setIsEditing(false);
+        }),
+      });
+  
+      // Check if the response is OK and that it has JSON content
+      if (!response.ok) {
+        throw new Error(`Failed to update lessor: ${errorDetails.error}`);
       }
-    } catch (error) {
-      console.error("Save error:", error);
-      toast.error("Error saving data");
-    }
+  
+      // If response is OK and JSON, proceed
+      const data = await response.json();
+      toast.success(data.message || "Lessor information updated successfully");
+      setIsEditing(false);
+    } catch (error) {}
   };
 
   const handleDeleteClick = () => {
@@ -112,23 +115,25 @@ const EditLessor = () => {
     );
   };
 
+
   const confirmDelete = async (isConfirmed, toastId) => {
     if (isConfirmed) {
-      const { error } = await supabase
-        .from("lessor")
-        .delete()
-        .eq("lessor_id", formData.lessor_id);
-
-      if (error) {
-        console.error("Error deleting lessor:", error);
-        toast.error("Failed to delete lessor.");
-      } else {
-        toast.success("Lessor deleted successfully");
-        router.push("/AdminLessor");
+      const response = await fetch('/api/Fetchlessor', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lessor_id: formData.lessor_id }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to delete car: ${errorDetails.error}`);
       }
+      const data = await response.json();
+      toast.success(data.message || "lessor information delete successfully");
+      router.push("/AdminLessor");
     }
-    toast.dismiss(toastId); // Dismiss the confirmation toast after handling "Yes" or "No"
   };
+
+ 
 
   const handleChange = (e) => {
     const { name, value } = e.target;

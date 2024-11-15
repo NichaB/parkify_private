@@ -11,6 +11,7 @@ const Lessors = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
+
   // Fetch lessors from Supabase
   useEffect(() => {
 
@@ -20,21 +21,24 @@ const Lessors = () => {
         return;
       }
     const fetchLessors = async () => {
-      const { data, error } = await supabase
-        .from("lessor")
-        .select("lessor_id, lessor_firstname, lessor_lastname");
-
-      if (error) {
-        console.error("Error fetching lessors:", error);
-        toast.error("Failed to fetch lessors.");
-        router.push("/AdminLogin");
-      } else {
-        setLessors(data);
-      }
-    };
+      try {
+        const response = await fetch(`/api/Fetchlessor`);
+        if (!response.ok) 
+          {throw new Error("Failed to fetch lessor.", response.error);
+         }
+        else{
+          const { lessorDetails } = await response.json();
+          setLessors(lessorDetails);}
+        } 
+        catch (error) {
+          console.error("Error fetching lessor:", error);
+          toast.error("Failed to fetch lessor.");
+          router.push("/AdminMenu"); }};
 
     fetchLessors();
   }, []);
+
+  
 
   // Filter lessors based on search query
   const filteredLessors = lessors.filter((lessor) =>
