@@ -32,37 +32,33 @@ const EditCar = () => {
     }
 
 
-    const fetchCar = async () => {
+     const fetchCar = async () => {
       try {
-        const { data, error } = await supabase.rpc("fetch_car_by_id", { car_id_input: parseInt(carId) });
-
-        if (error) {
-          console.error("Error fetching car data:", error);
-          toast.error("Failed to fetch car data.");
-          router.push("/AdminCar");
-        } 
-        
-        else if (data && data.length > 0) {
-          const car = data[0];
-          setFormData({
-            car_id: car.car_id,
-            user_id: car.user_id,
-            car_model: car.car_model,
-            car_color: car.car_color,
-            license_plate: car.license_plate,
-            car_image: car.car_image || ""
-          });
-          setLoading(false);
-        } else {
-          toast.error("Car not found.");
-          router.push("/AdminCar");
+        const response = await fetch(`/api/updateCar?car_id=${carId}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch car data");
         }
+
+        const { car } = await response.json();
+        setFormData({
+          car_id: car.car_id,
+          user_id: car.user_id,
+          car_model: car.car_model,
+          car_color: car.car_color,
+          license_plate: car.license_plate,
+          car_image: car.car_image || "",
+        });
+        setLoading(false);
       } catch (error) {
-        console.error("Error in fetchCar:", error);
-      }};
+        console.error("Error fetching car data:", error);
+        toast.error("Failed to fetch car data.");
+        router.push("/AdminCar");
+      }
+    };
 
     fetchCar();
   }, [router]);
+
 
   const handleEditClick = () => setIsEditing(true);
 
@@ -180,7 +176,7 @@ const EditCar = () => {
         </div>
       )}
 
-      <div className="flex justify-between mb-4 mt-8">
+      <div className="flex justify-between mb-4 mt-20">
         <Toaster position="top-center" />
         <button onClick={handleDeleteClick} className="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
         {isEditing ? (

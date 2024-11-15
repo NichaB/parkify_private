@@ -2,6 +2,32 @@
 
 import sql from '../../../config/db';
 
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const car_id = searchParams.get('car_id');
+
+  if (!car_id) {
+    return new Response(JSON.stringify({ error: 'Car ID is required' }), { status: 400 });
+  }
+
+  try {
+    const carData = await sql`
+      SELECT car_id, user_id, car_model, car_color, license_plate
+      FROM car
+      WHERE car_id = ${car_id}
+    `;
+
+    if (carData.length === 0) {
+      return new Response(JSON.stringify({ error: 'Car not found' }), { status: 404 });
+    }
+
+    return new Response(JSON.stringify({ car: carData[0] }), { status: 200 });
+  } catch (error) {
+    console.error('Fetch Error:', error);
+    return new Response(JSON.stringify({ error: 'Error fetching car data', details: error.message }), { status: 500 });
+  }
+}
+
 export async function PUT(req) {
   try {
     const { car_id, car_model, car_color, license_plate } = await req.json();

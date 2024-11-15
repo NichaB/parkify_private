@@ -57,7 +57,13 @@ const EditIssue = () => {
   const handleEditClick = () => setIsEditing(true);
 
  
-  const handleSaveClick = async () => {
+ const handleSaveClick = async () => {
+    // Validation for status
+    if ((formData.status === "In Progress" || formData.status === "Done") && (!formData.issue_detail || !formData.resolved_by || !formData.issue_header)) {
+      toast.error("Please fill in Information for the selected status.");
+      return;
+    }
+
     try {
       const response = await fetch(`/api/fetchissue`, {
         method: "PUT",
@@ -71,18 +77,12 @@ const EditIssue = () => {
           resolved_by: formData.resolved_by || null,
         }),
       });
-  
+
       if (!response.ok) {
-        let errorDetails;
-        try {
-          errorDetails = await response.json();
-        } catch (jsonError) {
-          // Fallback if response is not JSON
-          throw new Error("Failed to update issue: Unexpected error occurred");
-        }
+        const errorDetails = await response.json();
         throw new Error(`Failed to update issue: ${errorDetails.error}`);
       }
-  
+
       toast.success("Issue information updated successfully");
       setIsEditing(false);
     } catch (error) {
