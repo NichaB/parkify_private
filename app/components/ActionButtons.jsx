@@ -1,67 +1,127 @@
-// src/components/ActionButtons.jsx
-"use client";
-
 import React, { useState, useEffect } from 'react';
 import PaymentSuccess from './PaymentSuccess';
 import supabase from '../../config/supabaseClient';
 
-const ActionButtons = ({ startDate, endDate, startTime, endTime }) => {
+const ActionButtons = ({ reservationDate, startTime, endTime }) => {
     const [isConfirmPopupVisible, setIsConfirmPopupVisible] = useState(false);
     const [isPaymentSuccessVisible, setIsPaymentSuccessVisible] = useState(false);
     const [location, setLocation] = useState(null);
     const [contact, setContact] = useState(null);
+    const [pricePerHour, setPricePerHour] = useState(0); // Define pricePerHour state
+    const [totalPrice, setTotalPrice] = useState(0); // Define totalPrice state
+    const parkingLotId = 1;
+    const carId = 4;
+    const userId = 33;
 
-    // Fetch contact and location information from Supabase
+    // Helper function to format date from dd/mm/yyyy to yyyy-mm-dd
+    const formatReservationDate = (date) => {
+        if (!date || date.indexOf('/') === -1) return null;
+        const [day, month, year] = date.split('/');
+        return `${year}-${month}-${day}`;
+    };
+
+    const [startDate, endDate] = reservationDate
+        ? reservationDate.split(" - ").map(date => formatReservationDate(date.trim()))
+        : [null, null];
+
     useEffect(() => {
         const fetchData = async () => {
-            const { data, error } = await supabase
-                .from('user_info') // Replace with your actual table name
-                .select('phone_number') // Update with the actual column names for contact and location
-                .eq('user_id', 33) // Replace with the actual condition you need
+            // Fetch contact info
+            const { data: userData, error: userError } = await supabase
+                .from('user_info')
+                .select('phone_number')
+                .eq('user_id', userId)
                 .single();
 
-            if (error) {
-                console.error('Error fetching data:', error);
+            if (userError) {
+                console.error('Error fetching data:', userError);
             } else {
-                setContact(data.phone_number);
-                //setLocation(data.location_name);
+                setContact(userData.phone_number);
             }
 
+            // Fetch location and pricePerHour
             const { data: locationData, error: locationError } = await supabase
                 .from('parking_lot')
-                .select('location_name')
-                .eq('parking_lot_id', 1)
+                .select('location_name, price_per_hour') // Fetch price per hour here
+                .eq('parking_lot_id', parkingLotId)
                 .single();
 
             if (locationError) {
                 console.error('Error fetching location data:', locationError);
             } else {
                 setLocation(locationData.location_name);
+                setPricePerHour(locationData.price_per_hour); // Set pricePerHour state
             }
         };
 
         fetchData();
     }, []);
 
-    // Check if all input fields are filled
-    const allInputsFilled = startDate && endDate && startTime && endTime;
+    const allInputsFilled = reservationDate && startTime && endTime;
 
-    // Function to open the popup
     const handlePaymentClick = () => {
         if (allInputsFilled) {
+            sessionStorage.setItem('reservationDate', reservationDate);
+            sessionStorage.setItem('startTime', startTime);
+            sessionStorage.setItem('endTime', endTime);
             setIsConfirmPopupVisible(true);
         }
     };
 
-    // Function to close the popup
     const closePopup = () => {
         setIsConfirmPopupVisible(false);
     };
 
-    // Function to handle confirm button click
-    const handleConfirmClick = () => {
+    const handleConfirmClick = async () => {
         setIsConfirmPopupVisible(false);
-        setIsPaymentSuccessVisible(true); // Show PaymentSuccess component
+
+        const currentDate = new Date();
+        const offsetDate = new Date(currentDate.getTime() + 7 * 60 * 60 * 1000);
+
+        const formattedReservationDate = `${offsetDate.getFullYear()}-${String(offsetDate.getMonth() + 1).padStart(2, '0')}-${String(offsetDate.getDate()).padStart(2, '0')} ${String(offsetDate.getHours()).padStart(2, '0')}:${String(offsetDate.getMinutes()).padStart(2, '0')}:${String(offsetDate.getSeconds()).padStart(2, '0')} +07`;
+
+        if (!startDate || !endDate || !startTime || !endTime) {
+            console.error("Invalid date or time values:", { startDate, endDate, startTime, endTime });
+            return;
+        }
+
+        const start = new Date(`${startDate}T${startTime}:00+07:00`);
+        const end = new Date(`${endDate}T${endTime}:00+07:00`);
+
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            console.error("Error creating date objects:", { start, end });
+            return;
+        }
+
+        const totalHours = Math.abs((end - start) / (1000 * 60 * 60));
+        const calculatedTotalPrice = totalHours * pricePerHour;
+        setTotalPrice(calculatedTotalPrice); // Update totalPrice state
+
+        const startTimestamp = start.toISOString();
+        const endTimestamp = end.toISOString();
+
+        const { data, error } = await supabase
+            .from('reservation')
+            .insert([
+                {
+                    parking_lot_id: parkingLotId,
+                    user_id: userId,
+                    reservation_date: formattedReservationDate,
+                    start_time: startTimestamp,
+                    end_time: endTimestamp,
+                    total_price: calculatedTotalPrice,
+                    duration_hour: totalHours,
+                    duration_day: Math.floor(totalHours / 24),
+                    car_id: carId,
+                },
+            ]);
+
+        if (error) {
+            console.error("Error inserting reservation:", error.message);
+        } else {
+            console.log("Reservation successfully added:", data);
+            setIsPaymentSuccessVisible(true);
+        }
     };
 
     return (
@@ -73,19 +133,17 @@ const ActionButtons = ({ startDate, endDate, startTime, endTime }) => {
             <button
                 onClick={handlePaymentClick}
                 disabled={!allInputsFilled}
-                className={`py-2 px-4 rounded-lg ${allInputsFilled ? 'bg-green-500' : 'bg-gray-400 cursor-not-allowed'
-                    } text-white`}
+                className={`py-2 px-4 rounded-lg ${allInputsFilled ? 'bg-green-500' : 'bg-gray-400 cursor-not-allowed'} text-white`}
             >
                 Payment
             </button>
 
-            {/* Confirmation Popup */}
             {isConfirmPopupVisible && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
                     <div className="bg-white rounded-lg p-6 w-80 shadow-lg">
                         <h2 className="text-xl font-bold mb-2 text-black">Confirm Reservation</h2>
                         <p><span className="font-semibold text-black">Location:</span> <span className='text-black'>{location || 'Loading...'}</span></p>
-                        <p><span className="font-semibold text-black">Date:</span> <span className='text-black'>{startDate} - {endDate}</span></p>
+                        <p><span className="font-semibold text-black">Date:</span> <span className='text-black'>{reservationDate}</span></p>
                         <p><span className="font-semibold text-black">Time:</span> <span className='text-black'>{startTime} - {endTime}</span></p>
                         <p><span className="font-semibold text-black">Contact:</span> <span className='text-black'>{"+66 " + contact || 'Loading...'}</span></p>
                         <p className="text-gray-500 text-sm mt-2">Please note that this information will be shared with the parking lot owner.</p>
@@ -102,12 +160,16 @@ const ActionButtons = ({ startDate, endDate, startTime, endTime }) => {
                 </div>
             )}
 
-            {/* Payment Success Popup */}
-            {isPaymentSuccessVisible && <PaymentSuccess onClose={() => setIsPaymentSuccessVisible(false)}
-                startDate={startDate}
-                endDate={endDate}
-                startTime={startTime}
-                endTime={endTime} />} {/* Display PaymentSuccess component when confirmed */}
+            {isPaymentSuccessVisible && (
+                <PaymentSuccess
+                    onClose={() => setIsPaymentSuccessVisible(false)}
+                    reservationDate={reservationDate}
+                    startTime={startTime}
+                    endTime={endTime}
+                    pricePerHour={pricePerHour}
+                    totalPrice={totalPrice} // Pass totalPrice to PaymentSuccess
+                />
+            )}
         </div>
     );
 };

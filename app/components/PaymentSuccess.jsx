@@ -3,11 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import supabase from '../../config/supabaseClient';
 
-const PaymentSuccess = ({ startDate, endDate, startTime, endTime }) => {
+const PaymentSuccess = ({ reservationDate, startTime, endTime, totalPrice }) => {
     const router = useRouter();
     const [bookerName, setBookerName] = useState('Loading...');
     const [location, setLocation] = useState('Loading...');
-    const [totalPayment, setTotalPayment] = useState(0);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -15,7 +14,7 @@ const PaymentSuccess = ({ startDate, endDate, startTime, endTime }) => {
                 const { data: userInfoData, error: userInfoError } = await supabase
                     .from('user_info')
                     .select('first_name, last_name')
-                    .eq('user_id', 28)
+                    .eq('user_id', 27)
                     .single();
 
                 if (userInfoError) {
@@ -26,26 +25,14 @@ const PaymentSuccess = ({ startDate, endDate, startTime, endTime }) => {
 
                 const { data: parkingData, error: parkingError } = await supabase
                     .from('parking_lot')
-                    .select('location_name, price_per_hour')
+                    .select('location_name')
                     .eq('parking_lot_id', 1)
                     .single();
 
                 if (parkingError) {
-                    console.error('Error fetching parking location and price:', parkingError);
+                    console.error('Error fetching parking location:', parkingError);
                 } else {
                     setLocation(parkingData.location_name);
-                    const pricePerHour = parkingData.price_per_hour;
-
-                    const start = new Date(`${startDate}T${startTime}`);
-                    const end = new Date(`${endDate}T${endTime}`);
-                    const totalHours = Math.abs((end - start) / (1000 * 60 * 60));
-
-                    if (!isNaN(totalHours) && pricePerHour) {
-                        const calculatedPayment = pricePerHour * totalHours;
-                        setTotalPayment(calculatedPayment);
-                    } else {
-                        console.error('Invalid totalHours or pricePerHour');
-                    }
                 }
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -53,10 +40,10 @@ const PaymentSuccess = ({ startDate, endDate, startTime, endTime }) => {
         };
 
         fetchData();
-    }, [startDate, endDate, startTime, endTime]);
+    }, []);
 
     const handleClose = () => {
-        router.push('/Home'); // Navigate to the home page
+        router.push('/Home');
     };
 
     return (
@@ -73,7 +60,7 @@ const PaymentSuccess = ({ startDate, endDate, startTime, endTime }) => {
 
                 <div className="flex justify-between items-center bg-gray-800 py-4 px-6 rounded-lg mb-6">
                     <p className="text-gray-400 text-lg">Total Payment</p>
-                    <p className="text-2xl font-bold">THB {totalPayment.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">THB {totalPrice.toFixed(2)}</p>
                     <div className="bg-green-500 w-6 h-6 rounded-full flex items-center justify-center ml-2">
                         <span>✔</span>
                     </div>
@@ -87,7 +74,7 @@ const PaymentSuccess = ({ startDate, endDate, startTime, endTime }) => {
                     <div className="flex justify-between">
                         <p className="text-gray-400 font-semibold">Date & Time Reservation</p>
                         <div className="text-right pl-5">
-                            <p><span className='text-white'>{startDate} - {endDate}</span></p>
+                            <p><span className='text-white'>{reservationDate}</span></p>
                             <p><span className='text-white'>{startTime} - {endTime}</span></p>
                         </div>
                     </div>
@@ -95,10 +82,7 @@ const PaymentSuccess = ({ startDate, endDate, startTime, endTime }) => {
                         <p className="text-gray-400 font-semibold">Booker Name</p>
                         <p>{bookerName}</p>
                     </div>
-                    <div className="flex justify-between">
-                        <p className="text-gray-400 font-semibold">Ref Number</p>
-                        <p>000085752257</p>
-                    </div>
+
                 </div>
             </div>
         </div>
