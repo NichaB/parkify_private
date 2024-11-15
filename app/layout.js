@@ -11,7 +11,11 @@ export default function RootLayout({ children }) {
         <meta name="theme-color" content="#000000" />
         <title>Parkify Mobile App</title>
       </head>
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> feature/reservation
       <body className="bg-gray-100 min-h-screen">
         {children}  {/* Render the content of individual pages here */}
       </body>
