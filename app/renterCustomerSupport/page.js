@@ -8,7 +8,8 @@ import BackButton from '../components/BackButton';
 export default function CustomerSupportPage() {
   const [issue, setIssue] = useState('');
   const [details, setDetails] = useState('');
-  const [userId, setUserId] = useState(null);
+  const [userId, setRenterId] = useState(null);
+
   const router = useRouter();
 
 
@@ -33,7 +34,7 @@ if (storedRenterId) {
     }
 
     try {
-      const response = await fetch('/api/submitComplaint', {
+      const response = await fetch('/api/renterSubmitComplaint', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ complain: issue, detail: details, userId }),

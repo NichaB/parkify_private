@@ -16,7 +16,7 @@ export async function POST(req) {
 
     // Insert data into the complain table
     const insertResult = await sql`
-      INSERT INTO complain (user_id, complain, detail, user_type)
+      INSERT INTO complain (submitter_id, complain, detail, user_type)
       VALUES (${userId}, ${complain}, ${detail}, 'renter')
       RETURNING complain_id
     `;

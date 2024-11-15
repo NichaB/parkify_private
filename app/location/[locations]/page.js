@@ -60,7 +60,7 @@ export default function LocationPage({ params }) {
   return (
     <div className="min-h-screen bg-white p-4 space-y-4">
       {/* Search Bar */}
-      <div className="flex items-center bg-gray-100 p-3 rounded-lg shadow-md">
+      <div className="flex items-center bg-gray-100 p-3 rounded-lg shadow-md mt-7">
         <input
           type="text"
           value={searchText}

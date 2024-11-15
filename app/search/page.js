@@ -40,7 +40,7 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col p-6">
       {/* Search Bar with Close Button */}
-      <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg mb-4 shadow-md">
+      <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg mb-4 shadow-md mt-4">
         <input
           type="text"
           value={searchText}
