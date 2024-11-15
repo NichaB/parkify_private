@@ -1,10 +1,8 @@
-// app/location/[locations]/page.js
 "use client";
 
 import { useRouter } from "next/navigation";
 import { AiOutlineClose } from "react-icons/ai";
 import { useState, useEffect } from "react";
-import { supabase } from "../../../config/supabaseClient";
 import React from "react";
 
 export default function LocationPage({ params }) {
@@ -26,22 +24,33 @@ export default function LocationPage({ params }) {
   useEffect(() => {
     const fetchParkingData = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("parking_lot")
-        .select("*")
-        .ilike("location_name", `%${location}%`); // Case-insensitive match using ilike
 
-      if (error) {
-        console.error("Error fetching parking data:", error);
-        setError("Failed to load parking data.");
-      } else {
-        setParkingData(data);
+      try {
+        const response = await fetch(`/api/fetchParking?locationName=${encodeURIComponent(location)}`);
+        if (!response.ok) {
+          const errorDetails = await response.json();
+          throw new Error(errorDetails.error || 'Failed to fetch parking data.');
+        }
+
+        const { parkingLots } = await response.json();
+        setParkingData(parkingLots);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching parking data:", err);
+        setError(err.message || "Failed to load parking data.");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchParkingData();
   }, [location]);
+
+  // Function to handle click on a parking lot
+  const handleParkingClick = (parkingLotId) => {
+    sessionStorage.setItem("parkingLotId", parkingLotId); // Store parking lot ID in sessionStorage
+    router.push(`/parkingDetails/${parkingLotId}`); // Redirect to a parking lot details page
+  };
 
   // Function to get the image URL for a location
   const getImageForLocation = (locationName) => {
@@ -95,7 +104,11 @@ export default function LocationPage({ params }) {
           <p className="text-red-500">{error}</p>
         ) : parkingData.length > 0 ? (
           parkingData.map((spot, index) => (
-            <div key={`${spot.id}-${index}`} className="flex justify-between items-center bg-gray-100 p-4 rounded-lg shadow-md">
+            <div
+              key={`${spot.parking_lot_id}-${index}`}
+              className="flex justify-between items-center bg-gray-100 p-4 rounded-lg shadow-md cursor-pointer"
+              onClick={() => handleParkingClick(spot.parking_lot_id)} // Add click handler
+            >
               <div className="flex flex-col">
                 {/* Display the rate prominently */}
                 <h3 className="text-lg font-bold text-gray-800 mb-1">{spot.price_per_hour} THB / Hour</h3>
@@ -105,7 +118,7 @@ export default function LocationPage({ params }) {
               
               {/* ID and Custom Parking Icon */}
               <div className="flex items-center space-x-2">
-                <span className="text-xs font-semibold text-gray-500 bg-gray-200 rounded-full px-2 py-1">{spot.id}</span>
+                <span className="text-xs font-semibold text-gray-500 bg-gray-200 rounded-full px-2 py-1">{spot.parking_lot_id}</span>
                 <img
                   src="/images/parking-icon.png" // Adjust the path based on your actual file location
                   alt="Parking Icon"
