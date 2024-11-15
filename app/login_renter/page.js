@@ -8,16 +8,39 @@ import LoginButton from '../components/LoginButton';
 
 export default function LoginPage() {
 
-  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
-
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutTimeLeft, setLockoutTimeLeft] = useState(null); // Lockout time in seconds
   const router = useRouter();
 
   useEffect(() => {
     sessionStorage.clear();
+
+    // Check lockout status and start timer if needed
+    const lockoutEnd = localStorage.getItem('lockoutEnd');
+    if (lockoutEnd) {
+      const timeLeft = Math.ceil((parseInt(lockoutEnd) - Date.now()) / 1000);
+      if (timeLeft > 0) {
+        setLockoutTimeLeft(timeLeft);
+
+        const interval = setInterval(() => {
+          setLockoutTimeLeft((prev) => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              localStorage.removeItem('lockoutEnd');
+              localStorage.setItem('failedAttempts', 0); // Reset failed attempts after lockout
+              return null;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+
+        return () => clearInterval(interval); // Cleanup interval on unmount
+      }
+    }
   }, []);
 
   const handleChange = (e) => {
@@ -27,8 +50,43 @@ export default function LoginPage() {
     });
   };
 
+  const handleFailedLoginAttempt = () => {
+    let attempts = parseInt(localStorage.getItem('failedAttempts')) || 0;
+    attempts += 1;
+    localStorage.setItem('failedAttempts', attempts);
+
+    if (attempts >= 3) {
+      const lockoutDuration = 30 * 1000; // 30 seconds lockout
+      const lockoutEndTime = Date.now() + lockoutDuration;
+      localStorage.setItem('lockoutEnd', lockoutEndTime);
+      setLockoutTimeLeft(30);
+
+      const interval = setInterval(() => {
+        setLockoutTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            localStorage.removeItem('lockoutEnd');
+            localStorage.setItem('failedAttempts', 0); // Reset failed attempts after lockout
+            setFailedAttempts(0); // Reset attempts in state
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      toast.error('Too many failed attempts. Please wait 30 seconds.');
+    } else {
+      toast.error('Incorrect email or password. Please try again.');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (lockoutTimeLeft) {
+      toast.error(`Too many attempts. Please wait for ${lockoutTimeLeft} seconds.`);
+      return;
+    }
 
     if (!formData.email || !formData.password) {
       toast.error('Please enter both email and password.');
@@ -45,16 +103,17 @@ export default function LoginPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Login failed. Please try again.');
+        handleFailedLoginAttempt();
+        return;
       }
+
       sessionStorage.setItem('userId', result.user_id);
       toast.success('Login successful!');
-
-      // Redirect to the settings page or desired page after login
-      router.push('/setting');
+      localStorage.setItem('failedAttempts', 0); // Reset failed attempts
+      router.push('/home_renter'); // Redirect to settings page
     } catch (error) {
-      toast.error(error.message || 'An error occurred. Please try again.');
       console.error('Login error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     }
   };
 
@@ -64,7 +123,7 @@ export default function LoginPage() {
 
       {/* Back Button */}
       <button 
-        onClick={() => router.push('/landing')} 
+        onClick={() => router.push('/welcomerenter')} 
         className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black"
       >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
@@ -86,6 +145,7 @@ export default function LoginPage() {
               value={formData.email}
               onChange={handleChange}
               className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={lockoutTimeLeft !== null} // Disable field during lockout
             />
           </div>
 
@@ -97,13 +157,23 @@ export default function LoginPage() {
               value={formData.password}
               onChange={handleChange}
               className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={lockoutTimeLeft !== null} // Disable field during lockout
             />
           </div>
         </form>
       </div>
 
       <div className="flex flex-col items-center mb-4 w-4/5 mx-auto">
-        <LoginButton onClick={handleSubmit} className="w-full bg-black text-white py-3 rounded-lg">
+        {lockoutTimeLeft !== null && (
+          <p className="text-red-500 mb-4">
+            Too many failed attempts. Please wait {lockoutTimeLeft} seconds to try again.
+          </p>
+        )}
+        <LoginButton 
+          onClick={handleSubmit} 
+          className="w-full bg-black text-white py-3 rounded-lg"
+          disabled={lockoutTimeLeft !== null}
+        >
           Login
         </LoginButton>
         

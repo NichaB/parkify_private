@@ -1,43 +1,49 @@
-// pages/index.js
-"use client"
+"use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // Import the useRouter hook
 import Link from "next/link";
 import Header from "../components/Header";
 import SearchBar from "../components/SearchBar";
 import PlaceCard from "../components/PlaceCard";
 import BottomNav from "../components/BottomNav";
-import ReservedCard from "../components/ReservedCard"
-import { supabase } from "../../config/supabaseClient"; // Correct path for your supabaseClient
+import ReservedCard from "../components/ReservedCard";
 
 export default function HomePage() {
     const [userName, setUserName] = useState("");
+    const router = useRouter(); // Initialize the router
 
     useEffect(() => {
         const fetchUserName = async () => {
-            try {
-                const { data, error } = await supabase
-                    .from("lessor") // Replace with your actual table name
-                    .select("lessor_firstname")
-                    .eq("lessor_id", 9)
-                    .single(); // Fetch a single record with lessor_id = 1
+            // Retrieve userId from sessionStorage
+            const userId = sessionStorage.getItem("userId");
 
-                if (error) {
-                    console.error("Error fetching user name:", error.message || error);
-                } else if (data) {
-                    // Combine first and last name
-                    setUserName(`${data.lessor_firstname}`);
+            if (!userId) {
+                console.error("User ID is not found in session storage.");
+                router.push("/login_renter"); // Use the router to redirect
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/fetchRenter?renterId=${userId}`);
+                if (!response.ok) {
+                    throw new Error(`Error fetching renter details: ${response.statusText}`);
+                }
+
+                const { renterDetails } = await response.json();
+
+                if (renterDetails) {
+                    setUserName(`${renterDetails.first_name} ${renterDetails.last_name}`);
                 } else {
-                    console.warn("No data returned from Supabase.");
+                    console.warn("Renter details not found.");
                 }
             } catch (err) {
-                console.error("Unexpected error fetching data from Supabase:", err);
+                console.error("Unexpected error fetching renter details:", err);
             }
         };
 
         fetchUserName();
-    }, []);
-
+    }, [router]); // Add router to the dependency array
 
     return (
         <div className="min-h-screen bg-white p-6 pb-20">
