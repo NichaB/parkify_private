@@ -130,11 +130,11 @@ export default function EditRenter() {
     <div className="flex flex-col h-screen bg-white">
       <Toaster />
       <div className="relative flex-grow overflow-y-auto p-6">
-        <BackButton targetPage="/setting" />
+        <BackButton targetPage="/setting_renter" />
         <h1 className="text-2xl font-bold text-black text-left w-full px-6 mt-5 py-4">
           Profile Setting
         </h1>
-        <div className="flex flex-col items-center mt-20 ">
+        <div className="flex flex-col items-center mt-10 ">
           {Object.keys(fieldLabels).map((field) => (
             <div
               key={field}

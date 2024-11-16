@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import toast, { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from "react-hot-toast";
 
 // Function to convert to Thai time (Asia/Bangkok)
 const formatToThaiDatetime = (datetime) => {
@@ -14,6 +14,7 @@ const formatToThaiDatetime = (datetime) => {
 
 const EditReservation = () => {
   const router = useRouter();
+  const pricePerHour = 50; // Example hourly rate
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     reservation_id: "",
@@ -21,10 +22,10 @@ const EditReservation = () => {
     user_id: "",
     start_datetime: "",
     end_datetime: "",
-    total_price: "",
+    total_price: 0.0, // Float for accurate calculation
     duration_hour: 0,
     duration_day: 0,
-    car_id: ""
+    car_id: "",
   });
   const [loading, setLoading] = useState(true);
 
@@ -38,35 +39,37 @@ const EditReservation = () => {
 
     const fetchReservationData = async () => {
       try {
-        console.log(`Fetching data for reservationId: ${reservationId}`);
-        const response = await fetch(`/api/adFetchRes?reservationId=${reservationId}`);
-        
+        const response = await fetch(
+          `/api/adFetchRes?reservationId=${reservationId}`
+        );
         if (!response.ok) {
           console.error("Response Error:", await response.json());
           throw new Error("Failed to fetch reservation data");
         }
-        
+
         const { reservationDetails } = await response.json();
-        console.log("Fetched Data:", reservationDetails); // Log fetched data
-        
-        // Extract the first item in the array if reservationDetails is an array
-        const reservation = Array.isArray(reservationDetails) ? reservationDetails[0] : reservationDetails;
-        
+        const reservation = Array.isArray(reservationDetails)
+          ? reservationDetails[0]
+          : reservationDetails;
+
         if (!reservation) {
           throw new Error("No reservation data found");
         }
-        
-        // Populate formData with fetched data
+
         setFormData({
           reservation_id: reservation.reservation_id || "",
           parking_lot_id: reservation.parking_lot_id || "",
           user_id: reservation.user_id || "",
-          start_datetime: reservation.start_time ? formatToThaiDatetime(reservation.start_time) : "",
-          end_datetime: reservation.end_time ? formatToThaiDatetime(reservation.end_time) : "",
-          total_price: reservation.total_price || "",
+          start_datetime: reservation.start_time
+            ? formatToThaiDatetime(reservation.start_time)
+            : "",
+          end_datetime: reservation.end_time
+            ? formatToThaiDatetime(reservation.end_time)
+            : "",
+          total_price: parseFloat(reservation.total_price) || 0.0,
           duration_hour: reservation.duration_hour || 0,
           duration_day: reservation.duration_day || 0,
-          car_id: reservation.car_id || ""
+          car_id: reservation.car_id || "",
         });
         setLoading(false);
       } catch (error) {
@@ -79,32 +82,68 @@ const EditReservation = () => {
     fetchReservationData();
   }, [router]);
 
+  useEffect(() => {
+    calculateDurationAndPrice();
+  }, [formData.start_datetime, formData.end_datetime]);
+
+  const calculateDurationAndPrice = () => {
+    const { start_datetime, end_datetime } = formData;
+    if (start_datetime && end_datetime) {
+      const start = new Date(start_datetime);
+      const end = new Date(end_datetime);
+
+      if (end > start) {
+        const diffMs = end - start;
+        const diffHours = diffMs / (1000 * 60 * 60); // Convert ms to hours
+        const totalPrice = parseFloat(diffHours * pricePerHour);
+
+        setFormData((prevData) => ({
+          ...prevData,
+          duration_hour: Math.floor(diffHours),
+          duration_day: Math.floor(diffHours / 24),
+          total_price: totalPrice, // Update total price
+        }));
+      } else {
+        setFormData((prevData) => ({
+          ...prevData,
+          duration_hour: 0,
+          duration_day: 0,
+          total_price: 0.0, // Reset price if dates are invalid
+        }));
+        toast.error(
+          "End date and time must be later than the start date and time."
+        );
+      }
+    }
+  };
+
   const handleEditClick = () => setIsEditing(true);
 
   const handleSaveClick = async () => {
     try {
-      const response = await fetch(`/api/adFetchRes`, {
+      const response = await fetch(`/api/adFetchIssue`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          reservation_id: formData.reservation_id,
-          start_time: formData.start_datetime,
-          end_time: formData.end_datetime,
-          total_price: formData.total_price,
-          duration_hour: formData.duration_hour,
-          duration_day: formData.duration_day
-        })
+          issue_id: formData.issue_id,
+          admin_id: formData.admin_id,
+          issue_header: formData.issue_header,
+          issue_detail: formData.issue_detail,
+          resolved_by: formData.resolved_by || null,
+          status: formData.status, // Ensure this is passed
+        }),
       });
-      
+
       if (!response.ok) {
-        throw new Error("Failed to update reservation");
+        const errorDetails = await response.json();
+        throw new Error(`Failed to update issue: ${errorDetails.error}`);
       }
 
-      toast.success("Reservation information updated successfully");
+      toast.success("Issue information updated successfully");
       setIsEditing(false);
     } catch (error) {
-      console.error("Error updating reservation:", error);
-      toast.error("Failed to update reservation information.");
+      console.error("Save error:", error);
+      toast.error(error.message || "Error saving data");
     }
   };
 
@@ -139,10 +178,13 @@ const EditReservation = () => {
   const confirmDelete = async (isConfirmed, toastId) => {
     if (isConfirmed) {
       try {
-        const response = await fetch(`/api/adFetchRes?reservationId=${formData.reservation_id}`, {
-          method: "DELETE"
-        });
-        
+        const response = await fetch(
+          `/api/adFetchRes?reservationId=${formData.reservation_id}`,
+          {
+            method: "DELETE",
+          }
+        );
+
         if (!response.ok) {
           throw new Error("Failed to delete reservation");
         }
@@ -165,36 +207,6 @@ const EditReservation = () => {
     }));
   };
 
-  useEffect(() => {
-    calculateDuration();
-  }, [formData.start_datetime, formData.end_datetime]);
-
-  const calculateDuration = () => {
-    const { start_datetime, end_datetime } = formData;
-    if (start_datetime && end_datetime) {
-      const start = new Date(start_datetime);
-      const end = new Date(end_datetime);
-
-      if (end > start) {
-        const diffMs = end - start;
-        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-        const diffDays = Math.floor(diffHours / 24);
-
-        setFormData((prevData) => ({
-          ...prevData,
-          duration_hour: diffHours,
-          duration_day: diffDays,
-        }));
-      } else {
-        setFormData((prevData) => ({
-          ...prevData,
-          duration_hour: 0,
-          duration_day: 0,
-        }));
-      }
-    }
-  };
-
   if (loading) return <p>Loading...</p>;
 
   return (
@@ -212,21 +224,42 @@ const EditReservation = () => {
           stroke="currentColor"
           className="w-6 h-6"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15 19l-7-7 7-7"
+          />
         </svg>
       </button>
 
       <div className="flex justify-between mb-4 mt-20">
-        <button onClick={handleDeleteClick} className="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
+        <button
+          onClick={handleDeleteClick}
+          className="bg-red-500 text-white px-4 py-2 rounded"
+        >
+          Delete
+        </button>
         {isEditing ? (
-          <button onClick={handleSaveClick} className="bg-green-500 text-white px-4 py-2 rounded">Save</button>
+          <button
+            onClick={handleSaveClick}
+            className="bg-green-500 text-white px-4 py-2 rounded"
+          >
+            Save
+          </button>
         ) : (
-          <button onClick={handleEditClick} className="bg-blue-500 text-white px-4 py-2 rounded">Edit</button>
+          <button
+            onClick={handleEditClick}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Edit
+          </button>
         )}
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-500 mb-1">Start Date & Time (Thai Time)</label>
+        <label className="block text-gray-500 mb-1">
+          Start Date & Time (Thai Time)
+        </label>
         <input
           type="datetime-local"
           name="start_datetime"
@@ -238,7 +271,9 @@ const EditReservation = () => {
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-500 mb-1">End Date & Time (Thai Time)</label>
+        <label className="block text-gray-500 mb-1">
+          End Date & Time (Thai Time)
+        </label>
         <input
           type="datetime-local"
           name="end_datetime"
@@ -252,12 +287,10 @@ const EditReservation = () => {
       <div className="mb-4">
         <label className="block text-gray-500 mb-1">Total Price</label>
         <input
-          type="number"
-          name="total_price"
-          value={formData.total_price}
-          onChange={handleChange}
-          readOnly={!isEditing}
-          className="w-full p-2 rounded border border-gray-300"
+          type="text"
+          value={`${formData.total_price.toFixed(2)} THB`}
+          readOnly
+          className="w-full p-2 rounded border border-gray-300 bg-gray-100"
         />
       </div>
 

@@ -21,7 +21,7 @@ const Reservations = () => {
     const userId = sessionStorage.getItem("userId");
     if (!userId) {
       toast.error("User ID not found. Please log in.");
-      router.push("/UserLogin");
+      router.push("/login_renter");
       return;
     }
 

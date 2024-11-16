@@ -1,34 +1,41 @@
 import sql from '../../../config/db';  // Ensure your database configuration is correct
+
 export async function PUT(req) {
-    try {
-      const { issue_id, admin_id, issue_header, issue_detail, resolved_by  } = await req.json();
-  
-      if (!issue_id) {
-        return new Response(JSON.stringify({ error: 'ISSUE ID is required' }), { status: 400 });
-      }
-  
-      const updateData = {};
+  try {
+    const { issue_id, admin_id, issue_header, issue_detail, resolved_by, status } = await req.json();
+
+    if (!issue_id) {
+      return new Response(JSON.stringify({ error: 'ISSUE ID is required' }), { status: 400 });
+    }
+
+    const updateData = {};
     if (issue_header) updateData.issue_header = issue_header;
     if (issue_detail) updateData.issue_detail = issue_detail;
     if (resolved_by) updateData.resolved_by = resolved_by;
-  
-      if (Object.keys(updateData).length === 0) {
-        return new Response(JSON.stringify({ error: 'At least one field must be updated' }), { status: 400 });
-      }
-  
-      await sql`
-        UPDATE issue
-        SET ${sql(updateData)}
-        WHERE issue_id = ${issue_id}
-      `;
-  
-      return new Response(JSON.stringify({ message: 'Issue information updated successfully' }), { status: 200 });
-    
-    } catch (error) {
-      console.error('Update Error:', error);
-      return new Response(JSON.stringify({ error: 'Error updating ISSUE' }), { status: 500 });
+    if (status) updateData.status = status; // Ensure status is included
+
+    if (Object.keys(updateData).length === 0) {
+      return new Response(JSON.stringify({ error: 'At least one field must be updated' }), { status: 400 });
     }
+
+    const updatedRows = await sql`
+      UPDATE issue
+      SET ${sql(updateData)}
+      WHERE issue_id = ${issue_id}
+      RETURNING issue_id
+    `;
+
+    if (updatedRows.length === 0) {
+      throw new Error('Issue not found or could not be updated');
+    }
+
+    return new Response(JSON.stringify({ message: 'Issue information updated successfully' }), { status: 200 });
+
+  } catch (error) {
+    console.error('Update Error:', error);
+    return new Response(JSON.stringify({ error: 'Error updating ISSUE', details: error.message }), { status: 500 });
   }
+}
 
   
   export async function DELETE(req) {

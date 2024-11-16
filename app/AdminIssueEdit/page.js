@@ -24,7 +24,15 @@ const EditIssue = () => {
 
   
   useEffect(() => {
+    
+     if (!sessionStorage.getItem("admin_id")) {
+      toast.error("Admin ID not found. Please log in.");
+      router.push("/AdminLogin");
+      return;
+    }
+
     const issueId = sessionStorage.getItem("issue_id");
+   
     const fetchIssueById = async (issueId) => {
       try {
         const { data, error } = await supabase.rpc("get_issue", { issue_id_input: parseInt(issueId) });
@@ -58,38 +66,32 @@ const EditIssue = () => {
 
  
  const handleSaveClick = async () => {
-    // Validation for status
-    if ((formData.status === "In Progress" || formData.status === "Done") && (!formData.issue_detail || !formData.resolved_by || !formData.issue_header)) {
-      toast.error("Please fill in Information for the selected status.");
-      return;
+  try {
+    const response = await fetch(`/api/adFetchIssue`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        issue_id: formData.issue_id,
+        admin_id: formData.admin_id,
+        issue_header: formData.issue_header,
+        issue_detail: formData.issue_detail,
+        resolved_by: formData.resolved_by || null,
+        status: formData.status, // Ensure this is passed
+      }),
+    });
+
+    if (!response.ok) {
+      const errorDetails = await response.json();
+      throw new Error(`Failed to update issue: ${errorDetails.error}`);
     }
 
-    try {
-      const response = await fetch(`/api/adFetchIssue`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          issue_id: formData.issue_id,
-          admin_id: formData.admin_id,
-          issue_header: formData.issue_header,
-          issue_detail: formData.issue_detail,
-          status: formData.status,
-          resolved_by: formData.resolved_by || null,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorDetails = await response.json();
-        throw new Error(`Failed to update issue: ${errorDetails.error}`);
-      }
-
-      toast.success("Issue information updated successfully");
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Save error:", error);
-      toast.error(error.message || "Error saving data");
-    }
-  };
+    toast.success("Issue information updated successfully");
+    setIsEditing(false);
+  } catch (error) {
+    console.error("Save error:", error);
+    toast.error(error.message || "Error saving data");
+  }
+};
   
   
   const handleDeleteClick = () => {

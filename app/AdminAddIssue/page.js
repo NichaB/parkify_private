@@ -129,15 +129,15 @@ const AddIssuePage = () => {
     {/* Home Button - Red when in /AdminMenu or /AdminAddIssue */}
     <button
       onClick={() => handleNavigate("/AdminMenu")}
-      className={(isActive("/AdminMenu") || isActive("/AdminAddIssue")) ? "text-red-500" : "text-gray-500"}
+      className={(isActive("/AdminMenu")) ? "text-red-500" : "text-gray-500"}
     >
       <FaHome className="text-2xl" />
     </button>
 
     {/* Customer Complaint Button */}
     <button
-      onClick={() => handleNavigate("/CustomerComplaint")}
-      className={isActive("/CustomerComplaint") ? "text-red-500" : "text-gray-500"}
+      onClick={() => handleNavigate("/AdminCustomerComplaint")}
+      className={isActive("/AdminCustomerComplaint") ||  isActive("/AdminAddIssue") ? "text-red-500" : "text-gray-500"}
     >
       <FaExclamationTriangle className="text-2xl" />
     </button>

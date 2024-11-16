@@ -182,7 +182,7 @@ const AdminMenu = () => {
 
     {/* Customer Complaint Button */}
     <button
-      onClick={() => handleNavigate("/CustomerComplaint")}
+      onClick={() => handleNavigate("/AdminCustomerComplaint")}
       className={isActive("/CustomerComplaint") ? "text-red-500" : "text-gray-500"}
     >
       <FaExclamationTriangle className="text-2xl" />

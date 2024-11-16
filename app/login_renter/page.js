@@ -17,6 +17,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
+    
     sessionStorage.clear();
 
     // Check lockout status and start timer if needed

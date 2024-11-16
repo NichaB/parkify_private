@@ -79,7 +79,7 @@ const CustomerComplaints = () => {
 
       {/* Content Area */}
       <div className="flex-grow overflow-y-auto p-6">
-        <h1 className="text-3xl font-bold text-black text-left w-full mt-16 py-4">
+        <h1 className="text-3xl font-bold text-black text-left w-full mt-10 py-4">
           Customer Support 🔧
         </h1>
 
@@ -153,9 +153,9 @@ const CustomerComplaints = () => {
 
           {/* Customer Complaint Button */}
           <button
-            onClick={() => handleNavigate("/CustomerComplaint")}
+            onClick={() => handleNavigate("/AdminCustomerComplaint")}
             className={
-              isActive("/CustomerComplaint") ? "text-red-500" : "text-gray-500"
+              isActive("/AdminCustomerComplaint") ? "text-red-500" : "text-gray-500"
             }
           >
             <FaExclamationTriangle className="text-2xl" />

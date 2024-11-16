@@ -52,7 +52,7 @@ export default function SearchPage() {
         />
         {/* Close button navigates to the home page */}
       
-<button onClick={() => router.push("/home")}>
+<button onClick={() => router.push("/home_renter")}>
   <AiOutlineClose size={24} className="text-gray-500" />
 </button>
 

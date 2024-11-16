@@ -153,7 +153,7 @@ const CustomerComplaintEdit = () => {
     <div className="p-6 max-w-md mx-auto">
       <Toaster />
       <button
-        onClick={() => router.push("/CustomerComplaint")}
+        onClick={() => router.push("/AdminCustomerComplaint")}
         className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black"
       >
         <svg
@@ -172,7 +172,7 @@ const CustomerComplaintEdit = () => {
         </svg>
       </button>
 
-      <div className="flex justify-between mb-4 mt-16">
+      <div className="flex justify-between mb-4 mt-20">
         <button
           onClick={handleDeleteClick}
           className="bg-red-500 text-white px-4 py-2 rounded flex items-center space-x-2"

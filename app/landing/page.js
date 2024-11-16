@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { AiOutlineSound, AiFillSound } from "react-icons/ai";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,9 @@ const LandingPage = () => {
   const [audioPlayed, setAudioPlayed] = useState(false); // State to check if audio has started
 
   useEffect(() => {
+    // Clear session storage when the component loads
+    sessionStorage.clear();
+
     // Create the audio element on component mount
     const audioElement = new Audio("/RaceCar.mp3");
     audioElement.loop = true;
@@ -46,20 +50,20 @@ const LandingPage = () => {
 
   return (
     <div className="relative flex flex-col items-center justify-center h-screen bg-gray-100 p-4">
-      {/* Background GIF */}
+      {/* Background Video */}
       <img
-        src="/racing.gif"
+        src="/badparking.gif"
         alt="Background GIF"
         className="absolute inset-0 w-full h-full object-cover"
       />
 
       {/* White Mask */}
-      <div className="absolute inset-0 bg-gray-200 opacity-60 z-10"></div>
+      <div className="absolute inset-0 bg-gray-400 opacity-60 z-10"></div>
 
       {/* Logo and Content */}
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-4">
+      <div className="flex flex-col items-center justify-center h-screen p-4 z-20">
         {/* Logo */}
-        <img src="logo.png" alt="Parkify Logo" className="w-64 md:w-80 z-50" />
+        <img src="logo.png" alt="Parkify Logo" className="w-64 md:w-80" />
 
         {/* Sound Button */}
         <div className="flex justify-center items-center">
@@ -82,7 +86,6 @@ const LandingPage = () => {
           className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-4 sm:mb-0"
         >
           <img src="lessor.png" alt="Lessor Icon" className="w-12 mb-2" />
-    
           <span className="text-lg font-semibold px-5">Lessor</span>
         </button>
 

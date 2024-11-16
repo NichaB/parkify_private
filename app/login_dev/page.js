@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../config/supabaseClient";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import supabase from "../../config/supabaseClient";
+import { Toaster, toast } from "react-hot-toast"; // Correct import for react-hot-toast
 
 const LoginPage = () => {
   const router = useRouter();
@@ -112,9 +111,21 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center h-screen bg-white px-4">
-      <div className="text-center mb-8">
-        <div className="rounded-full w-100 h-100 flex justify-center items-center">
+    <div className="flex flex-col justify-center items-center h-screen">
+      <Toaster position="top-center" reverseOrder={false} /> {/* Toaster for notifications */}
+
+      {/* Back Button */}
+      <button 
+        onClick={() => router.push('/landing')} 
+        className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <div className="text-center mb-8 mt-10">
+        <div className="rounded-full w-80 h-80 flex justify-center items-center">
           <img
             src="/images/Brand.png"
             alt="Parking Icon"
@@ -153,7 +164,6 @@ const LoginPage = () => {
           {lockoutTime ? `Please wait ${timeRemaining} seconds` : "Login"}
         </button>
       </form>
-      <ToastContainer position="top-center" autoClose={3000} />
     </div>
   );
 };

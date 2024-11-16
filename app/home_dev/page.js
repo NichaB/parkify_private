@@ -1,19 +1,19 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { supabase } from "../../config/supabaseClient"; // Ensure this path is correct
+import {
+  FaExclamationTriangle,
+  FaSignOutAlt,
+} from "react-icons/fa"; // Import icons
 import { useRouter } from "next/navigation"; // For Next.js 13+ with app directory
-import { toast } from "react-hot-toast"; // Import toast from react-hot-toast
+import { toast } from "react-hot-toast";
+import supabase from "../../config/supabaseClient";
 
 const IssueCard = ({ issue }) => {
   const router = useRouter();
 
-  // Function to handle the click event and navigate without displaying the ID in the URL
   const handleIssueClick = () => {
-    // Store the issue_id in session storage
     sessionStorage.setItem("issue_id", issue.issue_id);
-
-    // Navigate to the next page
     router.push("/issue_dev");
   };
 
@@ -53,15 +53,10 @@ const IssueReportPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [developerId, setDeveloperId] = useState(null);
 
   useEffect(() => {
-    // Retrieve developer_id from session storage
-    const id = sessionStorage.getItem("developer_id");
-    if (id) {
-      setDeveloperId(id);
-    } else {
-      // Redirect to login if developer_id is not found
+    const developerId = sessionStorage.getItem("developer_id");
+    if (!developerId) {
       toast.error("Please log in to access issues.");
       router.push("/login_dev");
     }
@@ -71,12 +66,10 @@ const IssueReportPage = () => {
     const fetchIssues = async () => {
       try {
         const { data, error } = await supabase.rpc("get_all_issues");
-
         if (error) {
           console.error("Error fetching data:", error.message || error);
-          setError("Failed to fetch issues. Check console for details.");
+          setError("Failed to fetch issues.");
         } else {
-          console.log("Fetched data:", data);
           setIssues(data);
         }
       } catch (err) {
@@ -86,17 +79,23 @@ const IssueReportPage = () => {
         setLoading(false);
       }
     };
+
     fetchIssues();
   }, []);
 
   const filteredIssues = searchTerm
-    ? issues.filter(issue =>
+    ? issues.filter((issue) =>
         issue.issue_header.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : issues;
 
+  const handleLogout = () => {
+    sessionStorage.clear();
+    router.push("/login_dev");
+  };
+
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    <div className="relative p-4 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6 mt-10">Issue Report</h1>
 
       <div className="relative mb-4">
@@ -104,7 +103,7 @@ const IssueReportPage = () => {
           type="text"
           placeholder="Search"
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full p-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300"
         />
         {searchTerm && (
@@ -116,18 +115,27 @@ const IssueReportPage = () => {
           </button>
         )}
       </div>
-      {loading ? (
-        <p className="text-center">Loading issues...</p>
-      ) : error ? (
-        <p className="text-center text-red-500">Error: {error}</p>
-      ) : filteredIssues.length === 0 ? (
-        <p className="text-center">No issues found.</p>
-      ) : (
-        filteredIssues.map(issue => (
-          <IssueCard key={issue.issue_id} issue={issue} />
-        ))
-      )}
-      {/* ToastContainer is not needed in React Hot Toast */}
+
+      <div>
+        {loading ? (
+          <p className="text-center">Loading issues...</p>
+        ) : error ? (
+          <p className="text-center text-red-500">{error}</p>
+        ) : filteredIssues.length === 0 ? (
+          <p className="text-center">No issues found.</p>
+        ) : (
+          filteredIssues.map((issue) => <IssueCard key={issue.issue_id} issue={issue} />)
+        )}
+      </div>
+
+      {/* Logout Button */}
+      <button
+        onClick={handleLogout}
+        className="fixed top-10 right-5 flex items-center bg-red-500 text-white px-4 py-2 rounded-full shadow-lg space-x-2 hover:bg-red-600"
+      >
+        <FaSignOutAlt className="text-xl" />
+        <span className="font-semibold">Logout</span>
+      </button>
     </div>
   );
 };

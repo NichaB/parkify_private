@@ -14,6 +14,11 @@ const Issues = () => {
   // Fetch issues from Supabase
   useEffect(() => {
     const fetchIssue = async () => {
+      if (!sessionStorage.getItem("admin_id")) {
+        toast.error("Admin ID not found. Please log in.");
+        router.push("/AdminLogin");
+        return;
+      }
       try {
         const { data, error } = await supabase.rpc("get_all_issues");
 
@@ -21,8 +26,8 @@ const Issues = () => {
 
         setIssues(data);
       } catch (error) {
-        console.error("Error fetching cars:", error);
-        toast.error("Failed to fetch cars.");
+        console.error("Error fetching issues:", error);
+        toast.error("Failed to fetch issues.");
         router.push("/AdminLogin");
       }
     };
@@ -30,10 +35,15 @@ const Issues = () => {
     fetchIssue();
   }, [router]);
 
-  // Filter issues based on search query for issue_header
-  const filteredIssues = issues.filter((issue) =>
-    issue.issue_header.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter and sort issues
+  const filteredIssues = issues
+    .filter((issue) =>
+      issue.issue_header.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      const statusOrder = ["Not Started", "In Progress", "Done"];
+      return statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
+    });
 
   // Handle navigation to edit page
   const handleEditClick = (issueId) => {
@@ -103,7 +113,7 @@ const Issues = () => {
           />
         </div>
 
-        {/* Display Filtered Issues */}
+        {/* Display Filtered and Sorted Issues */}
         {filteredIssues.map((issue) => (
           <div
             key={issue.issue_id}
@@ -113,11 +123,19 @@ const Issues = () => {
               <FaExclamationTriangle className="text-xl mr-3 text-black" />
               <div className="font-semibold text-black">
                 <div>{issue.issue_header}</div>
-                <div className="text-sm text-gray-500">Details: {issue.issue_detail}</div>
-                <div className={`text-sm font-semibold ${getStatusColor(issue.status)}`}>
+                <div className="text-sm text-gray-500">
+                  Details: {issue.issue_detail}
+                </div>
+                <div
+                  className={`text-sm font-semibold ${getStatusColor(
+                    issue.status
+                  )}`}
+                >
                   Status: {issue.status}
                 </div>
-                <div className="text-sm text-gray-500">Resolved By: {issue.resolved_by || "N/A"}</div>
+                <div className="text-sm text-gray-500">
+                  Resolved By: {issue.resolved_by || "N/A"}
+                </div>
               </div>
             </div>
             <button

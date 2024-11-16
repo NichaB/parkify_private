@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AiOutlineLogout, AiOutlineUser, AiOutlineCar, AiOutlineCustomerService } from 'react-icons/ai';
 import toast, { Toaster } from 'react-hot-toast';
-import BottomNav from '../components/BottomNav';
+import BottomNav from '../components/BottomNavLessor';
 import BackButton from '../components/BackButton';
 
 export default function SettingsPage() {

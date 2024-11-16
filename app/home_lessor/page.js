@@ -24,7 +24,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    console.log(sessionStorage.getItem('lessorId'))
+    
     if (!lessorId) return; // Wait until lessorId is set
 
     const fetchData = async () => {

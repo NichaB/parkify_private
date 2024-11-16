@@ -61,7 +61,7 @@ if (storedRenterId) {
 
       <div className="relative flex-grow overflow-y-auto p-6">
         {/* Back Button */}
-        <BackButton targetPage="/setting" />
+        <BackButton targetPage="/setting_renter" />
 
         {/* Heading */}
         <h1 className="text-2xl font-bold text-black text-left w-full px-2 mt-5 py-4">
