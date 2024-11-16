@@ -37,7 +37,7 @@ const CustomerComplaints = () => {
     const fetchComplaints = async () => {
       try {
         // Fetch data from the API
-        const response = await fetch("/api/fetchComplaint");
+        const response = await fetch("/api/adFetchComplaint");
         const result = await response.json();
 
         if (!response.ok) {

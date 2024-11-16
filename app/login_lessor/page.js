@@ -63,7 +63,7 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch('/api/checkLogin', {
+      const response = await fetch('/api/checkLessorLogin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

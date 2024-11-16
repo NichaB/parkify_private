@@ -65,7 +65,7 @@ const EditIssue = () => {
     }
 
     try {
-      const response = await fetch(`/api/fetchissue`, {
+      const response = await fetch(`/api/adFetchIssue`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -123,7 +123,7 @@ const EditIssue = () => {
   const confirmDelete = async (isConfirmed) => {
     if (isConfirmed) {
       try {
-        const response = await fetch(`/api/fetchissue?issue_id=${formData.issue_id}`, {
+        const response = await fetch(`/api/adFetchIssue?issue_id=${formData.issue_id}`, {
           method: "DELETE",
         });
   

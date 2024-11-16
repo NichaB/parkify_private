@@ -42,7 +42,7 @@ export default function EditLessor() {
 
   const fetchLessorDetails = async () => {
     try {
-      const response = await fetch(`../api/fetchLessor?lessorId=${lessorId}`);
+      const response = await fetch(`../api/lessorFetchLessor?lessorId=${lessorId}`);
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || "Error fetching data");
@@ -118,7 +118,7 @@ export default function EditLessor() {
         lessor_line_url: lessorDetails.lessor_line_url,
       };
 
-      const updateResponse = await fetch(`../api/fetchLessor`, {
+      const updateResponse = await fetch(`../api/lessorFetchLessor`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -142,7 +142,7 @@ export default function EditLessor() {
   const handleDelete = async () => {
     const lessorId = sessionStorage.getItem("lessorId"); 
     try {
-      const response = await fetch(`../api/fetchLessor?lessorId=${lessorId}`, {
+      const response = await fetch(`../api/lessorFetchLessor?lessorId=${lessorId}`, {
         method: "DELETE",
       });
 

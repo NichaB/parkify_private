@@ -29,7 +29,7 @@ export default function HomePage() {
 
     const fetchData = async () => {
       try {
-        const response = await fetch(`../api/fetchHome?lessorId=${lessorId}`);
+        const response = await fetch(`../api/lessorFetchHome?lessorId=${lessorId}`);
         if (!response.ok) throw new Error('Failed to fetch data');
         console.log(response);
 

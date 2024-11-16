@@ -30,58 +30,43 @@ export default function RegisterInformationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!userData.email || !userData.password || !userData.firstName || !userData.lastName || !userData.phoneNumber) {
       toast.error('Please fill in all fields');
       return;
     }
-
+  
     try {
-      const { data: phoneCheckData, error: phoneCheckError } = await supabase
-        .from('user_info')
-        .select('phone_number')
-        .eq('phone_number', userData.phoneNumber)
-        .single();
-
-      if (phoneCheckError && phoneCheckError.code !== 'PGRST116') {
-        toast.error('An error occurred while checking the phone number. Please try again.');
-        return;
+      const response = await fetch('/api/renterRegisterPro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+  
+      const result = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(result.error || 'An error occurred while registering. Please try again.');
       }
-
-      if (phoneCheckData) {
-        toast.error('Phone number already exists. Please use a different phone number.');
-        return;
-      }
-
-      const imagePath = await uploadImage();
-
-      const { data: insertData, error: insertError } = await supabase
-        .from('user_info')
-        .insert([{
-          first_name: userData.firstName,
-          last_name: userData.lastName,
-          email: userData.email,
-          phone_number: userData.phoneNumber,
-          password: userData.password, // Ensure to hash this in production
-        }]);
-
-      if (insertError) {
-        toast.error('An error occurred while registering. Please try again.');
-        return;
-      }
-
+  
+      // Store user_id in sessionStorage for the next page
+      sessionStorage.setItem('userId', result.userId);
+  
       toast.success('Registration successful!');
-      router.push('/profile');
+      router.push('/regisCar'); // Redirect to car registration page
     } catch (error) {
-      toast.error('An unexpected error occurred. Please try again later.');
+      toast.error(error.message);
+      console.error('Registration error:', error);
     }
   };
+  
+
 
   return (
     <div className="flex flex-col h-screen bg-white">
       <Toaster />
       <div className="relative flex-grow overflow-y-auto p-6">
-        <button onClick={() => router.push('/welcomerentor')} className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black">
+        <button onClick={() => router.push('/register_renter')} className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>

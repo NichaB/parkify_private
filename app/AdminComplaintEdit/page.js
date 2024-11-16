@@ -37,7 +37,7 @@ const CustomerComplaintEdit = () => {
 
       try {
         const response = await fetch(
-          `/api/fetchComplaint?complainId=${complainId}`
+          `/api/adFetchComplaint?complainId=${complainId}`
         );
         const result = await response.json();
 
@@ -65,7 +65,7 @@ const CustomerComplaintEdit = () => {
   // Handle save click
   const handleSaveClick = async () => {
   try {
-    const response = await fetch("/api/fetchComplaint", {
+    const response = await fetch("/api/adFetchComplaint", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -123,7 +123,7 @@ const CustomerComplaintEdit = () => {
     try {
       const complainId = formData.complain_id;
 
-      const response = await fetch(`/api/fetchComplaint?complainId=${complainId}`, {
+      const response = await fetch(`/api/adFetchComplaint?complainId=${complainId}`, {
         method: "DELETE",
       });
 

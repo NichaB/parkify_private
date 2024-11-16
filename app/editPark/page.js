@@ -31,7 +31,7 @@ export default function EditParking() {
     if (!lessorId) return; // Wait until lessorId is set
 
     try {
-      const response = await fetch(`/api/fetchPark?lessorId=${lessorId}`);
+      const response = await fetch(`/api/lessorFetchPark?lessorId=${lessorId}`);
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || "Error fetching data");
@@ -102,7 +102,7 @@ export default function EditParking() {
           location_image: "",
         };
   
-        const createResponse = await fetch("/api/fetchPark", {
+        const createResponse = await fetch("/api/lessorFetchPark", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -135,7 +135,7 @@ export default function EditParking() {
         newImagePath = uploadResult.publicUrl;
       }
   
-      await fetch("/api/fetchPark", {
+      await fetch("/api/lessorFetchPark", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -161,7 +161,7 @@ export default function EditParking() {
   const handleDelete = async (index) => {
     const lot = parkingLots[index];
     try {
-      const deleteResponse = await fetch(`/api/fetchPark?parkingLotId=${lot.parking_lot_id}`, {
+      const deleteResponse = await fetch(`/api/lessorFetchPark?parkingLotId=${lot.parking_lot_id}`, {
         method: "DELETE",
       });
 
