@@ -43,7 +43,7 @@ const ParkingDetail = () => {
           throw new Error('User ID is missing in session storage.');
         }
 
-        const response = await fetch(`/api/fetchCar?userId=${userId}`);
+        const response = await fetch(`/api/renterFetchCar?userId=${userId}`);
         if (!response.ok) {
           const errorDetails = await response.json();
           throw new Error(errorDetails.error || 'Failed to fetch user cars.');

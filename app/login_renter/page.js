@@ -94,7 +94,7 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch('/api/checkLogin', {
+      const response = await fetch('/api/checkRenterLogin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

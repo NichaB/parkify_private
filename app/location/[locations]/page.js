@@ -25,7 +25,7 @@ export default function LocationPage({ params }) {
     const fetchParkingData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/fetchParking?locationName=${encodeURIComponent(location)}`);
+        const response = await fetch(`/api/renterFetchParking?locationName=${encodeURIComponent(location)}`);
         if (!response.ok) {
           const errorDetails = await response.json();
           throw new Error(errorDetails.error || "Failed to fetch parking data.");

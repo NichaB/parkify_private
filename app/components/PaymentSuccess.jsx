@@ -25,7 +25,9 @@ const PaymentSuccess = ({
           setBookerName(lessorDetails.name);
         } else {
           const renterResponse = await fetch(
-            `/api/fetchRenter?renterId=${sessionStorage.getItem("userId")}`
+            `/api/renterFetchRenter?renterId=${sessionStorage.getItem(
+              "userId"
+            )}`
           );
           if (!renterResponse.ok) {
             console.error("Error fetching booker details.");

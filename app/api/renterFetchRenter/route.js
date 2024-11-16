@@ -5,7 +5,6 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const renterId = searchParams.get('renterId');
 
-  console.log("API Request Received. Renter ID:", renterId); // Debug log
 
   if (!renterId) {
     console.log("Renter ID missing in request.");
@@ -18,7 +17,7 @@ export async function GET(req) {
       FROM user_info
       WHERE user_id = ${renterId}
     `;
-    console.log("SQL Query Result:", renterResult);
+
 
     if (renterResult.length === 0) {
       console.log("No renter found for ID:", renterId);

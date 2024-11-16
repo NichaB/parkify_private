@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../../config/supabaseClient";
 
 const ReservationCard = () => {
   const [reservations, setReservations] = useState([]);
@@ -10,21 +9,18 @@ const ReservationCard = () => {
   useEffect(() => {
     setIsMounted(true);
     const fetchReservations = async () => {
-      const { data, error } = await supabase.from("reservation").select(`
-                    reservation_id,
-                    parking_lot_id,
-                    start_time,
-                    end_time,
-                    duration_hour,
-                    parking_lot (
-                        location_name
-                    )
-                `);
-
-      if (error) {
+      try {
+        const userId = sessionStorage.getItem("userId"); // Assume userId is stored in sessionStorage
+        const response = await fetch(
+          `/api/renterFetchReservation?userId=${userId}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch reservations");
+        }
+        const { reservationDetails } = await response.json();
+        setReservations(reservationDetails);
+      } catch (error) {
         console.error("Error fetching reservations:", error.message);
-      } else {
-        setReservations(data);
       }
     };
 
@@ -52,14 +48,16 @@ const ReservationCard = () => {
 
   const confirmDelete = async () => {
     if (reservationToDelete) {
-      const { error } = await supabase
-        .from("reservation")
-        .delete()
-        .eq("reservation_id", reservationToDelete.reservation_id);
+      try {
+        const response = await fetch(
+          `/api/renterFetchReservation?reservationId=${reservationToDelete.reservation_id}`,
+          { method: "DELETE" }
+        );
 
-      if (error) {
-        console.error("Error deleting reservation:", error.message);
-      } else {
+        if (!response.ok) {
+          throw new Error("Failed to delete reservation");
+        }
+
         setReservations(
           reservations.filter(
             (res) => res.reservation_id !== reservationToDelete.reservation_id
@@ -67,6 +65,8 @@ const ReservationCard = () => {
         );
         setShowConfirmation(false);
         setReservationToDelete(null);
+      } catch (error) {
+        console.error("Error deleting reservation:", error.message);
       }
     }
   };
@@ -84,7 +84,7 @@ const ReservationCard = () => {
             <div className="flex justify-between w-full mb-2">
               <h2 className="text-4xl font-bold">Reserved</h2>
               <span className="ml-2 bg-gray-600 text-sm py-3 px-2 rounded">
-                {reservation.parking_lot?.location_name || "Loading..."}
+                {reservation.location_name || "Loading..."}
               </span>
             </div>
             <div className="flex items-center mb-1">
@@ -94,7 +94,7 @@ const ReservationCard = () => {
                 className="mr-2 w-5 h-6"
               />
               <p className="text-lg font-semibold">
-                {reservation.parking_lot?.location_name || "Loading..."}
+                {reservation.location_name || "Loading..."}
               </p>
             </div>
             <div className="flex items-center mb-1">

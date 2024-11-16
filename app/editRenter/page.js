@@ -37,7 +37,7 @@ export default function EditRenter() {
 
   const fetchRenterDetails = async () => {
     try {
-      const response = await fetch(`../api/fetchRenter?renterId=${renterId}`);
+      const response = await fetch(`../api/renterFetchRenter?renterId=${renterId}`);
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || "Error fetching data");
@@ -73,7 +73,7 @@ export default function EditRenter() {
     }
 
     try {
-      const updateResponse = await fetch(`../api/fetchRenter`, {
+      const updateResponse = await fetch(`../api/renterFetchRenter`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -101,7 +101,7 @@ export default function EditRenter() {
 
   const handlePasswordVerification = async () => {
     try {
-        const response = await fetch('/api/verifyPassword', {
+        const response = await fetch('/api/renterVerifyPassword', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

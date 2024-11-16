@@ -27,7 +27,7 @@ const Reservations = () => {
 
     const fetchReservations = async () => {
       try {
-        const response = await fetch(`/api/fetchReservation?userId=${userId}`);
+        const response = await fetch(`/api/renterFetchReservation?userId=${userId}`);
         if (!response.ok) {
           throw new Error("Failed to fetch reservations");
         }

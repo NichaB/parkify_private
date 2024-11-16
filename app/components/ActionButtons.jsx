@@ -43,7 +43,7 @@ const ActionButtons = ({ parkingDetails, reservationData }) => {
 
         try {
           const renterResponse = await fetch(
-            `/api/fetchRenter?renterId=${renterId}`
+            `/api/renterFetchRenter?renterId=${renterId}`
           );
           if (!renterResponse.ok)
             throw new Error("Failed to fetch renter details");

@@ -43,7 +43,7 @@ export default function RegisterPage() {
 
     try {
       // Step 1: Check email availability
-      const response = await fetch('/api/checkEmail', {
+      const response = await fetch('/api/checkRenterEmail', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email }),

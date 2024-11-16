@@ -19,7 +19,7 @@ export default function HomePage() {
             const userId = sessionStorage.getItem("userId");
 
             try {
-                const response = await fetch(`/api/fetchRenter?renterId=${userId}`);
+                const response = await fetch(`/api/renterFetchRenter?renterId=${userId}`);
                 if (!response.ok) {
                     throw new Error(`Error fetching renter details: ${response.statusText}`);
                 }

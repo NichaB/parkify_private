@@ -29,7 +29,7 @@ export default function EditCar() {
     if (!userId) return;
 
     try {
-      const response = await fetch(`/api/fetchCar?userId=${userId}`);
+      const response = await fetch(`/api/renterFetchCar?userId=${userId}`);
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || "Error fetching data");
@@ -92,7 +92,7 @@ export default function EditCar() {
           car_image: "",
         };
 
-        const createResponse = await fetch("/api/fetchCar", {
+        const createResponse = await fetch("/api/renterFetchCar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -125,7 +125,7 @@ export default function EditCar() {
         newImagePath = uploadResult.publicUrl;
       }
 
-      await fetch("/api/fetchCar", {
+      await fetch("/api/renterFetchCar", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -149,7 +149,7 @@ export default function EditCar() {
   const handleDelete = async (index) => {
     const car = cars[index];
     try {
-      const deleteResponse = await fetch(`/api/fetchCar?carId=${car.car_id}`, {
+      const deleteResponse = await fetch(`/api/renterFetchCar?carId=${car.car_id}`, {
         method: "DELETE",
       });
 
