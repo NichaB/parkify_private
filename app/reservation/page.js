@@ -80,9 +80,10 @@ const ParkingDetail = () => {
         <img
           src="parkinglots-image.jpg"
           alt="Parking Lot"
-          className="w-full h-96 object-cover rounded-lg mb-6"
+          className="w-full max-w-2xl h-auto object-cover rounded-lg mb-6 mx-auto"
         />
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0 sm:space-x-6">
+
+        <div className="flex flex-row justify-between items-center mb-6 space-x-4">
           <span className="bg-blue-500 text-white font-bold px-4 py-2 rounded-full text-base lg:text-xl">
             {parkingDetails.parkingCode}
           </span>
@@ -90,13 +91,14 @@ const ParkingDetail = () => {
             {parkingDetails.price}
           </span>
         </div>
+
         <p className="text-md font-semibold text-gray-800 mb-2">
           Address: {parkingDetails.address}
         </p>
         <ContactInfo lessorDetails={parkingDetails.lessorDetails} />
 
         {/* Car Selection Combobox */}
-        <div className="mt-6">
+        <div className="mt-6 mb-5">
           <h3 className="text-lg font-semibold mb-2">Select Your Car:</h3>
           {userCars.length > 0 ? (
             <select
@@ -117,6 +119,7 @@ const ParkingDetail = () => {
             <p className="text-gray-600">No cars registered.</p>
           )}
         </div>
+
 
         {/* Reservation Section */}
         <ReservationSection

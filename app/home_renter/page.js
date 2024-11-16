@@ -18,12 +18,6 @@ export default function HomePage() {
             // Retrieve userId from sessionStorage
             const userId = sessionStorage.getItem("userId");
 
-            if (!userId) {
-                console.error("User ID is not found in session storage.");
-                router.push("/login_renter"); // Use the router to redirect
-                return;
-            }
-
             try {
                 const response = await fetch(`/api/fetchRenter?renterId=${userId}`);
                 if (!response.ok) {

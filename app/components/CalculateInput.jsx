@@ -48,37 +48,53 @@ const CalculateInput = ({ onReservationChange, pricePerHour }) => {
 
   return (
     <div>
-      <div className="flex space-x-2">
+      {/* Date Inputs */}
+      <div className="flex space-x-4 mb-4">
         <input
           type="date"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
           placeholder="Start Date"
+          className="p-2 border rounded-md"
         />
         <input
           type="date"
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
           placeholder="End Date"
+          className="p-2 border rounded-md"
         />
       </div>
-      <div className="flex space-x-2 mt-2">
+
+      {/* Time Inputs */}
+      <div className="flex space-x-4 mb-4">
         <input
           type="time"
           value={startTime}
           onChange={(e) => setStartTime(e.target.value)}
           placeholder="Start Time"
+          className="p-2 border rounded-md"
         />
         <input
           type="time"
           value={endTime}
           onChange={(e) => setEndTime(e.target.value)}
           placeholder="End Time"
+          className="p-2 border rounded-md"
         />
       </div>
-      {error && <p className="mt-2 text-red-500">{error}</p>}
-      <p className="mt-2">Total: {total}</p>
-      <p className="mt-2">Total Price: {totalPrice.toFixed(2)} THB</p>
+
+      {/* Error Message */}
+      {error && <p className="mt-4 text-red-500">{error}</p>}
+
+      {/* Total and Total Price */}
+      <p className="mt-4 font-semibold">
+        <span className="text-gray-500">Total:</span> {total}
+      </p>
+      <p className="mt-2 font-semibold">
+        <span className="text-gray-500">Total Price:</span>{" "}
+        {totalPrice.toFixed(2)} THB
+      </p>
     </div>
   );
 };

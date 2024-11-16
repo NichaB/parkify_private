@@ -143,10 +143,10 @@ const ActionButtons = ({ parkingDetails, reservationData }) => {
   };
 
   return (
-    <div className="flex flex-col items-center mt-6 md:flex-row md:justify-between md:space-x-4">
+    <div className="flex flex-row items-center justify-center space-x-4 mt-6">
       <button
         onClick={handleDirectionsClick}
-        className="bg-blue-500 text-white py-2 px-4 rounded-lg flex items-center mb-4 md:mb-0"
+        className="bg-blue-500 text-white py-2 px-4 rounded-lg flex items-center"
       >
         <img
           src="google-maps.png"
