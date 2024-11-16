@@ -1,14 +1,15 @@
 // app/api/fetchRenter/route.js
 import sql from '../../../config/db';
 
-// GET Renter Details
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const renterId = searchParams.get('renterId');
-  console.log("Requested Renter ID:", renterId);  // Debugging output
+
+  console.log("API Request Received. Renter ID:", renterId); // Debug log
 
   if (!renterId) {
-    return new Response(JSON.stringify({ error: 'Renter ID is required' }), { status: 400 });
+    console.log("Renter ID missing in request.");
+    return new Response(JSON.stringify({ error: "Renter ID is required" }), { status: 400 });
   }
 
   try {
@@ -17,17 +18,17 @@ export async function GET(req) {
       FROM user_info
       WHERE user_id = ${renterId}
     `;
-    console.log("Database query result:", renterResult);  // Debugging output
+    console.log("SQL Query Result:", renterResult);
 
     if (renterResult.length === 0) {
-      return new Response(JSON.stringify({ error: 'Renter not found' }), { status: 404 });
+      console.log("No renter found for ID:", renterId);
+      return new Response(JSON.stringify({ error: "Renter not found" }), { status: 404 });
     }
 
-    const renterDetails = renterResult[0];
-    return new Response(JSON.stringify({ renterDetails }), { status: 200 });
+    return new Response(JSON.stringify({ renterDetails: renterResult[0] }), { status: 200 });
   } catch (error) {
-    console.error('Database Error:', error);
-    return new Response(JSON.stringify({ error: 'Error fetching data' }), { status: 500 });
+    console.error("Database Error:", error);
+    return new Response(JSON.stringify({ error: "Error fetching data" }), { status: 500 });
   }
 }
 

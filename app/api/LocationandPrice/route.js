@@ -21,6 +21,7 @@ export async function GET(req) {
                 pl.location_name, 
                 pl.price_per_hour, 
                 pl.address,
+                pl.location_url,
                 l.lessor_firstname AS lessor_name, 
                 l.lessor_email, 
                 l.lessor_phone_number AS lessor_phone,
@@ -46,6 +47,7 @@ export async function GET(req) {
         parkingCode: parkingDetails[0].location_name,
         price: `${parkingDetails[0].price_per_hour} THB / HOURS`,
         address: parkingDetails[0].address,
+        locationUrl: parkingDetails[0].location_url,
         lessorDetails: {
           name: parkingDetails[0].lessor_name,
           email: parkingDetails[0].lessor_email,
