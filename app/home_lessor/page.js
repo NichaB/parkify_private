@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { FaUserAlt, FaPhoneAlt } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
-import BottomNav from '../components/BottmNavLessor';
+import BottomNav from '../components/BottomNavLessor';
 
 export default function HomePage() {
   const router = useRouter();

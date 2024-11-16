@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
-import BottomNav from '../components/BottomNav';
+import BottomNav from "../components/BottomNavLessor";
 import BackButton from '../components/BackButton';
 
 export default function CustomerSupportPage() {

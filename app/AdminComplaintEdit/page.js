@@ -28,30 +28,33 @@ const CustomerComplaintEdit = () => {
     }
 
     const fetchComplaintData = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("complain")
-          .select("*")
-          .eq("complain_id", complainId)
-          .single();
+      const complainId = sessionStorage.getItem("complain_id");
+      if (!complainId) {
+        toast.error("Complaint ID not found");
+        router.push("/CustomerComplaint");
+        return;
+      }
 
-        if (error) {
-          console.error("Error fetching complaint data:", error);
-          toast.error("Failed to fetch complaint data.");
-          router.push("/CustomerComplaint");
-        } else {
-          setFormData({
-            complain_id: data.complain_id,
-            complain: data.complain,
-            detail: data.detail,
-            submitter_id: data.submitter_id,
-            user_type: data.user_type,
-          });
-          setLoading(false);
-        }
+      try {
+        const response = await fetch(
+          `/api/fetchComplaint?complainId=${complainId}`
+        );
+        const result = await response.json();
+
+        if (!response.ok)
+          throw new Error(result.error || "Error fetching complaint data");
+
+        setFormData({
+          complain_id: result.complaints[0].complain_id,
+          complain: result.complaints[0].complain,
+          detail: result.complaints[0].detail,
+          submitter_id: result.complaints[0].submitter_id,
+          user_type: result.complaints[0].user_type,
+        });
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching complaint data:", error);
-        toast.error("An error occurred while fetching data.");
+        toast.error("Failed to fetch complaint data.");
         router.push("/CustomerComplaint");
       }
     };
@@ -61,28 +64,29 @@ const CustomerComplaintEdit = () => {
 
   // Handle save click
   const handleSaveClick = async () => {
-    try {
-      const { error } = await supabase
-        .from("complain")
-        .update({
-          complain: formData.complain,
-          detail: formData.detail,
-          user_type: formData.user_type,
-        })
-        .eq("complain_id", formData.complain_id);
+  try {
+    const response = await fetch("/api/fetchComplaint", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        complain_id: formData.complain_id,
+        complain: formData.complain,
+        detail: formData.detail,
+        user_type: formData.user_type,
+      }),
+    });
 
-      if (error) {
-        console.error("Error updating complaint data:", error);
-        toast.error("Failed to update complaint information.");
-      } else {
-        toast.success("Complaint information updated successfully");
-        setIsEditing(false);
-      }
-    } catch (error) {
-      console.error("Error saving complaint data:", error);
-      toast.error("An error occurred while saving data.");
-    }
-  };
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Error updating complaint data");
+
+    toast.success("Complaint information updated successfully");
+    setIsEditing(false);
+  } catch (error) {
+    console.error("Error saving complaint data:", error);
+    toast.error("Failed to update complaint information.");
+  }
+};
+
 
   // Handle delete click
   const handleDeleteClick = () => {
@@ -114,28 +118,28 @@ const CustomerComplaintEdit = () => {
   };
 
   // Confirm delete
-  const confirmDelete = async (isConfirmed, toastId) => {
-    if (isConfirmed) {
-      try {
-        const { error } = await supabase
-          .from("complain")
-          .delete()
-          .eq("complain_id", formData.complain_id);
+ const confirmDelete = async (isConfirmed, toastId) => {
+  if (isConfirmed) {
+    try {
+      const complainId = formData.complain_id;
 
-        if (error) {
-          console.error("Error deleting complaint:", error);
-          toast.error("Failed to delete complaint.");
-        } else {
-          toast.success("Complaint deleted successfully");
-          router.push("/CustomerComplaint");
-        }
-      } catch (error) {
-        console.error("Error deleting complaint:", error);
-        toast.error("An error occurred while deleting data.");
-      }
+      const response = await fetch(`/api/fetchComplaint?complainId=${complainId}`, {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Error deleting complaint");
+
+      toast.success("Complaint deleted successfully");
+      router.push("/CustomerComplaint");
+    } catch (error) {
+      console.error("Error deleting complaint:", error);
+      toast.error("Failed to delete complaint.");
     }
-    toast.dismiss(toastId);
-  };
+  }
+  toast.dismiss(toastId);
+};
+
 
   // Handle input change
   const handleChange = (e) => {

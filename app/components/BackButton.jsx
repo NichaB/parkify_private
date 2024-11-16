@@ -1,5 +1,5 @@
-import { useRouter } from 'next/navigation';
-import PropTypes from 'prop-types';
+import { useRouter } from "next/navigation";
+import PropTypes from "prop-types";
 
 export default function BackButton({ targetPage }) {
   const router = useRouter();

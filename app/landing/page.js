@@ -82,11 +82,12 @@ const LandingPage = () => {
           className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-4 sm:mb-0"
         >
           <img src="lessor.png" alt="Lessor Icon" className="w-12 mb-2" />
+    
           <span className="text-lg font-semibold px-5">Lessor</span>
         </button>
 
         <button
-          onClick={() => navigateWithAudioStop("/welcomerentor")}
+          onClick={() => navigateWithAudioStop("/welcomerenter")}
           className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-4 sm:mb-0"
         >
           <img src="renter.png" alt="Renter Icon" className="w-12 mb-2" />
@@ -94,7 +95,7 @@ const LandingPage = () => {
         </button>
 
         <button
-          onClick={() => navigateWithAudioStop("/welcomeadmin")}
+          onClick={() => navigateWithAudioStop("/AdminLogin")}
           className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-4 sm:mb-0"
         >
           <img src="admin.png" alt="Admin Icon" className="w-12 mb-2" />

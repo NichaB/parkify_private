@@ -28,23 +28,32 @@ const CustomerComplaints = () => {
 
   // Fetch complaints from Supabase
   useEffect(() => {
-
     if (!sessionStorage.getItem("admin_id")) {
-        toast.error("Admin ID not found. Please log in.");
-        router.push("/AdminLogin");
-        return;
-      }
-      
-    const fetchComplaints = async () => {
-      const { data, error } = await supabase
-        .from("complain") // Ensure this table name matches your database
-        .select("complain_id, complain, submitter_id, user_type");
+      toast.error("Admin ID not found. Please log in.");
+      router.push("/AdminLogin");
+      return;
+    }
 
-      if (error) {
-        console.error("Error fetching complaints:", error);
-        toast.error("Failed to fetch complaints.");
-      } else {
-        setComplaints(data);
+    const fetchComplaints = async () => {
+      try {
+        // Fetch data from the API
+        const response = await fetch("/api/fetchComplaint");
+        const result = await response.json();
+
+        if (!response.ok) {
+          toast.error(result.error || "Failed to fetch complaints");
+          return;
+        }
+
+        if (!result.complaints || result.complaints.length === 0) {
+          toast("No complaints available.");
+        } else {
+          setComplaints(result.complaints); // Update state with fetched data
+          console.log("Fetched complaints successfully:", result.complaints);
+        }
+      } catch (error) {
+        console.error("Error fetching complaints:", error.message);
+        toast.error("An unexpected error occurred. Please try again.");
       }
     };
 
@@ -127,27 +136,32 @@ const CustomerComplaints = () => {
           Add New Issue for Developer
         </span>
       </button>
-{/* Bottom Navigation */}
-<div className="fixed bottom-0 left-0 right-0 w-screen bg-white border-t border-gray-300 py-3">
-  <div className="flex justify-around items-center">
-    {/* Home Button - Red when in /AdminMenu or /AdminAddIssue */}
-    <button
-      onClick={() => handleNavigate("/AdminMenu")}
-      className={(isActive("/AdminMenu") || isActive("/AdminAddIssue")) ? "text-red-500" : "text-gray-500"}
-    >
-      <FaHome className="text-2xl" />
-    </button>
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 w-screen bg-white border-t border-gray-300 py-3">
+        <div className="flex justify-around items-center">
+          {/* Home Button - Red when in /AdminMenu or /AdminAddIssue */}
+          <button
+            onClick={() => handleNavigate("/AdminMenu")}
+            className={
+              isActive("/AdminMenu") || isActive("/AdminAddIssue")
+                ? "text-red-500"
+                : "text-gray-500"
+            }
+          >
+            <FaHome className="text-2xl" />
+          </button>
 
-    {/* Customer Complaint Button */}
-    <button
-      onClick={() => handleNavigate("/CustomerComplaint")}
-      className={isActive("/CustomerComplaint") ? "text-red-500" : "text-gray-500"}
-    >
-      <FaExclamationTriangle className="text-2xl" />
-    </button>
-
-  </div>
-</div>
+          {/* Customer Complaint Button */}
+          <button
+            onClick={() => handleNavigate("/CustomerComplaint")}
+            className={
+              isActive("/CustomerComplaint") ? "text-red-500" : "text-gray-500"
+            }
+          >
+            <FaExclamationTriangle className="text-2xl" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

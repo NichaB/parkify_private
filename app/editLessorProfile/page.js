@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { FaEdit } from "react-icons/fa";
-import BottomNav from "../components/BottomNav";
+import BottomNav from "../components/BottomNavLessor";
 import BackButton from "../components/BackButton";
 import { useRouter } from 'next/navigation';
+import supabase from '../../config/supabaseClient';
 
 export default function EditLessor() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function EditLessor() {
   // Retrieve lessorId from sessionStorage on client side
   useEffect(() => {
     const storedLessorId = sessionStorage.getItem("lessorId");
-    // const storedLessorId = "17";
+
     if (storedLessorId) {
       setLessorId(storedLessorId);
     } else {
@@ -67,8 +68,9 @@ export default function EditLessor() {
 
 
   const handleSave = async () => {
-    const lessorId = "9";
+    const lessorId = sessionStorage.getItem("lessorId");
     const oldImagePath = lessorDetails.lessor_profile_pic;
+    console.log("oldImagePath", oldImagePath);
   
     if (
       !lessorDetails.lessor_firstname ||
@@ -138,7 +140,7 @@ export default function EditLessor() {
     }
   };
   const handleDelete = async () => {
-    const lessorId = "9"; 
+    const lessorId = sessionStorage.getItem("lessorId"); 
     try {
       const response = await fetch(`../api/fetchLessor?lessorId=${lessorId}`, {
         method: "DELETE",

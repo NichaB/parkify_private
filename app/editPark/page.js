@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { FaEdit, FaPlus } from "react-icons/fa";
-import BottomNav from "../components/BottomNav";
+import BottomNav from "../components/BottomNavLessor";
 import BackButton from "../components/BackButton";
 import { useRouter } from "next/navigation";
 

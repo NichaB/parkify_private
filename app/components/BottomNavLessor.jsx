@@ -36,7 +36,7 @@ export default function BottomNav() {
         className={
           pathname === "/setting_lessor" ||
           pathname === "/editPark" ||
-          pathname === "/editRenterProfile" ||
+          pathname === "/editLessorProfile" ||
           pathname === "/lessorCustomerSupport"
             ? "text-red-500"
             : "text-gray-500 hover:text-red-500"

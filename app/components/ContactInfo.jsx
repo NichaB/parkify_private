@@ -1,54 +1,42 @@
-// src/components/ContactInfo.js
 "use client";
-import React, { useEffect, useState } from 'react';
-import supabase from '../../config/supabaseClient';
+import React from "react";
 
-const ContactInfo = () => {
-    const [contact, setContact] = useState(null);
-
-    useEffect(() => {
-        // Fetch contact information from Supabase
-        const fetchContact = async () => {
-            const { data, error } = await supabase
-                .from('lessor')
-                .select('lessor_firstname, lessor_lastname, lessor_phone_number, lessor_profile_pic')
-                .eq('lessor_id', 99) // Adjust this ID as per your needs
-                .single();
-
-            if (error) {
-                console.error('Error fetching contact:', error);
-            } else {
-                setContact(data);
-            }
-        };
-
-        fetchContact();
-    }, []);
-
+const ContactInfo = ({ lessorDetails }) => {
+  if (!lessorDetails) {
     return (
-        <div className="bg-gray-100 p-4 rounded-lg mb-4">
-            <div className="flex items-center mb-2">
-                <img
-                    src={contact ? contact.lessor_profile_pic : 'default_image.png'} // Use the fetched image URL or a default
-                    alt="Contact"
-                    className="w-12 h-12 rounded-full mr-4"
-                />
-                <div>
-                    <h3 className="text-lg font-semibold text-black">
-                        {contact ? (
-                            <>
-                                <span>{contact.lessor_firstname}</span>
-                                <span className="ml-2">{contact.lessor_lastname}</span> {/* Adjust `ml-2` as needed */}
-                            </>
-                        ) : 'Loading...'}
-                    </h3>
-                    <p className="text-gray-500">
-                        {contact ? contact.lessor_phone_number : 'Loading...'}
-                    </p>
-                </div>
-            </div>
-        </div>
+      <div className="bg-gray-100 p-4 rounded-lg shadow-md">
+        <p className="text-gray-500">Loading contact information...</p>
+      </div>
     );
+  }
+
+  return (
+    <div className="bg-gray-100 p-4 rounded-lg shadow-md flex items-center space-x-4">
+      <img
+        src={lessorDetails?.profilePic || "user_icon.png"} // Use provided or default image
+        onError={(e) => {
+          e.target.onerror = null; // Prevent infinite loop
+          e.target.src = "user_icon.png"; // Fallback to default image
+        }}
+        alt="Contact"
+        className="w-20 h-20 rounded-full object-cover shadow-md"
+      />
+      <div className="text-left">
+        <h3 className="text-xl font-semibold text-black">
+          {lessorDetails.name}
+        </h3>
+        <p className="text-gray-500 text-sm flex items-center">
+          <img src="telephone.png" alt="Phone Icon" className="w-3 h-3 mr-2" />
+          {lessorDetails.phone}
+        </p>
+
+        <p className="text-gray-500 text-sm flex items-center">
+          <img src="gmail.png" alt="Phone Icon" className="w-3.5 h-3.5 mr-2" />
+          {lessorDetails.email}
+        </p>
+      </div>
+    </div>
+  );
 };
 
 export default ContactInfo;
