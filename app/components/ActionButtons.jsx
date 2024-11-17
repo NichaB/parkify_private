@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import PaymentSuccess from "./PaymentSuccess";
+import { Toaster, toast } from "react-hot-toast";
 
 const ActionButtons = ({ parkingDetails, reservationData }) => {
   const [isConfirmPopupVisible, setIsConfirmPopupVisible] = useState(false);
@@ -84,7 +85,7 @@ const ActionButtons = ({ parkingDetails, reservationData }) => {
     const validationErrors = validateInputs();
 
     if (validationErrors.length > 0) {
-      alert(
+      toast.error(
         `Please fix the following errors:\n- ${validationErrors.join("\n- ")}`
       );
       return;
@@ -129,21 +130,29 @@ const ActionButtons = ({ parkingDetails, reservationData }) => {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        alert(`Error: ${data.error}`);
-        return; // Keep the confirmation modal open
+      if (data.status === "full") {
+        toast.error("Parking lot is full.");
+        return; // Do not proceed further
       }
 
+      if (data.status === "error") {
+        toast.error(data.message);
+        return; // Do not proceed further
+      }
+
+      // Handle success
       setIsConfirmPopupVisible(false); // Close the confirmation modal
       setIsPaymentSuccessVisible(true); // Show the payment success modal
+      toast.success(data.message);
     } catch (error) {
       console.error("Error creating reservation:", error);
-      alert("Failed to create reservation. Please try again.");
+      toast.error("Failed to create reservation. Please try again.");
     }
   };
 
   return (
     <div className="flex flex-row items-center justify-center space-x-4 mt-6">
+      <Toaster />
       <button
         onClick={handleDirectionsClick}
         className="bg-blue-500 text-white py-2 px-4 rounded-lg flex items-center"

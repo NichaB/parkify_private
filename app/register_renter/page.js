@@ -28,43 +28,47 @@ export default function RegisterPage() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // Validate input fields
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
-      toast.error('Please fill in all fields');
+  // Validate input fields
+  if (!formData.email || !formData.password || !formData.confirmPassword) {
+    toast.error('Please fill in all fields');
+    return;
+  }
+
+  if (formData.password !== formData.confirmPassword) {
+    toast.error('Passwords do not match');
+    return;
+  }
+
+  try {
+    // Step 1: Check email availability
+    const response = await fetch('/api/checkRenterEmail', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: formData.email }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      // Show toast if the email already exists
+      toast.error(result.error || 'Failed to validate email',{duration: 1000,});
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
+    // Step 2: Temporarily store email and password for later use in profile registration
+    sessionStorage.setItem('userEmail', formData.email);
+    sessionStorage.setItem('userPassword', formData.password);
 
-    try {
-      // Step 1: Check email availability
-      const response = await fetch('/api/checkRenterEmail', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email }),
-      });
-  
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || 'Email check failed');
-      }
-  
-      // Step 2: Temporarily store email and password for later use in profile registration
-      sessionStorage.setItem('userEmail', formData.email);
-      sessionStorage.setItem('userPassword', formData.password);
-  
-      // Redirect to the profile page
-      router.push('/regisProfile');
-    } catch (error) {
-      toast.error(error.message || 'An unexpected error occurred. Please try again.');
-      console.error('Email check error:', error);
-    }
-  };
+    // Redirect to the profile page
+    router.push('/regisProfile_renter');
+  } catch (error) {
+    toast.error('An unexpected error occurred. Please try again.');
+    console.error('Error during registration:', error);
+  }
+};
+
 
   return (
     <div className="flex flex-col h-screen bg-white">

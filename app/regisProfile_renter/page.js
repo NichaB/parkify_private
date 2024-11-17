@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import supabase from '../../config/supabaseClient';
@@ -10,6 +10,12 @@ export default function RegisterInformationPage() {
   const email = sessionStorage.getItem('userEmail');
   const password = sessionStorage.getItem('userPassword');
  
+  useEffect(() => {
+    if (!email || !password) {
+      toast.error('Email and password are required. Redirecting to registration.');
+      router.push('/register_renter');
+    }
+  }, [email, password, router]);
 
   const [userData, setUserData] = useState({
     email: email || '',
@@ -105,12 +111,13 @@ export default function RegisterInformationPage() {
           {/* Phone Number */}
           <div className="w-11/12">
             <input
-              type="text"
+              type="number"
               name="phoneNumber"
               placeholder="Phone Number"
               value={userData.phoneNumber}
               onChange={handleChange}
               className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              min="0"
             />
           </div>
 

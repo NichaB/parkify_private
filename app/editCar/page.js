@@ -170,27 +170,41 @@ export default function EditCar() {
 
   if (loading) return <div>Loading...</div>;
 
-  return (
-    <div className="flex flex-col h-screen bg-white">
-      <Toaster />
-      <div className="relative flex-grow overflow-y-auto p-6">
-        <BackButton targetPage="/setting_renter" />
-        <div className="flex items-center justify-between w-full px-6 mt-5 py-4">
-          <h1 className="text-2xl font-bold text-black text-left">
-            Car Management
-          </h1>
-          <button
-            type="button"
-            onClick={handleAddCar}
-            className="flex items-center bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-600"
-            disabled={isAdding}
-          >
-            <FaPlus className="mr-2" />
-            Add Car
-          </button>
-        </div>
+return (
+  <div className="flex flex-col h-screen bg-white">
+    <Toaster />
+    <div className="relative flex-grow overflow-y-auto p-6">
+      <BackButton targetPage="/setting_renter" />
+      <div className="flex items-center justify-between w-full px-6 mt-5 py-4">
+        <h1 className="text-2xl font-bold text-black text-left">
+          Car Management
+        </h1>
+        <button
+          type="button"
+          onClick={handleAddCar}
+          className="flex items-center bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-600"
+          disabled={isAdding}
+        >
+          <FaPlus className="mr-2" />
+          Add Car
+        </button>
+      </div>
 
-        {cars.map((car, index) => (
+      {/* Show message if no cars are available */}
+      {cars.length === 0 && (
+        <div className="flex flex-col items-center justify-center h-96">
+          <h2 className="text-xl text-gray-500 font-semibold">
+            No cars registered
+          </h2>
+          <p className="text-sm text-gray-400">
+            Please add a car to get started.
+          </p>
+        </div>
+      )}
+
+      {/* Render the car list if available */}
+      {cars.length > 0 &&
+        cars.map((car, index) => (
           <div
             key={car.car_id}
             className="space-y-6 mb-8 p-6 border rounded-lg shadow-lg w-11/12 mx-auto bg-white"
@@ -257,8 +271,8 @@ export default function EditCar() {
             </form>
           </div>
         ))}
-      </div>
-      <BottomNav />
     </div>
-  );
+    <BottomNav />
+  </div>
+);
 }

@@ -2,14 +2,15 @@
 import React, { useEffect, useState } from 'react';
 import ContactInfo from '../components/ContactInfo';
 import ReservationSection from '../components/ReservationSection';
+import { useRouter } from 'next/navigation';
 
 const ParkingDetail = () => {
   const [parkingDetails, setParkingDetails] = useState(null);
   const [userCars, setUserCars] = useState([]);
   const [selectedCarId, setSelectedCarId] = useState(null);
   const [error, setError] = useState(null);
+  const router = useRouter();
 
-  // Fetch parking details on component mount
   useEffect(() => {
     const fetchParkingDetails = async () => {
       try {
@@ -25,7 +26,7 @@ const ParkingDetail = () => {
         }
 
         const data = await response.json();
-        setParkingDetails(data); // parkingDetails now contains parkingLotId
+        setParkingDetails(data);
       } catch (err) {
         setError(err.message || 'Failed to load parking details.');
       }
@@ -34,7 +35,6 @@ const ParkingDetail = () => {
     fetchParkingDetails();
   }, []);
 
-  // Fetch user cars on component mount
   useEffect(() => {
     const fetchUserCars = async () => {
       try {
@@ -59,11 +59,10 @@ const ParkingDetail = () => {
     fetchUserCars();
   }, []);
 
-  // Handle car selection
   const handleCarSelection = (e) => {
     const carId = e.target.value;
     setSelectedCarId(carId);
-    sessionStorage.setItem('carId', carId); // Store selected car ID in session storage
+    sessionStorage.setItem('carId', carId);
   };
 
   if (error) {
@@ -77,10 +76,18 @@ const ParkingDetail = () => {
   return (
     <div className="w-full h-full bg-gray-100 flex flex-col items-center py-8">
       <div className="w-full max-w-screen-xl bg-white shadow-lg rounded-lg p-6 lg:p-12">
+        <button 
+          onClick={() => router.push('/search')} 
+          className="absolute top-10 left-24 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black bg-gray-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
         <img
-          src="parkinglots-image.jpg"
+          src={parkingDetails.locationImage || 'images/Map.png'} // Use the image URL from API or a default image
           alt="Parking Lot"
-          className="w-full max-w-2xl h-auto object-cover rounded-lg mb-6 mx-auto"
+          className="w-auto h-60 object-cover rounded-lg mb-6 mx-auto"
         />
 
         <div className="flex flex-row justify-between items-center mb-6 space-x-4">
@@ -97,7 +104,6 @@ const ParkingDetail = () => {
         </p>
         <ContactInfo lessorDetails={parkingDetails.lessorDetails} />
 
-        {/* Car Selection Combobox */}
         <div className="mt-6 mb-5">
           <h3 className="text-lg font-semibold mb-2">Select Your Car:</h3>
           {userCars.length > 0 ? (
@@ -120,11 +126,9 @@ const ParkingDetail = () => {
           )}
         </div>
 
-
-        {/* Reservation Section */}
         <ReservationSection
-          parkingDetails={parkingDetails} // Pass parkingDetails (including parkingLotId)
-          selectedCarId={selectedCarId} // Pass selectedCarId
+          parkingDetails={parkingDetails}
+          selectedCarId={selectedCarId}
         />
       </div>
     </div>

@@ -4,6 +4,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { AiOutlineClockCircle, AiOutlineClose } from "react-icons/ai";
 import { useEffect, useState } from "react";
+import BackButton from "../components/BackButton";
 
 export default function SearchPage() {
   const router = useRouter();
@@ -39,6 +40,7 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col p-6">
+      <BackButton targetPage="/home_renter" />
       {/* Search Bar with Close Button */}
       <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg mb-4 shadow-md mt-4">
         <input

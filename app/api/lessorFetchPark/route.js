@@ -140,7 +140,10 @@ export async function DELETE(req) {
 
 // New POST method to add a parking lot
 export async function POST(req) {
+  
   const { lessorId, location_name, address, location_url, total_slots, price_per_hour, location_image } = await req.json();
+  console.log('Incoming payload:', { lessorId, location_name, address, location_url, total_slots, price_per_hour, location_image });
+
 
   if (!lessorId || !location_name || !address || !location_url || !total_slots || !price_per_hour) {
     return new Response(JSON.stringify({ error: 'All fields are required' }), { status: 400 });
@@ -148,8 +151,8 @@ export async function POST(req) {
 
   try {
     const insertResult = await sql`
-      INSERT INTO parking_lot (lessor_id, location_name, address, location_url, total_slots, price_per_hour, location_image)
-      VALUES (${lessorId}, ${location_name}, ${address}, ${location_url}, ${total_slots}, ${price_per_hour}, ${location_image})
+      INSERT INTO parking_lot (lessor_id, location_name, address, location_url, total_slots, available_slots, price_per_hour, location_image)
+      VALUES (${lessorId}, ${location_name}, ${address}, ${location_url}, ${total_slots}, ${total_slots}, ${price_per_hour}, ${location_image})
       RETURNING parking_lot_id
     `;
 

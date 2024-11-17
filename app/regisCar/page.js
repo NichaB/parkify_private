@@ -1,4 +1,3 @@
-// RegisterInformationPage.js
 'use client';
 import React, { useState, useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
@@ -30,26 +29,25 @@ export default function RegisterInformationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!carData.carModel || !carData.licensePlateNumber || !carData.carColor) {
       toast.error('Please fill in all fields');
       return;
     }
-  
+
     if (!fileURL && fileUploadRef.current) {
       try {
         await fileUploadRef.current.handleUpload();
       } catch (error) {
-        // Stop submission if file upload fails
-        return;
+        return; // Stop submission if file upload fails
       }
     }
-  
+
     if (!fileURL) {
       toast.error('Please upload an image');
       return;
     }
-  
+
     try {
       const response = await fetch('/api/registerCar', {
         method: 'POST',
@@ -62,13 +60,13 @@ export default function RegisterInformationPage() {
           fileURL,
         }),
       });
-  
+
       const result = await response.json();
-  
+
       if (!response.ok) {
         throw new Error(result.error || 'An error occurred while registering the car.');
       }
-  
+
       toast.success(result.message || 'Car registration successful!');
       router.push('/home_renter');
     } catch (error) {
@@ -76,21 +74,29 @@ export default function RegisterInformationPage() {
       console.error('Registration error:', error);
     }
   };
-  
-  
-  
-  
 
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="relative flex flex-col h-screen bg-white">
       <Toaster />
-      <div className="relative flex-grow overflow-y-auto p-6">
-        <button onClick={() => router.push('/welcomerenter')} className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
 
+      {/* Cross Icon */}
+      <button
+        onClick={() => router.push('/home_renter')}
+        className="absolute top-4 right-4 z-50 flex items-center justify-center w-10 h-10 rounded-full bg-red-500 text-white hover:bg-red-700 shadow-md focus:outline-none"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-6 h-6"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <div className="relative flex-grow overflow-y-auto p-6">
         <h1 className="text-2xl font-bold text-black text-left w-full px-6 mt-16 py-4">
           Car Registration
         </h1>
@@ -139,7 +145,7 @@ export default function RegisterInformationPage() {
             />
           </div>
 
-          <div className="flex justify-center mb-4 w-4/5 mx-auto"> 
+          <div className="flex justify-center mb-4 w-4/5 mx-auto">
             <button type="submit" className="w-full bg-customBlue text-white py-3 rounded-lg hover:bg-blue-100">
               Register Car
             </button>

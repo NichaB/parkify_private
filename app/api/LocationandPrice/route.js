@@ -4,8 +4,7 @@ export async function GET(req) {
   try {
     // Extract query parameters from the request URL
     const { searchParams } = new URL(req.url);
-    const parkingLotId = searchParams.get("id"); // Get 'id' from query parameters
-    console.log("Requested Parking Lot ID:", parkingLotId); // Debugging output
+    const parkingLotId = searchParams.get("id");
 
     // Validate the required parameter
     if (!parkingLotId) {
@@ -17,22 +16,22 @@ export async function GET(req) {
 
     // Fetch parking details and lessor details using a JOIN query
     const parkingDetails = await sql`
-            SELECT 
-                pl.location_name, 
-                pl.price_per_hour, 
-                pl.address,
-                pl.location_url,
-                l.lessor_firstname AS lessor_name, 
-                l.lessor_email, 
-                l.lessor_phone_number AS lessor_phone,
-                l.lessor_profile_pic
-            FROM parking_lot AS pl
-            JOIN lessor AS l
-            ON pl.lessor_id = l.lessor_id
-            WHERE pl.parking_lot_id = ${parkingLotId}
-        `;
+      SELECT 
+        pl.location_name, 
+        pl.price_per_hour, 
+        pl.address,
+        pl.location_url,
+        pl.location_image,
+        l.lessor_firstname AS lessor_name, 
+        l.lessor_email, 
+        l.lessor_phone_number AS lessor_phone,
+        l.lessor_profile_pic
+      FROM parking_lot AS pl
+      JOIN lessor AS l
+      ON pl.lessor_id = l.lessor_id
+      WHERE pl.parking_lot_id = ${parkingLotId}
+    `;
 
-    console.log("Query Result:", parkingDetails); // Debugging output
 
     // Check if parking details are found
     if (parkingDetails.length === 0) {
@@ -48,6 +47,7 @@ export async function GET(req) {
         price: `${parkingDetails[0].price_per_hour} THB / HOURS`,
         address: parkingDetails[0].address,
         locationUrl: parkingDetails[0].location_url,
+        locationImage: parkingDetails[0].location_image,
         lessorDetails: {
           name: parkingDetails[0].lessor_name,
           email: parkingDetails[0].lessor_email,

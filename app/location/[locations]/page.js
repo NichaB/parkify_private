@@ -3,39 +3,51 @@
 import { useRouter } from "next/navigation";
 import { AiOutlineClose } from "react-icons/ai";
 import { useState, useEffect } from "react";
-import React from "react";
+import BackButton from "../../components/BackButton";
+import { Toaster, toast } from "react-hot-toast";
 
 export default function LocationPage({ params }) {
-  const unwrappedParams = React.use(params);
-  const location = decodeURIComponent(unwrappedParams.locations).toLowerCase();
-
+  const [location, setLocation] = useState("");
   const router = useRouter();
-  const [searchText, setSearchText] = useState(location || "");
+  const [searchText, setSearchText] = useState("");
   const [parkingData, setParkingData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Resolve params.locations (handles async `params`)
   useEffect(() => {
-    if (location) {
-      setSearchText(location);
+    async function resolveParams() {
+      const resolvedParams = await params;
+      const decodedLocation = decodeURIComponent(
+        resolvedParams.locations
+      ).toLowerCase();
+      setLocation(decodedLocation);
+      setSearchText(decodedLocation); // Initialize the search text
     }
-  }, [location]);
+    resolveParams();
+  }, [params]);
 
+  // Fetch parking data when location changes
   useEffect(() => {
+    if (!location) return;
+
     const fetchParkingData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/renterFetchParking?locationName=${encodeURIComponent(location)}`);
+        const response = await fetch(
+          `/api/renterFetchParking?locationName=${encodeURIComponent(location)}`
+        );
         if (!response.ok) {
-          const errorDetails = await response.json();
-          throw new Error(errorDetails.error || "Failed to fetch parking data.");
+          setParkingData([]);
+          setError(null); // No error message shown to the user
+          return;
         }
         const { parkingLots } = await response.json();
         setParkingData(parkingLots);
         setError(null);
       } catch (err) {
         console.error("Error fetching parking data:", err);
-        setError(err.message || "Failed to load parking data.");
+        setError("Failed to load parking data.");
       } finally {
         setLoading(false);
       }
@@ -44,11 +56,15 @@ export default function LocationPage({ params }) {
     fetchParkingData();
   }, [location]);
 
-const handleParkingClick = (parkingLotId) => {
-  sessionStorage.setItem("parkingLotId", parkingLotId); // Save parking lot ID
-  router.push(`/reservation`); // Navigate to reservation page
-};
+  const handleParkingClick = (parkingLotId, availableSlots) => {
+    if (availableSlots === 0) {
+      toast.error("This parking lot is full. Please select another.");
+      return; // Stop further execution
+    }
 
+    sessionStorage.setItem("parkingLotId", parkingLotId); // Save parking lot ID
+    router.push(`/reservation`); // Navigate to reservation page
+  };
 
   const getImageForLocation = (locationName) => {
     const locationImages = {
@@ -63,6 +79,9 @@ const handleParkingClick = (parkingLotId) => {
 
   return (
     <div className="min-h-screen bg-white p-4 space-y-4">
+      <Toaster position="top-center" reverseOrder={false} />
+      <BackButton targetPage="/search" />
+      {/* Search Box */}
       <div className="flex items-center bg-gray-100 p-3 rounded-lg shadow-md mt-7">
         <input
           type="text"
@@ -75,6 +94,8 @@ const handleParkingClick = (parkingLotId) => {
           <AiOutlineClose size={20} className="text-gray-500" />
         </button>
       </div>
+
+      {/* Location Image */}
       {locationImage && (
         <div className="rounded-lg overflow-hidden shadow-lg relative mb-8">
           <img
@@ -87,22 +108,32 @@ const handleParkingClick = (parkingLotId) => {
           </div>
         </div>
       )}
+
+      {/* Parking Data */}
       <div className="space-y-4">
         {loading ? (
-          <p className="text-gray-500">Loading parking data...</p>
-        ) : error ? (
-          <p className="text-red-500">{error}</p>
+          <p className="text-gray-500 text-center">Loading parking data...</p>
         ) : parkingData.length > 0 ? (
           parkingData.map((spot) => (
             <div
               key={spot.parking_lot_id}
               className="flex justify-between items-center bg-gray-100 p-4 rounded-lg shadow-md cursor-pointer"
-              onClick={() => handleParkingClick(spot.parking_lot_id)}
+              onClick={() => handleParkingClick(spot.parking_lot_id, spot.available_slots)}
             >
               <div className="flex flex-col">
-                <h3 className="text-lg font-bold text-gray-800 mb-1">{spot.price_per_hour} THB / Hour</h3>
+                <h3 className="text-lg font-bold text-gray-800 mb-1">
+                  {spot.price_per_hour} THB / Hour
+                </h3>
                 <p className="text-sm text-gray-500">{spot.address}</p>
+                <p
+                  className={`text-sm font-semibold ${
+                    spot.available_slots > 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  Available Slots: {spot.available_slots}
+                </p>
               </div>
+
               <div className="flex items-center space-x-2">
                 <img
                   src="/images/parking-icon.png"
@@ -113,7 +144,14 @@ const handleParkingClick = (parkingLotId) => {
             </div>
           ))
         ) : (
-          <p className="text-gray-500">No parking spots available for {location}</p>
+          <div className="flex flex-col items-center justify-center h-96">
+            <h2 className="text-xl text-gray-500 font-semibold">
+              No parking spots available
+            </h2>
+            <p className="text-sm text-gray-400">
+              Sorry, we couldn't find any parking spots for "{location}".
+            </p>
+          </div>
         )}
       </div>
     </div>

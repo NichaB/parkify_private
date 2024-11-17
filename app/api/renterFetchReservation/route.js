@@ -4,7 +4,6 @@ export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
-    console.log('Received userId:', userId);
 
     const query = userId
       ? sql`
@@ -15,7 +14,7 @@ export async function GET(req) {
           r.end_time, 
           r.total_price, 
           r.parking_lot_id, 
-          c.car_model,
+          COALESCE(c.car_model, 'No car available, please insert') AS car_model,
           p.location_name,
           p.address AS location_address
         FROM reservation r
@@ -31,7 +30,7 @@ export async function GET(req) {
           r.end_time, 
           r.total_price, 
           r.parking_lot_id, 
-          c.car_model,
+          COALESCE(c.car_model, 'No car available, please insert') AS car_model,
           p.location_name,
           p.address AS location_address
         FROM reservation r
@@ -41,8 +40,9 @@ export async function GET(req) {
 
     const reservationResult = await query;
 
+    // Return an empty array if no reservations are found
     if (reservationResult.length === 0) {
-      return new Response(JSON.stringify({ error: 'No reservations found' }), { status: 404 });
+      return new Response(JSON.stringify({ reservationDetails: [] }), { status: 200 });
     }
 
     return new Response(JSON.stringify({ reservationDetails: reservationResult }), { status: 200 });
@@ -51,6 +51,7 @@ export async function GET(req) {
     return new Response(JSON.stringify({ error: 'Error fetching data', details: error.message }), { status: 500 });
   }
 }
+
 
 export async function DELETE(req) {
   try {

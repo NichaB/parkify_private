@@ -133,7 +133,10 @@ const Reservations = () => {
               </div>
             ))
           ) : (
-            <p className="text-center text-gray-500">No reservations found.</p>
+            <div className="flex flex-col items-center justify-center h-96">
+              <h2 className="text-xl text-gray-500 font-semibold">No reservations available</h2>
+              <p className="text-sm text-gray-400">Please make a reservation to see it here.</p>
+            </div>
           )}
         </div>
       </div>

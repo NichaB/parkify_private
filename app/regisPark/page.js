@@ -1,21 +1,19 @@
-// RegisterInformationPage.js
-'use client';
-import React, { useState, useRef } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import { v4 as uuidv4 } from 'uuid';
+"use client";
+import React, { useState, useRef } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function RegisterInformationPage() {
   const router = useRouter();
-  const lessorId = sessionStorage.getItem('lessorId'); // Assuming lessor_id is stored here
+  const lessorId = sessionStorage.getItem("lessorId"); // Assuming lessor_id is stored here
   const fileUploadRef = useRef(null); // Ref to capture file input
 
   const [lessorData, setLessorData] = useState({
-    locationName: '',
-    address: '',
-    locationUrl: '',
-    totalSlots: '',
-    pricePerHour: '',
+    locationName: "",
+    address: "",
+    locationUrl: "",
+    totalSlots: "",
+    pricePerHour: "",
   });
 
   const handleChange = (e) => {
@@ -28,68 +26,98 @@ export default function RegisterInformationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     // Validate all fields are filled
-    if (!lessorData.locationName || !lessorData.address || !lessorData.locationUrl || !lessorData.totalSlots || !lessorData.pricePerHour) {
-      toast.error('Please fill in all fields');
+    if (
+      !lessorData.locationName ||
+      !lessorData.address ||
+      !lessorData.locationUrl ||
+      !lessorData.totalSlots ||
+      !lessorData.pricePerHour
+    ) {
+      toast.error("Please fill in all fields");
       return;
     }
-  
+
     // Validate that a file has been uploaded
     const file = fileUploadRef.current?.files[0];
     if (!file) {
-      toast.error('Please upload a location image.');
+      toast.error("Please upload a location image.");
       return;
     }
-  
+
     try {
       // Create FormData and append all fields and file
       const formData = new FormData();
-      formData.append('lessorId', lessorId);
-      formData.append('locationName', lessorData.locationName);
-      formData.append('address', lessorData.address);
-      formData.append('locationUrl', lessorData.locationUrl);
-      formData.append('totalSlots', lessorData.totalSlots);
-      formData.append('pricePerHour', lessorData.pricePerHour);
-      formData.append('locationImage', file); // Add file for image upload
-  
+      formData.append("lessorId", lessorId);
+      formData.append("locationName", lessorData.locationName);
+      formData.append("address", lessorData.address);
+      formData.append("locationUrl", lessorData.locationUrl);
+      formData.append("totalSlots", lessorData.totalSlots);
+      formData.append("pricePerHour", lessorData.pricePerHour);
+      formData.append("locationImage", file); // Add file for image upload
+
       // Make the API call
-      const response = await fetch('/api/regisParkInfo', {
-        method: 'POST',
+      const response = await fetch("/api/regisParkInfo", {
+        method: "POST",
         body: formData, // Send as form data
       });
-  
+
       const result = await response.json();
       if (!response.ok) {
-        throw new Error(result.error || 'An error occurred during registration');
+        throw new Error(
+          result.error || "An error occurred during registration"
+        );
       }
-  
-      toast.success('Lessor registration successful!');
-      router.push('/home_lessor'); // Redirect after success
+
+      toast.success("Lessor registration successful!");
+      router.push("/home_lessor"); // Redirect after success
     } catch (error) {
-      toast.error(error.message || 'An unexpected error occurred. Please try again later.');
-      console.error('Registration error:', error);
+      toast.error(
+        error.message || "An unexpected error occurred. Please try again later."
+      );
+      console.error("Registration error:", error);
     }
   };
 
   return (
     <div className="flex flex-col h-screen bg-white">
       <Toaster />
-      <div className="relative flex-grow overflow-y-auto p-6">
-        <button 
-          onClick={() => router.push('/welcome')} 
-          className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
 
+      {/* Cross Button */}
+      {/* Cross Button */}
+      <button
+        onClick={() => {
+          console.log("Navigating to home_lessor");
+          router.push("/home_lessor");
+        }}
+        className="absolute top-5 right-5 flex items-center justify-center w-10 h-10 rounded-full bg-red-500 text-white hover:bg-red-700 shadow-md focus:outline-none z-50" // Added z-50 to ensure it's on top
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-6 h-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+
+      <div className="relative flex-grow overflow-y-auto p-6">
         <h1 className="text-2xl font-bold text-black text-left w-full px-6 mt-16 py-4">
           Parking Registration
         </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6 flex flex-col items-center">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 flex flex-col items-center"
+        >
           <div className="w-11/12">
             <input
               type="text"
@@ -98,7 +126,7 @@ export default function RegisterInformationPage() {
               value={lessorData.locationName}
               onChange={handleChange}
               className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              style={{ textTransform: 'capitalize' }}
+              style={{ textTransform: "capitalize" }}
             />
           </div>
 
@@ -156,9 +184,12 @@ export default function RegisterInformationPage() {
             />
           </div>
 
-          <div className="flex justify-center mb-4 w-4/5 mx-auto"> 
-            <button type="submit" className="w-full bg-customBlue text-white py-3 rounded-lg hover:bg-blue-100">
-              Register Lessor
+          <div className="flex justify-center mb-4 w-4/5 mx-auto">
+            <button
+              type="submit"
+              className="w-full bg-customBlue text-white py-3 rounded-lg hover:bg-blue-100"
+            >
+              Add Parking
             </button>
           </div>
         </form>

@@ -15,6 +15,11 @@ const ReservationCard = () => {
           `/api/renterFetchReservation?userId=${userId}`
         );
         if (!response.ok) {
+          // Check if the error is because no reservations were found
+          if (response.status === 404) {
+            setReservations([]); // Set reservations to an empty array
+            return;
+          }
           throw new Error("Failed to fetch reservations");
         }
         const { reservationDetails } = await response.json();
@@ -76,64 +81,79 @@ const ReservationCard = () => {
   return (
     <div className="overflow-x-auto py-4">
       <div className="flex space-x-4">
-        {reservations.map((reservation, index) => (
-          <div
-            key={index}
-            className="bg-gray-800 text-white rounded-lg p-4 shadow-lg flex flex-col items-start mb-4 max-w-xl"
-          >
-            <div className="flex justify-between w-full mb-2">
-              <h2 className="text-4xl font-bold">Reserved</h2>
-              <span className="ml-2 bg-gray-600 text-sm py-3 px-2 rounded">
-                {reservation.location_name || "Loading..."}
-              </span>
-            </div>
-            <div className="flex items-center mb-1">
-              <img
-                src="mapPin.png"
-                alt="location icon"
-                className="mr-2 w-5 h-6"
-              />
-              <p className="text-lg font-semibold">
-                {reservation.location_name || "Loading..."}
-              </p>
-            </div>
-            <div className="flex items-center mb-1">
-              <img src="Clock.png" alt="clock icon" className="mr-2 w-5 h-5" />
-              <p className="text-lg">
-                {new Date(reservation.start_time).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}{" "}
-                -
-                {new Date(reservation.end_time).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
-            </div>
-            <div className="flex items-center mb-1">
-              <img
-                src="Calendar.png"
-                alt="calendar icon"
-                className="mr-2 w-5 h-5"
-              />
-              <p className="text-lg">
-                {new Date(reservation.start_time).toLocaleDateString("en-GB")}
-              </p>
-            </div>
-            <div className="flex justify-between items-center w-full mt-3">
-              <button
-                onClick={() => handleDeleteClick(reservation)}
-                className="bg-red-500 text-white py-1 px-4 rounded-lg"
-              >
-                Cancel
-              </button>
-              <div className="text-right text-xl font-bold">
-                {reservation.duration_hour} HOURS
+        {reservations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-96 w-full">
+            <h2 className="text-xl text-gray-500 font-semibold">
+              No reservations yet.
+            </h2>
+            <p className="text-sm text-gray-400">
+              Start by booking your first parking spot.
+            </p>
+          </div>
+        ) : (
+          reservations.map((reservation, index) => (
+            <div
+              key={index}
+              className="bg-gray-800 text-white rounded-lg p-4 shadow-lg flex flex-col items-start mb-4 max-w-xl"
+            >
+              <div className="flex justify-between w-full mb-2">
+                <h2 className="text-4xl font-bold">Reserved</h2>
+                <span className="ml-2 bg-gray-600 text-sm py-3 px-2 rounded">
+                  {reservation.location_name || "Loading..."}
+                </span>
+              </div>
+              <div className="flex items-center mb-1">
+                <img
+                  src="mapPin.png"
+                  alt="location icon"
+                  className="mr-2 w-5 h-6"
+                />
+                <p className="text-lg font-semibold">
+                  {reservation.location_name || "Loading..."}
+                </p>
+              </div>
+              <div className="flex items-center mb-1">
+                <img
+                  src="Clock.png"
+                  alt="clock icon"
+                  className="mr-2 w-5 h-5"
+                />
+                <p className="text-lg">
+                  {new Date(reservation.start_time).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  -
+                  {new Date(reservation.end_time).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
+              <div className="flex items-center mb-1">
+                <img
+                  src="Calendar.png"
+                  alt="calendar icon"
+                  className="mr-2 w-5 h-5"
+                />
+                <p className="text-lg">
+                  {new Date(reservation.start_time).toLocaleDateString("en-GB")}
+                </p>
+              </div>
+              <div className="flex justify-between items-center w-full mt-3">
+                <button
+                  onClick={() => handleDeleteClick(reservation)}
+                  className="bg-red-500 text-white py-1 px-4 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <div className="text-right text-xl font-bold">
+                  {reservation.duration_hour} HOURS
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {showConfirmation && (
