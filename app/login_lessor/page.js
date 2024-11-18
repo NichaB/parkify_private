@@ -32,6 +32,8 @@ export default function LoginPage() {
             if (prev <= 1) {
               clearInterval(interval);
               localStorage.removeItem('lockoutEnd');
+              localStorage.setItem('failedAttempts', 0); // Reset failed attempts after lockout
+              setFailedAttempts(0);
               return 0;
             }
             return prev - 1;

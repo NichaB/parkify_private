@@ -14,7 +14,7 @@ export async function POST(req) {
     `;
 
     if (emailCheck.length > 0) {
-      return new Response(JSON.stringify({ error: 'Email already exists' }), { status: 400 });
+      return new Response(JSON.stringify({ error: 'Email already exists' }), { status: 409 });
     }
 
     return new Response(JSON.stringify({ message: 'Email is available' }), { status: 200 });
