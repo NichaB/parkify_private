@@ -36,56 +36,56 @@ export async function GET(req) {
 
 export async function PUT(req) {
   try {
-      const {
-          user_id,
-          first_name,
-          last_name,
-          phone_number,
-          email,
-          password,
-      } = await req.json();
+    const {
+      user_id,
+      first_name,
+      last_name,
+      phone_number,
+      email,
+      password,
+    } = await req.json();
 
-      if (!user_id) {
-          return new Response(
-              JSON.stringify({ error: "Renter ID is required" }),
-              { status: 400 }
-          );
-      }
-
-      // Prepare data for updating
-      const updateData = {};
-      if (first_name) updateData.first_name = first_name;
-      if (last_name) updateData.last_name = last_name;
-      if (phone_number) updateData.phone_number = phone_number;
-      if (email) updateData.email = email;
-      if (password) updateData.password = password;
-
-      if (Object.keys(updateData).length === 0) {
-          return new Response(
-              JSON.stringify({ error: "At least one field must be updated" }),
-              { status: 400 }
-          );
-      }
-
-      await sql`
-          UPDATE user_info
-          SET ${sql(updateData)}
-          WHERE user_id = ${user_id}
-      `;
-
+    if (!user_id) {
       return new Response(
-          JSON.stringify({ message: "Renter updated successfully" }),
-          { status: 200 }
+        JSON.stringify({ error: "Renter ID is required" }),
+        { status: 400 }
       );
+    }
+
+    // Prepare data for updating
+    const updateData = {};
+    if (first_name) updateData.first_name = first_name;
+    if (last_name) updateData.last_name = last_name;
+    if (phone_number) updateData.phone_number = phone_number;
+    if (email) updateData.email = email;
+    if (password) updateData.password = password;
+
+    if (Object.keys(updateData).length === 0) {
+      return new Response(
+        JSON.stringify({ error: "At least one field must be updated" }),
+        { status: 400 }
+      );
+    }
+
+    // Perform the update
+    await sql`
+      UPDATE user_info
+      SET ${sql(updateData)}
+      WHERE user_id = ${user_id}
+    `;
+
+    return new Response(
+      JSON.stringify({ message: "Renter updated successfully" }),
+      { status: 200 }
+    );
   } catch (error) {
-      console.error("Update Error:", error);
-      return new Response(
-          JSON.stringify({ error: "Error updating data" }),
-          { status: 500 }
-      );
+    console.error("Update Error:", error);
+    return new Response(
+      JSON.stringify({ error: "Error updating data", details: error.message }),
+      { status: 500 }
+    );
   }
 }
-
 
 
 // DELETE Renter
