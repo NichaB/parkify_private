@@ -3,6 +3,15 @@ const nextConfig = {
   images: {
     domains: ['klxuzcwcvhulmdckttju.supabase.co'],
   },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/landing',
+        permanent: true, // Use true for 301 redirects, false for 302 redirects
+      },
+    ];
+  },
 };
 
 export default nextConfig;
