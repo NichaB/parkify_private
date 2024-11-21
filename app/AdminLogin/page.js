@@ -14,38 +14,38 @@ const AdminLogin = () => {
 
   useEffect(() => {
 
-        // Initialize lockout time immediately on mount
-        const lockoutEnd = localStorage.getItem("lockoutEnd");
-        if (lockoutEnd) {
-          const timeLeft = parseInt(lockoutEnd) - Date.now();
-          if (timeLeft > 0) {
-            setLockoutTimeLeft(timeLeft); // Set initial countdown without refresh
-          } else {
-            // Clear lockout if expired
-            localStorage.removeItem("lockoutEnd");
-            localStorage.setItem("failedAttempts", 0); // Reset failed attempts
-          }
+    // Initialize lockout time immediately on mount
+    const lockoutEnd = localStorage.getItem("lockoutEnd");
+    if (lockoutEnd) {
+      const timeLeft = parseInt(lockoutEnd) - Date.now();
+      if (timeLeft > 0) {
+        setLockoutTimeLeft(timeLeft); // Set initial countdown without refresh
+      } else {
+        // Clear lockout if expired
+        localStorage.removeItem("lockoutEnd");
+        localStorage.setItem("failedAttempts", 0); // Reset failed attempts
+      }
+    }
+
+    // Start countdown if lockout is active
+    const timer = setInterval(() => {
+      const lockoutEnd = localStorage.getItem("lockoutEnd");
+      if (lockoutEnd) {
+        const timeLeft = parseInt(lockoutEnd) - Date.now();
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          localStorage.removeItem("lockoutEnd");
+          localStorage.setItem("failedAttempts", 0); // Reset failed attempts after lockout
+          setLockoutTimeLeft(null);
+        } else {
+          setLockoutTimeLeft(timeLeft);
         }
-    
-        // Start countdown if lockout is active
-        const timer = setInterval(() => {
-          const lockoutEnd = localStorage.getItem("lockoutEnd");
-          if (lockoutEnd) {
-            const timeLeft = parseInt(lockoutEnd) - Date.now();
-            if (timeLeft <= 0) {
-              clearInterval(timer);
-              localStorage.removeItem("lockoutEnd");
-              localStorage.setItem("failedAttempts", 0); // Reset failed attempts after lockout
-              setLockoutTimeLeft(null);
-            } else {
-              setLockoutTimeLeft(timeLeft);
-            }
-          }
-        }, 1000);
-    
-        return () => clearInterval(timer);
-      }, []);
-    
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -154,9 +154,8 @@ const AdminLogin = () => {
 
           <button
             onClick={handleLogin}
-            className={`w-full ${
-              lockoutTimeLeft ? "bg-gray-400" : "bg-gray-900"
-            } text-white py-3 rounded-lg font-semibold mb-14`}
+            className={`w-full ${lockoutTimeLeft ? "bg-gray-400" : "bg-gray-900"
+              } text-white py-3 rounded-lg font-semibold mb-14`}
             disabled={lockoutTimeLeft}
           >
             {lockoutTimeLeft
