@@ -7,17 +7,20 @@ import { FaCheckCircle } from "react-icons/fa";
 
 export default function RegisterInformationPage() {
   const router = useRouter();
-  const email = sessionStorage.getItem("userEmail");
-  const password = sessionStorage.getItem("userPassword");
+  
   const [selectedFile, setSelectedFile] = useState(null);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false); // State to control popup visibility
 
-  /*useEffect(() => {
-  if (!email || !password) {
-    toast.error('Email and password are required. Redirecting to registration.');
-    router.push('/register_lessor');
+const [email, setEmail] = useState("");
+const [password, setPassword] = useState("");
+
+useEffect(() => {
+  if (typeof window !== "undefined") {
+    setEmail(sessionStorage.getItem("userEmail") || "");
+    setPassword(sessionStorage.getItem("userPassword") || "");
   }
-}, [email, password, router]);*/
+}, []);
+
 
   const [userData, setUserData] = useState({
     email: email || "",
