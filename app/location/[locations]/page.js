@@ -68,7 +68,7 @@ export default function LocationPage({ params }) {
 
   const getImageForLocation = (locationName) => {
     const locationImages = {
-      yaowarat: "/images/yaowarat.jpg",
+      yaowarat: "/images/Yaowarat.jpg",
       siam: "/images/siam.jpg",
       "don muang": "/images/donmuang.jpg",
     };
