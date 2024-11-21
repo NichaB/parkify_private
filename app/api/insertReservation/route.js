@@ -5,28 +5,16 @@ export async function POST(req) {
     const {
       parkingLotId,
       userId,
-      reservationDate,
       startTime,
       endTime,
       pricePerHour,
       carId,
     } = await req.json();
 
-    console.log("Received API request payload:", {
-      parkingLotId,
-      userId,
-      reservationDate,
-      startTime,
-      endTime,
-      pricePerHour,
-      carId,
-    });
-
     // Validation: Check if all required fields are provided
     if (
       !parkingLotId ||
       !userId ||
-      !reservationDate ||
       !startTime ||
       !endTime ||
       !pricePerHour ||
@@ -35,57 +23,29 @@ export async function POST(req) {
       console.error("Validation Error: Missing required fields.");
       return new Response(
         JSON.stringify({ status: "error", message: "All fields are required." }),
-        { status: 200 } // Always return 200
+        { status: 200 }
       );
     }
 
-    // Check available slots
-    const [availableSlotsResult] = await sql`
-      SELECT available_slots
-      FROM parking_lot
-      WHERE parking_lot_id = ${parkingLotId}
-    `;
+    // Get the current timestamp for reservationDate
+    const reservationDateTime = new Date();
 
-    if (!availableSlotsResult) {
-      console.error("Parking lot not found.");
-      return new Response(
-        JSON.stringify({
-          status: "error",
-          message: "Parking lot not found.",
-        }),
-        { status: 200 } // Always return 200
-      );
-    }
-
-    const { available_slots } = availableSlotsResult;
-
-    if (available_slots <= 0) {
-      console.warn("Parking lot is full.");
-      return new Response(
-        JSON.stringify({
-          status: "full",
-          message: "Parking lot is full.",
-        }),
-        { status: 200 } // Always return 200
-      );
-    }
-
-    // Convert reservation date and time into proper datetime format
+    // Convert startTime and endTime into full Date objects
     const startDateTime = new Date(
-      `${reservationDate.split(" - ")[0]}T${startTime}:00+07:00`
+      `${reservationDateTime.toISOString().split("T")[0]}T${startTime}:00+07:00`
     );
     const endDateTime = new Date(
-      `${reservationDate.split(" - ")[1]}T${endTime}:00+07:00`
+      `${reservationDateTime.toISOString().split("T")[0]}T${endTime}:00+07:00`
     );
 
     if (isNaN(startDateTime) || isNaN(endDateTime)) {
-      console.error("Validation Error: Invalid date or time format.");
+      console.error("Validation Error: Invalid start or end time format.");
       return new Response(
         JSON.stringify({
           status: "error",
-          message: "Invalid date or time format.",
+          message: "Invalid start or end time format.",
         }),
-        { status: 200 } // Always return 200
+        { status: 200 }
       );
     }
 
@@ -93,72 +53,64 @@ export async function POST(req) {
     const totalHours = Math.abs((endDateTime - startDateTime) / (1000 * 60 * 60));
     const totalPrice = totalHours * pricePerHour;
 
-    // Convert to integers for smallint fields, rounding up
-    const totalHoursInt = Math.ceil(totalHours);
-    const totalDaysInt = Math.ceil(totalHours / 24);
+    // Transaction for consistency
+    let reservationId = null;
+    await sql.begin(async (sql) => {
+      // Step 1: Insert reservation
+      const reservationResult = await sql`
+        INSERT INTO reservation (
+          parking_lot_id,
+          user_id,
+          reservation_date,
+          start_time,
+          end_time,
+          total_price,
+          duration_hour,
+          duration_day,
+          car_id
+        )
+        VALUES (
+          ${parkingLotId},
+          ${userId},
+          ${reservationDateTime.toISOString()},
+          ${startDateTime.toISOString()},
+          ${endDateTime.toISOString()},
+          ${totalPrice},
+          ${Math.ceil(totalHours)},
+          ${Math.ceil(totalHours / 24)},
+          ${carId}
+        )
+        RETURNING reservation_id
+      `;
 
-    console.log("Calculated Values:", {
-      startDateTime,
-      endDateTime,
-      totalHoursInt,
-      totalDaysInt,
-      totalPrice,
+      if (reservationResult.length === 0) {
+        throw new Error("Reservation could not be created.");
+      }
+
+      reservationId = reservationResult[0].reservation_id;
+
+      // Step 2: Update available slots
+      const updateResult = await sql`
+        UPDATE parking_lot
+        SET available_slots = available_slots - 1
+        WHERE parking_lot_id = ${parkingLotId} AND available_slots > 0
+        RETURNING available_slots
+      `;
+
+      if (updateResult.length === 0) {
+        throw new Error("Parking lot not found or no available slots.");
+      }
+
+      console.log("Updated available_slots:", updateResult[0].available_slots);
     });
-
-    // Insert reservation
-    const result = await sql`
-      INSERT INTO reservation (
-        parking_lot_id,
-        user_id,
-        reservation_date,
-        start_time,
-        end_time,
-        total_price,
-        duration_hour,
-        duration_day,
-        car_id
-      )
-      VALUES (
-        ${parkingLotId},
-        ${userId},
-        ${reservationDate.split(" - ")[0]}, -- Use start date for reservation_date
-        ${startDateTime.toISOString()},
-        ${endDateTime.toISOString()},
-        ${totalPrice},
-        ${totalHoursInt},
-        ${totalDaysInt},
-        ${carId}
-      )
-      RETURNING reservation_id
-    `;
-
-    if (result.length === 0) {
-      console.error("SQL Error: Reservation could not be created.");
-      return new Response(
-        JSON.stringify({
-          status: "error",
-          message: "Reservation could not be created.",
-        }),
-        { status: 200 } // Always return 200
-      );
-    }
-
-    // Update the available slots in the parking lot
-    await sql`
-      UPDATE parking_lot
-      SET available_slots = available_slots - 1
-      WHERE parking_lot_id = ${parkingLotId}
-    `;
-
-    console.log("Reservation successfully created with ID:", result[0].reservation_id);
 
     return new Response(
       JSON.stringify({
         status: "success",
         message: "Reservation created successfully.",
-        reservationId: result[0].reservation_id,
+        reservationId,
       }),
-      { status: 200 } // Always return 200
+      { status: 200 }
     );
   } catch (error) {
     console.error("Error creating reservation:", error);
@@ -168,7 +120,7 @@ export async function POST(req) {
         message: "Internal server error.",
         details: error.message,
       }),
-      { status: 200 } // Always return 200
+      { status: 200 }
     );
   }
 }

@@ -91,8 +91,20 @@ const ActionButtons = ({ parkingDetails, reservationData }) => {
       return;
     }
 
+    // Extract start and end dates
     const start = new Date(`${reservationDate.split(" - ")[0]}T${startTime}`);
     const end = new Date(`${reservationDate.split(" - ")[1]}T${endTime}`);
+    const today = new Date();
+
+    // Reset time for today to midnight
+    today.setHours(0, 0, 0, 0);
+
+    // Validate that the start date is not earlier than today
+    if (start < today || start == today) {
+      toast.error("Reservation start date cannot be earlier than today.");
+      return;
+    }
+
     const durationInHours = (end - start) / (1000 * 60 * 60); // Calculate hours
     const pricePerHour = parseFloat(price.split(" ")[0]); // Extract price per hour from string
 
