@@ -75,7 +75,7 @@ export default function HomePage() {
         {/* Horizontal Scroll Container */}
         <div className="flex overflow-x-auto space-x-4 pb-2">
           <Link href="/search?place=Yaowarat">
-            <PlaceCard imageSrc="/images/Yaowarat.jpg" name="Yaowarat" />
+            <PlaceCard imageSrc="/images/yaowarat.jpg" name="Yaowarat" />
           </Link>
           <Link href="/search?place=Siam">
             <PlaceCard imageSrc="/images/siam.jpg" name="Siam" />

@@ -13,15 +13,12 @@ const LandingPage = () => {
   const [audioPlayed, setAudioPlayed] = useState(false); // State to check if audio has started
 
   useEffect(() => {
-    // Clear session storage when the component loads
     sessionStorage.clear();
 
-    // Create the audio element on component mount
     const audioElement = new Audio("/RaceCar.mp3");
     audioElement.loop = true;
     setAudio(audioElement);
 
-    // Cleanup function to stop the audio when navigating away
     return () => {
       if (audioElement) {
         audioElement.pause();
@@ -38,32 +35,35 @@ const LandingPage = () => {
     router.push(path);
   };
 
-  // Start playing the audio when the speaker icon is clicked
   const toggleAudio = () => {
     if (!audioPlayed) {
-      audio.play(); // Start audio
-      setAudioPlayed(true); // Set audio as played
+      audio.play();
+      setAudioPlayed(true);
     }
-    setAudioMuted(!audioMuted); // Toggle mute/unmute
-    audio.muted = !audioMuted; // Set audio muted/unmuted
+    setAudioMuted(!audioMuted);
+    audio.muted = !audioMuted;
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center h-screen bg-gray-100 p-4">
-      {/* Background Video */}
+    <div className="relative flex flex-col items-center justify-center h-screen bg-gray-100">
+      {/* Background GIF */}
       <img
         src="/badparking.gif"
         alt="Background GIF"
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover min-h-screen"
       />
 
       {/* White Mask */}
       <div className="absolute inset-0 bg-gray-400 opacity-60 z-10"></div>
 
       {/* Logo and Content */}
-      <div className="flex flex-col items-center justify-center h-screen p-4 z-20">
+      <div className="flex flex-col items-center justify-center p-4 z-20 space-y-4">
         {/* Logo */}
-        <img src="logo.png" alt="Parkify Logo" className="w-64 md:w-80" />
+        <img
+          src="logo.png"
+          alt="Parkify Logo"
+          className="w-48 md:w-64 max-w-full"
+        />
 
         {/* Sound Button */}
         <div className="flex justify-center items-center">
@@ -80,37 +80,38 @@ const LandingPage = () => {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:space-x-4 w-full max-w-md mx-auto justify-center items-center z-20 mb-20">
+      {/* Buttons */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl p-4 z-20">
         <button
           onClick={() => navigateWithAudioStop("/welcomelessor")}
-          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-4 sm:mb-0"
+          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200"
         >
           <img src="lessor.png" alt="Lessor Icon" className="w-12 mb-2" />
-          <span className="text-lg font-semibold px-5">Lessor</span>
+          <span className="text-lg font-semibold text-center">Lessor</span>
         </button>
 
         <button
           onClick={() => navigateWithAudioStop("/welcomerenter")}
-          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-4 sm:mb-0"
+          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200"
         >
           <img src="renter.png" alt="Renter Icon" className="w-12 mb-2" />
-          <span className="text-lg font-semibold px-5">Renter</span>
+          <span className="text-lg font-semibold text-center">Renter</span>
         </button>
 
         <button
           onClick={() => navigateWithAudioStop("/AdminLogin")}
-          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-4 sm:mb-0"
+          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200"
         >
           <img src="admin.png" alt="Admin Icon" className="w-12 mb-2" />
-          <span className="text-lg font-semibold px-5">Admin</span>
+          <span className="text-lg font-semibold text-center">Admin</span>
         </button>
 
         <button
           onClick={() => navigateWithAudioStop("start_dev")}
-          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200 flex-1 mb-10 sm:mb-0"
+          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200"
         >
           <img src="dev.png" alt="Developer Icon" className="w-12 mb-2" />
-          <span className="text-lg font-semibold px-1">Developer</span>
+          <span className="text-lg font-semibold text-center">Developer</span>
         </button>
       </div>
     </div>
