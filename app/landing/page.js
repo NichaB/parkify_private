@@ -8,9 +8,9 @@ import toast, { Toaster } from "react-hot-toast";
 const LandingPage = () => {
   const router = useRouter();
 
-  const [audioMuted, setAudioMuted] = useState(true); // State to track if audio is muted or not
-  const [audio, setAudio] = useState(null); // State to hold the audio element
-  const [audioPlayed, setAudioPlayed] = useState(false); // State to check if audio has started
+  const [audioMuted, setAudioMuted] = useState(true);
+  const [audio, setAudio] = useState(null);
+  const [audioPlayed, setAudioPlayed] = useState(false);
 
   useEffect(() => {
     sessionStorage.clear();
@@ -22,7 +22,7 @@ const LandingPage = () => {
     return () => {
       if (audioElement) {
         audioElement.pause();
-        audioElement.currentTime = 0; // Reset the audio playback
+        audioElement.currentTime = 0;
       }
     };
   }, []);
@@ -30,7 +30,7 @@ const LandingPage = () => {
   const navigateWithAudioStop = (path) => {
     if (audio) {
       audio.pause();
-      audio.currentTime = 0; // Reset audio playback
+      audio.currentTime = 0;
     }
     router.push(path);
   };
@@ -45,74 +45,74 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center h-screen bg-gray-100">
+    <div className="relative w-full h-screen overflow-hidden">
       {/* Background GIF */}
-      <img
-        src="/badparking.gif"
-        alt="Background GIF"
-        className="absolute inset-0 w-full h-full object-cover min-h-screen"
-      />
+      <div className="absolute inset-0">
+        <img
+          src="/badparking.gif"
+          alt="Background GIF"
+          className="w-full h-full object-cover"
+        />
+      </div>
 
       {/* White Mask */}
-      <div className="absolute inset-0 bg-gray-400 opacity-60 z-10"></div>
+      <div className="absolute inset-0 bg-gray-400 opacity-60"></div>
 
-      {/* Logo and Content */}
-      <div className="flex flex-col items-center justify-center p-4 z-20 space-y-4">
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center justify-between h-full px-4 py-8">
         {/* Logo */}
         <img
           src="logo.png"
           alt="Parkify Logo"
-          className="w-48 md:w-64 max-w-full"
+          className="w-48 md:w-64 mb-6 max-w-full"
         />
 
         {/* Sound Button */}
-        <div className="flex justify-center items-center">
+        <button
+          onClick={toggleAudio}
+          className="z-20 text-xl p-3 bg-white rounded-full shadow-lg mb-6"
+        >
+          {audioMuted ? (
+            <AiOutlineSound className="text-gray-600" />
+          ) : (
+            <AiFillSound className="text-blue-500" />
+          )}
+        </button>
+
+        {/* Buttons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl">
           <button
-            onClick={toggleAudio}
-            className="z-20 text-xl p-2 bg-white rounded-full shadow-lg"
+            onClick={() => navigateWithAudioStop("/welcomelessor")}
+            className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200"
           >
-            {audioMuted ? (
-              <AiOutlineSound className="text-gray-600" />
-            ) : (
-              <AiFillSound className="text-blue-500" />
-            )}
+            <img src="lessor.png" alt="Lessor Icon" className="w-12 mb-2" />
+            <span className="text-lg font-semibold text-center">Lessor</span>
+          </button>
+
+          <button
+            onClick={() => navigateWithAudioStop("/welcomerenter")}
+            className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200"
+          >
+            <img src="renter.png" alt="Renter Icon" className="w-12 mb-2" />
+            <span className="text-lg font-semibold text-center">Renter</span>
+          </button>
+
+          <button
+            onClick={() => navigateWithAudioStop("/AdminLogin")}
+            className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200"
+          >
+            <img src="admin.png" alt="Admin Icon" className="w-12 mb-2" />
+            <span className="text-lg font-semibold text-center">Admin</span>
+          </button>
+
+          <button
+            onClick={() => navigateWithAudioStop("start_dev")}
+            className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200"
+          >
+            <img src="dev.png" alt="Developer Icon" className="w-12 mb-2" />
+            <span className="text-lg font-semibold text-center">Developer</span>
           </button>
         </div>
-      </div>
-
-      {/* Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl p-4 z-20">
-        <button
-          onClick={() => navigateWithAudioStop("/welcomelessor")}
-          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200"
-        >
-          <img src="lessor.png" alt="Lessor Icon" className="w-12 mb-2" />
-          <span className="text-lg font-semibold text-center">Lessor</span>
-        </button>
-
-        <button
-          onClick={() => navigateWithAudioStop("/welcomerenter")}
-          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200"
-        >
-          <img src="renter.png" alt="Renter Icon" className="w-12 mb-2" />
-          <span className="text-lg font-semibold text-center">Renter</span>
-        </button>
-
-        <button
-          onClick={() => navigateWithAudioStop("/AdminLogin")}
-          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200"
-        >
-          <img src="admin.png" alt="Admin Icon" className="w-12 mb-2" />
-          <span className="text-lg font-semibold text-center">Admin</span>
-        </button>
-
-        <button
-          onClick={() => navigateWithAudioStop("start_dev")}
-          className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-lg hover:bg-gray-200 transition duration-200"
-        >
-          <img src="dev.png" alt="Developer Icon" className="w-12 mb-2" />
-          <span className="text-lg font-semibold text-center">Developer</span>
-        </button>
       </div>
     </div>
   );
