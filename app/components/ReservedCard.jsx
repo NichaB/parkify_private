@@ -15,7 +15,6 @@ const ReservationCard = () => {
           `/api/renterFetchReservation?userId=${userId}`
         );
         if (!response.ok) {
-          // Check if the error is because no reservations were found
           if (response.status === 404) {
             setReservations([]); // Set reservations to an empty array
             return;
@@ -23,7 +22,33 @@ const ReservationCard = () => {
           throw new Error("Failed to fetch reservations");
         }
         const { reservationDetails } = await response.json();
-        setReservations(reservationDetails);
+
+        // Calculate duration in days and hours for each reservation
+        const updatedReservations = reservationDetails.map((reservation) => {
+          const startTime = new Date(reservation.start_time);
+          const endTime = new Date(reservation.end_time);
+
+          // Calculate duration in hours
+          const durationInHours = Math.ceil(
+            (endTime - startTime) / (1000 * 60 * 60)
+          );
+
+          // Convert hours to days and remaining hours
+          const days = Math.floor(durationInHours / 24);
+          const hours = durationInHours % 24;
+
+          // Format duration
+          const durationFormatted =
+            days > 0
+              ? `${days} day${days > 1 ? "s" : ""} ${hours} hour${
+                  hours > 1 ? "s" : ""
+                }`
+              : `${hours} hour${hours !== 1 ? "s" : ""}`;
+
+          return { ...reservation, duration_formatted: durationFormatted }; // Add formatted duration
+        });
+
+        setReservations(updatedReservations);
       } catch (error) {
         console.error("Error fetching reservations:", error.message);
       }
@@ -118,12 +143,12 @@ const ReservationCard = () => {
                   alt="clock icon"
                   className="mr-2 w-5 h-5"
                 />
-                <p className="text-lg">
+                <p className="text-[16px]">
                   {new Date(reservation.start_time).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}{" "}
-                  -
+                  -{" "}
                   {new Date(reservation.end_time).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -136,10 +161,15 @@ const ReservationCard = () => {
                   alt="calendar icon"
                   className="mr-2 w-5 h-5"
                 />
-                <p className="text-lg">
-                  {new Date(reservation.start_time).toLocaleDateString("en-GB")}
+                <p className="text-[16px]">
+                  {`${new Date(reservation.start_time).toLocaleDateString(
+                    "en-GB"
+                  )} - ${new Date(reservation.end_time).toLocaleDateString(
+                    "en-GB"
+                  )}`}
                 </p>
               </div>
+
               <div className="flex justify-between items-center w-full mt-3">
                 <button
                   onClick={() => handleDeleteClick(reservation)}
@@ -147,8 +177,8 @@ const ReservationCard = () => {
                 >
                   Cancel
                 </button>
-                <div className="text-right text-xl font-bold">
-                  {reservation.duration_hour} HOURS
+                <div className="text-right text-[16px] font-bold">
+                  {reservation.duration_formatted}
                 </div>
               </div>
             </div>
