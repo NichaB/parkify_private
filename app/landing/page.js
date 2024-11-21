@@ -60,7 +60,7 @@ const LandingPage = () => {
         <img
           src="/logo.png"
           alt="Parkify Logo"
-          className="w-36 md:w-48 max-w-full"
+          className="w-48 md:w-64 max-w-full"
         />
         <button
           onClick={toggleAudio}
