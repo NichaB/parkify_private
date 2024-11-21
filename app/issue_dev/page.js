@@ -3,15 +3,19 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
-export default function  IssueDetailPage(){
+export default function IssueDetailPage() {
   const router = useRouter();
   const [issue, setIssue] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const developerEmail = sessionStorage.getItem("developer_email");
+  const [developerEmail, setDeveloperEmail] = useState(null);
 
   useEffect(() => {
+    // Access sessionStorage inside useEffect
     const developerId = sessionStorage.getItem("developer_id");
+    const email = sessionStorage.getItem("developer_email");
+    setDeveloperEmail(email);
+
     if (!developerId) {
       router.push("/login_dev");
       return;
@@ -174,6 +178,4 @@ export default function  IssueDetailPage(){
       </div>
     </div>
   );
-};
-
-
+}
