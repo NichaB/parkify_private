@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
-const IssueDetailPage = () => {
+export default function  IssueDetailPage(){
   const router = useRouter();
   const [issue, setIssue] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -176,4 +176,4 @@ const IssueDetailPage = () => {
   );
 };
 
-export default IssueDetailPage;
+
