@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect } from 'react';
 import { InputField } from '../components/InputField';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -77,7 +77,7 @@ export default function LoginPage() {
         setFailedAttempts(prev => prev + 1);
 
         if (failedAttempts + 1 >= 3) {
-          const lockoutDuration = 30 * 1000; // 30 seconds lockout duration
+          const lockoutDuration = 5 * 1000; // 30 seconds lockout duration
           const lockoutEndTime = Date.now() + lockoutDuration;
           localStorage.setItem('lockoutEnd', lockoutEndTime);
           setLockoutTimeLeft(Math.ceil(lockoutDuration / 1000));
@@ -112,8 +112,8 @@ export default function LoginPage() {
       <Toaster />
 
       {/* Back Button */}
-      <button 
-        onClick={() => router.push('/welcomelessor')} 
+      <button
+        onClick={() => router.push('/welcomelessor')}
         className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black"
       >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
@@ -129,13 +129,13 @@ export default function LoginPage() {
       {/* Login Form */}
       <div className="flex-grow flex flex-col items-center w-full px-6">
         <form onSubmit={handleSubmit} className="space-y-6 flex flex-col items-center w-full">
-          
+
           {/* Email Field */}
           <div className="w-11/12">
-            <InputField 
-              type="email" 
-              name="email" 
-              placeholder="Enter your email" 
+            <InputField
+              type="email"
+              name="email"
+              placeholder="Enter your email"
               value={formData.email}
               onChange={handleChange}
               className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -144,10 +144,10 @@ export default function LoginPage() {
 
           {/* Password Field */}
           <div className="w-11/12">
-            <InputField 
-              type="password" 
-              name="password" 
-              placeholder="Enter your password" 
+            <InputField
+              type="password"
+              name="password"
+              placeholder="Enter your password"
               value={formData.password}
               onChange={handleChange}
               className="w-full p-4 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

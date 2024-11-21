@@ -9,7 +9,7 @@ export default function RegisterInformationPage() {
   const router = useRouter();
   const email = sessionStorage.getItem('userEmail');
   const password = sessionStorage.getItem('userPassword');
- 
+
   useEffect(() => {
     if (!email || !password) {
       toast.error('Email and password are required. Redirecting to registration.');
@@ -36,28 +36,28 @@ export default function RegisterInformationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!userData.email || !userData.password || !userData.firstName || !userData.lastName || !userData.phoneNumber) {
       toast.error('Please fill in all fields');
       return;
     }
-  
+
     try {
       const response = await fetch('/api/renterRegisterPro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
       });
-  
+
       const result = await response.json();
-  
+
       if (!response.ok) {
         throw new Error(result.error || 'An error occurred while registering. Please try again.');
       }
-  
+
       // Store user_id in sessionStorage for the next page
       sessionStorage.setItem('userId', result.userId);
-  
+
       toast.success('Registration successful!');
       router.push('/regisCar'); // Redirect to car registration page
     } catch (error) {
@@ -65,7 +65,7 @@ export default function RegisterInformationPage() {
       console.error('Registration error:', error);
     }
   };
-  
+
 
 
   return (
@@ -77,15 +77,15 @@ export default function RegisterInformationPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        
+
         <h1 className="text-2xl font-bold text-black text-left w-full px-6 mt-16 py-4">
           Your Information for a <br /> Smooth Reservation Experience
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6 flex flex-col items-center">
           {/* Input fields */}
-           {/* First Name */}
-           <div className="w-11/12">
+          {/* First Name */}
+          <div className="w-11/12">
             <input
               type="text"
               name="firstName"
@@ -122,7 +122,7 @@ export default function RegisterInformationPage() {
           </div>
 
 
-          <div className="flex justify-center mb-4 w-4/5 mx-auto"> 
+          <div className="flex justify-center mb-4 w-4/5 mx-auto">
             <button type="submit" className="w-full bg-customBlue text-white py-3 rounded-lg hover:bg-blue-100">
               Get started
             </button>

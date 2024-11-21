@@ -17,7 +17,7 @@ export default function EditRenter() {
 
   // Retrieve RenterId from sessionStorage on client side
   useEffect(() => {
-    const storedRenterId = sessionStorage.getItem("userId"); 
+    const storedRenterId = sessionStorage.getItem("userId");
     if (storedRenterId) {
       setRenterId(storedRenterId);
     } else {
@@ -61,42 +61,43 @@ export default function EditRenter() {
   };
 
   const handleSave = async () => {
-  const payload = {
-    renter_id: renterId,
-    ...renterDetails,
-  };
+    const payload = {
+      renter_id: renterId,
+      ...renterDetails,
+    };
 
-  // Include currentPassword only if the password is being updated
-  if (passwordEditable && renterDetails.password) {
-    payload.currentPassword = currentPasswordInput;
-  }
-
-  try {
-    const updateResponse = await fetch(`../api/renterFetchRenter`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!updateResponse.ok) {
-      const errorText = await updateResponse.text();
-      toast.error(`Update failed: ${errorText || "Unknown error"}`);
-      return; // Exit the function if the update fails
+    // Include currentPassword only if the password is being updated
+    if (passwordEditable && renterDetails.password) {
+      payload.currentPassword = currentPasswordInput;
     }
 
-    // Reset passwordEditable to hide password as "***"
-    setPasswordEditable(false);
-    setRenterDetails((prev) => ({
-      ...prev,
-      password: "", // Clear the password field
-    }));
 
-    toast.success("Renter details updated successfully!");
-  } catch {
-    // Display a generic toast error for unexpected issues
-    toast.error("An unexpected error occurred while saving data");
-  }
-};
+    try {
+      const updateResponse = await fetch(`../api/renterFetchRenter`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!updateResponse.ok) {
+        const errorText = await updateResponse.text();
+        toast.error(`Update failed: ${errorText || "Unknown error"}`);
+        return; // Exit the function if the update fails
+      }
+
+      // Reset passwordEditable to hide password as "***"
+      setPasswordEditable(false);
+      setRenterDetails((prev) => ({
+        ...prev,
+        password: "", // Clear the password field
+      }));
+
+      toast.success("Renter details updated successfully!");
+    } catch {
+      // Display a generic toast error for unexpected issues
+      toast.error("An unexpected error occurred while saving data");
+    }
+  };
 
 
   const handlePasswordFieldClick = () => {
@@ -106,33 +107,38 @@ export default function EditRenter() {
     }
   };
 
-const handlePasswordVerification = async () => {
-  try {
-    const response = await fetch('/api/renterVerifyPassword', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: renterId,
-        currentPassword: currentPasswordInput,
-      }),
-    });
+  const handlePasswordVerification = async () => {
+    try {
+      const response = await fetch('/api/renterVerifyPassword', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: renterId,
+          currentPassword: currentPasswordInput,
+        }),
+      });
 
-    const result = await response.json();
+      const result = await response.json();
 
-    if (!response.ok) {
-      toast.error(result.error || "Password verification failed");
-      return; // Exit the function if verification fails
+      if (!response.ok) {
+        toast.error(result.error || "Password verification failed");
+        return; // Exit the function if verification fails
+      }
+
+      // Password verified successfully, allow password editing
+      setPasswordEditable(true);
+      setShowPasswordModal(false);
+      toast.success("You can now edit your password");
+      setRenterDetails((prev) => ({
+        ...prev,
+        password: result.decrypted_password,
+      }));
+
+    } catch {
+      // Display a generic toast for unexpected issues
+      toast.error("An unexpected error occurred during password verification.");
     }
-
-    // Password verified successfully, allow password editing
-    setPasswordEditable(true);
-    setShowPasswordModal(false);
-    toast.success("You can now edit your password");
-  } catch {
-    // Display a generic toast for unexpected issues
-    toast.error("An unexpected error occurred during password verification.");
-  }
-};
+  };
 
 
   if (loading) return <div>Loading...</div>;
@@ -158,7 +164,7 @@ const handlePasswordVerification = async () => {
                 type={field === "password" ? (passwordEditable ? "text" : "text") : "text"}
                 name={field}
                 value={
-                  field === "password" && !passwordEditable 
+                  field === "password" && !passwordEditable
                     ? "*****" // Display "***" when not editable
                     : renterDetails[field] || ""
                 }

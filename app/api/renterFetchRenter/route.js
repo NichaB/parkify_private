@@ -58,7 +58,12 @@ export async function PUT(req) {
     if (last_name) updateData.last_name = last_name;
     if (phone_number) updateData.phone_number = phone_number;
     if (email) updateData.email = email;
-    if (password) updateData.password = password;
+    if (password) {
+      const encryptedPasswordResult = await sql`
+          SELECT pgp_sym_encrypt(${password}, 'parkify-secret') AS encrypted_password;
+        `;
+      updateData.password = encryptedPasswordResult[0].encrypted_password;
+    }
 
     if (Object.keys(updateData).length === 0) {
       return new Response(
@@ -67,12 +72,11 @@ export async function PUT(req) {
       );
     }
 
-    // Perform the update
     await sql`
-      UPDATE user_info
-      SET ${sql(updateData)}
-      WHERE user_id = ${user_id}
-    `;
+          UPDATE user_info
+          SET ${sql(updateData)}
+          WHERE user_id = ${user_id}
+      `;
 
     return new Response(
       JSON.stringify({ message: "Renter updated successfully" }),
@@ -81,11 +85,12 @@ export async function PUT(req) {
   } catch (error) {
     console.error("Update Error:", error);
     return new Response(
-      JSON.stringify({ error: "Error updating data", details: error.message }),
+      JSON.stringify({ error: "Error updating data" }),
       { status: 500 }
     );
   }
 }
+
 
 
 // DELETE Renter

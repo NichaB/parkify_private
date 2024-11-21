@@ -12,12 +12,12 @@ export default function RegisterInformationPage() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false); // State to control popup visibility
 
-    useEffect(() => {
-    if (!email || !password) {
-      toast.error('Email and password are required. Redirecting to registration.');
-      router.push('/register_lessor');
-    }
-  }, [email, password, router]);
+  /*useEffect(() => {
+  if (!email || !password) {
+    toast.error('Email and password are required. Redirecting to registration.');
+    router.push('/register_lessor');
+  }
+}, [email, password, router]);*/
 
   const [userData, setUserData] = useState({
     email: email || "",
@@ -77,6 +77,7 @@ export default function RegisterInformationPage() {
       });
 
       const result = await response.json();
+
       if (!response.ok) {
         throw new Error(
           result.error || "An error occurred during registration"
@@ -85,7 +86,6 @@ export default function RegisterInformationPage() {
 
       sessionStorage.removeItem("userEmail");
       sessionStorage.removeItem("userPassword");
-
       sessionStorage.setItem("lessorId", result.lessorId);
 
       setShowSuccessPopup(true); // Show success popup

@@ -15,7 +15,6 @@ export default function EditLessor() {
   const [currentPasswordInput, setCurrentPasswordInput] = useState("");
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
-  // Retrieve lessorId from sessionStorage
   useEffect(() => {
     const storedLessorId = sessionStorage.getItem("lessorId");
     if (storedLessorId) {
@@ -34,12 +33,9 @@ export default function EditLessor() {
     lessor_password: "Password",
   };
 
-  // Fetch lessor details
   const fetchLessorDetails = async () => {
     try {
-      const response = await fetch(
-        `/api/lessorFetchLessor?lessorId=${lessorId}`
-      );
+      const response = await fetch(`/api/lessorFetchLessor?lessorId=${lessorId}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Error fetching data");
       setLessorDetails(data.lessorDetails || {});
@@ -52,9 +48,7 @@ export default function EditLessor() {
   };
 
   useEffect(() => {
-    if (lessorId) {
-      fetchLessorDetails();
-    }
+    if (lessorId) fetchLessorDetails();
   }, [lessorId]);
 
   const handleChange = (e) => {
@@ -63,7 +57,7 @@ export default function EditLessor() {
   };
 
   const handlePasswordFieldClick = () => {
-    if (!passwordEditable) {
+    if (!passwordEditable && !showPasswordModal) {
       setShowPasswordModal(true);
       toast("Please verify your current password first", { duration: 3000 });
     }
@@ -71,9 +65,9 @@ export default function EditLessor() {
 
   const handlePasswordVerification = async () => {
     try {
-      const response = await fetch(`/api/lessorVerifyPassword`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/lessorVerifyPassword', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           lessor_id: lessorId,
           currentPassword: currentPasswordInput,
@@ -81,73 +75,67 @@ export default function EditLessor() {
       });
 
       const result = await response.json();
+
       if (!response.ok) {
-        toast.error("Current password is incorrect");
-        return;
+        toast.error(result.error || "Password verification failed");
+        return; // Exit the function if verification fails
       }
 
+      // Password verified successfully, allow password editing
       setPasswordEditable(true);
       setShowPasswordModal(false);
       toast.success("You can now edit your password");
+      setLessorDetails((prev) => ({
+        ...prev,
+        lessor_password: result.decrypted_password
+      }));
+
+    } catch (error) {
+      // Display a generic toast for unexpected issues
+      toast.error("An unexpected error occurred during password verification.");
+    }
+  };
+
+
+
+  const handleSave = async () => {
+    const payload = {
+      lessor_id: lessorId,
+      ...lessorDetails,
+    };
+
+    // Include currentPassword only if the password is being updated
+    if (passwordEditable && lessorDetails.password) {
+      payload.currentPassword = currentPasswordInput;
+    }
+
+
+    try {
+      const updateResponse = await fetch(`../api/lessorFetchLessor`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!updateResponse.ok) {
+        const errorText = await updateResponse.text();
+        toast.error(`Update failed: ${errorText || "Unknown error"}`);
+        return; // Exit the function if the update fails
+      }
+
+      // Reset passwordEditable to hide password as "***"
+      setPasswordEditable(false);
+      setLessorDetails((prev) => ({
+        ...prev,
+        lessor_password: "", // Clear the password field
+      }));
+
+      toast.success("Renter details updated successfully!");
     } catch {
-      toast.error("An error occurred during password verification");
+      // Display a generic toast error for unexpected issues
+      toast.error("An unexpected error occurred while saving data");
     }
   };
-
- const handleSave = async () => {
-  const payload = {
-    lessor_id: lessorId,
-    ...lessorDetails,
-  };
-
-  const currentUser = lessorDetails.lessor_email; // Use email as current user
-
-  try {
-    const response = await fetch(`/api/lessorFetchLessor`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Current-User": currentUser, // Pass the current user
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Update failed");
-    }
-
-    toast.success("Lessor details updated successfully!");
-  } catch (error) {
-    toast.error("Error saving data");
-    console.error("Save error:", error);
-  }
-};
-
-const handleDelete = async () => {
-  const currentUser = lessorDetails.lessor_email;
-
-  try {
-    const deleteResponse = await fetch(`/api/lessorFetchLessor?lessorId=${lessorId}`, {
-      method: "DELETE",
-      headers: {
-        "Current-User": currentUser, // Pass the current user
-      },
-    });
-
-    if (!deleteResponse.ok) {
-      const errorText = await deleteResponse.text();
-      throw new Error(errorText || "Delete failed");
-    }
-
-    toast.success("Lessor deleted successfully!");
-    router.push("/login_lessor");
-  } catch (error) {
-    toast.error("Error deleting data");
-    console.error("Delete error:", error);
-  }
-};
-
 
   if (loading) return <div>Loading...</div>;
 
@@ -169,25 +157,18 @@ const handleDelete = async () => {
                 {fieldLabels[field]}
               </label>
               <input
-                type={
-                  field === "lessor_password" && !passwordEditable
-                    ? "password"
-                    : "text"
-                }
+                type={field === "lessor_password" ? (passwordEditable ? "text" : "text") : "text"}
                 name={field}
                 value={
                   field === "lessor_password" && !passwordEditable
-                    ? "******"
+                    ? "*****" // Display "***" when not editable
                     : lessorDetails[field] || ""
                 }
                 onChange={handleChange}
                 className="text-gray-800 text-right w-2/3 focus:outline-none bg-transparent"
                 readOnly={field === "lessor_password" && !passwordEditable}
-                onClick={() =>
-                  field === "lessor_password" && handlePasswordFieldClick()
-                }
+                onClick={() => field === "lessor_password" && handlePasswordFieldClick()}
               />
-
               <FaEdit className="ml-2 text-gray-400" />
             </div>
           ))}
@@ -205,13 +186,21 @@ const handleDelete = async () => {
       <BottomNav />
 
       {showPasswordModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+          role="dialog"
+          aria-labelledby="passwordModalTitle"
+          aria-hidden={!showPasswordModal}
+        >
           <div className="bg-white p-6 rounded shadow-lg w-80">
-            <h2 className="text-lg font-semibold mb-4">
+            <h2
+              id="passwordModalTitle"
+              className="text-lg font-semibold mb-4"
+            >
               Enter Current Password
             </h2>
             <input
-              type="password"
+              type="password_lessor"
               placeholder="Current Password"
               value={currentPasswordInput}
               onChange={(e) => setCurrentPasswordInput(e.target.value)}
