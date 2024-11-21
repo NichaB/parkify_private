@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import supabase from '../../config/supabaseClient';
@@ -8,9 +8,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default function RegisterInformationPage() {
   const router = useRouter();
-  const userId = sessionStorage.getItem('userId');
   const fileUploadRef = useRef(null);
 
+  const [userId, setUserId] = useState(null); // Store userId in state
   const [carData, setCarData] = useState({
     carModel: '',
     carColor: '',
@@ -18,6 +18,14 @@ export default function RegisterInformationPage() {
   });
 
   const [fileURL, setFileURL] = useState("");
+
+  // Get userId from sessionStorage on the client-side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUserId = sessionStorage.getItem('userId');
+      setUserId(storedUserId);
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

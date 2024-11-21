@@ -127,7 +127,7 @@ const CustomerComplaints = () => {
       </div>
 
       {/* Add Issue Button */}
-      {/* <button
+      <button
         onClick={() => handleNavigate("/AdminAddIssue")}
         className="fixed bottom-20 right-6 bg-blue-500 text-white p-4 rounded-full shadow-md flex items-center space-x-2 justify-center"
       >
@@ -135,7 +135,7 @@ const CustomerComplaints = () => {
         <span className="text-md font-semibold">
           Add New Issue for Developer
         </span>
-      </button> */}
+      </button>
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 w-screen bg-white border-t border-gray-300 py-3">
         <div className="flex justify-around items-center">

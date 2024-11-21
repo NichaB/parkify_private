@@ -1,13 +1,14 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
 export default function RegisterInformationPage() {
   const router = useRouter();
-  const lessorId = sessionStorage.getItem("lessorId"); // Assuming lessor_id is stored here
   const fileUploadRef = useRef(null); // Ref to capture file input
 
+  // State for lessorId and lessorData
+  const [lessorId, setLessorId] = useState(null);
   const [lessorData, setLessorData] = useState({
     locationName: "",
     address: "",
@@ -15,6 +16,14 @@ export default function RegisterInformationPage() {
     totalSlots: "",
     pricePerHour: "",
   });
+
+  // Get lessorId from sessionStorage on the client-side
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedLessorId = sessionStorage.getItem("lessorId");
+      setLessorId(storedLessorId);
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

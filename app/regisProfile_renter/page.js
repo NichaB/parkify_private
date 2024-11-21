@@ -4,18 +4,25 @@ import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import supabase from '../../config/supabaseClient';
 
-
 export default function RegisterInformationPage() {
   const router = useRouter();
-  const email = sessionStorage.getItem('userEmail');
-  const password = sessionStorage.getItem('userPassword');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
-    if (!email || !password) {
-      toast.error('Email and password are required. Redirecting to registration.');
-      router.push('/register_renter');
+    if (typeof window !== 'undefined') {
+      const storedEmail = sessionStorage.getItem('userEmail') || '';
+      const storedPassword = sessionStorage.getItem('userPassword') || '';
+      setEmail(storedEmail);
+      setPassword(storedPassword);
+
+      if (!storedEmail || !storedPassword) {
+        toast.error('Email and password are required. Redirecting to registration.');
+        router.push('/register_renter');
+      }
     }
-  }, [email, password, router]);
+  }, [router]);
+
 
   const [userData, setUserData] = useState({
     email: email || '',
