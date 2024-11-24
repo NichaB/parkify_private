@@ -14,6 +14,16 @@ export default function LocationPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+    // Check for userId in sessionStorage
+  useEffect(() => {
+    const userId = sessionStorage.getItem("userId");
+    if (!userId) {
+      toast.error("User ID not found. Please log in.");
+      router.push("/login_renter"); // Redirect to renter login if userId is missing
+      return; // Prevent further execution
+    }
+  }, [router]);
+  
   // Resolve params.locations (handles async `params`)
   useEffect(() => {
     async function resolveParams() {
@@ -29,6 +39,8 @@ export default function LocationPage({ params }) {
 
   // Fetch parking data when location changes
   useEffect(() => {
+
+    
     if (!location) return;
 
     const fetchParkingData = async () => {

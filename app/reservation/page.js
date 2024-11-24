@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import ContactInfo from '../components/ContactInfo';
 import ReservationSection from '../components/ReservationSection';
 import { useRouter } from 'next/navigation';
+import toast, { Toaster } from 'react-hot-toast';
 
 const ParkingDetail = () => {
   const [parkingDetails, setParkingDetails] = useState(null);
@@ -10,6 +11,18 @@ const ParkingDetail = () => {
   const [selectedCarId, setSelectedCarId] = useState(null);
   const [error, setError] = useState(null);
   const router = useRouter();
+  
+    // Check for userId in sessionStorage and redirect if missing
+useEffect(() => {
+const storedRenterId = sessionStorage.getItem("userId"); 
+// Hardcoded for testing; replace with session storage if needed
+if (storedRenterId) {
+    setRenterId(storedRenterId);
+} else {
+    toast.error("Renter ID not found");
+    router.push("/login_renter");
+}
+}, []);
 
   useEffect(() => {
     const fetchParkingDetails = async () => {
@@ -75,6 +88,7 @@ const ParkingDetail = () => {
 
   return (
     <div className="w-full h-full bg-gray-100 flex flex-col items-center py-8">
+      <Toaster/>
       <div className="w-full max-w-screen-xl bg-white shadow-lg rounded-lg p-6 lg:p-12">
         <button 
           onClick={() => router.push('/search')} 

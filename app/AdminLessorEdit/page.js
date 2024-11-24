@@ -21,6 +21,11 @@ const EditLessor = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+        if (!sessionStorage.getItem("admin_id")) {
+        toast.error("Admin ID not found. Please log in.");
+        router.push("/AdminLogin");
+        return;
+      }
     const fetchLessorData = async () => {
       const lessor_id = sessionStorage.getItem("lessor_id");
 

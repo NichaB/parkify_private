@@ -24,6 +24,11 @@ const EditCar = () => {
 
   // Fetch car data
   useEffect(() => {
+        if (!sessionStorage.getItem("admin_id")) {
+        toast.error("Admin ID not found. Please log in.");
+        router.push("/AdminLogin");
+        return;
+      }
     const carId = sessionStorage.getItem("car_id");
     if (!carId) {
       toast.error("Car ID not found");

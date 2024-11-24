@@ -15,6 +15,11 @@ const EditDeveloper = () => {
 
   // Fetch developer data using the API
   useEffect(() => {
+        if (!sessionStorage.getItem("admin_id")) {
+        toast.error("Admin ID not found. Please log in.");
+        router.push("/AdminLogin");
+        return;
+      }
     const developerId = sessionStorage.getItem("developer_id");
     if (!developerId) {
       toast.error("Developer ID not found");

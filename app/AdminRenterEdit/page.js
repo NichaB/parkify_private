@@ -19,6 +19,12 @@ const EditUser = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+        if (!sessionStorage.getItem("admin_id")) {
+        toast.error("Admin ID not found. Please log in.");
+        router.push("/AdminLogin");
+        return;
+      }
+      
     const fetchUserData = async () => {
       const userId = sessionStorage.getItem("user_id");
       if (!userId) {

@@ -21,7 +21,7 @@ export default function HomePage() {
       const userId = sessionStorage.getItem("userId");
       if (!userId) {
         toast.error("User ID not found");
-        router.push("/login_lessor"); // Redirect if no userId is found
+        router.push("/login_renter"); // Redirect if no userId is found
         return; // Prevent further execution
       }
 

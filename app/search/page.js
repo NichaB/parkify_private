@@ -4,11 +4,22 @@ import { useRouter } from "next/navigation";
 import { AiOutlineClockCircle, AiOutlineClose } from "react-icons/ai";
 import { useEffect, useState } from "react";
 import BackButton from "../components/BackButton";
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function SearchPage() {
   const router = useRouter();
   const [searchText, setSearchText] = useState("");
   const [recentSearches, setRecentSearches] = useState([]);
+
+    // Check for userId in sessionStorage and redirect if missing
+  useEffect(() => {
+    const userId = sessionStorage.getItem("userId");
+    if (!userId) {
+      toast.error("User ID not found. Please log in.");
+      router.push("/login_renter"); // Redirect to login if userId is missing
+      return; // Prevent further execution
+    }
+  }, [router]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -44,6 +55,7 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col p-6">
+      <Toaster />
       <BackButton targetPage="/home_renter" />
       <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg mb-4 shadow-md mt-4">
         <input

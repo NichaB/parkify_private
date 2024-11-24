@@ -20,6 +20,11 @@ const CustomerComplaintEdit = () => {
 
   // Fetch complaint data
   useEffect(() => {
+        if (!sessionStorage.getItem("admin_id")) {
+        toast.error("Admin ID not found. Please log in.");
+        router.push("/AdminLogin");
+        return;
+      }
     const complainId = sessionStorage.getItem("complain_id");
     if (!complainId) {
       toast.error("Complaint ID not found");

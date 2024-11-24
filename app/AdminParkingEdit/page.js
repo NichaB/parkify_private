@@ -23,6 +23,12 @@ const EditParkingLot = () => {
 
   // Fetch parking lot data
   useEffect(() => {
+        if (!sessionStorage.getItem("admin_id")) {
+        toast.error("Admin ID not found. Please log in.");
+        router.push("/AdminLogin");
+        return;
+      }
+      
     const parkingLotId = sessionStorage.getItem("parking_lot_id");
     if (!parkingLotId) {
       toast.error("Parking lot ID not found");
