@@ -5,12 +5,16 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 
-    // Update status to 'Complete' and increment available slots if necessary
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'User ID is required' }), { status: 400 });
+    }
+
+    // Update status to 'Complete' for all reservations where the end_time has passed today and increment available_slots
     await sql`
       WITH updated_reservations AS (
         UPDATE reservation
         SET status = 'Complete'
-        WHERE (duration_hour <= 0 AND duration_day <= 0) AND status != 'Complete'
+        WHERE end_time < CURRENT_DATE AND status != 'Complete'
         RETURNING parking_lot_id
       )
       UPDATE parking_lot
@@ -18,8 +22,8 @@ export async function GET(req) {
       WHERE parking_lot_id IN (SELECT parking_lot_id FROM updated_reservations)
     `;
 
-    // Base query
-    let query = sql`
+    // Query reservations for the provided userId and exclude those where end_time < today
+    const reservationResult = await sql`
       SELECT 
         r.reservation_id, 
         r.user_id, 
@@ -36,17 +40,9 @@ export async function GET(req) {
       FROM reservation r
       LEFT JOIN car c ON r.car_id = c.car_id
       LEFT JOIN parking_lot p ON r.parking_lot_id = p.parking_lot_id
-      WHERE r.status != 'Complete'
+      WHERE r.user_id = ${userId}
+        AND r.end_time >= CURRENT_DATE -- Exclude reservations where end_time has already passed
     `;
-
-    // Add userId condition if provided
-    if (userId) {
-      query = sql`
-        ${query} AND r.user_id = ${userId}
-      `;
-    }
-
-    const reservationResult = await sql`${query}`; // Execute the final query
 
     // Return an empty array if no reservations are found
     if (reservationResult.length === 0) {
@@ -59,6 +55,8 @@ export async function GET(req) {
     return new Response(JSON.stringify({ error: 'Error fetching data', details: error.message }), { status: 500 });
   }
 }
+
+
 
 
 export async function DELETE(req) {
