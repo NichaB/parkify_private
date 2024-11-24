@@ -4,72 +4,56 @@ const ReservationCard = () => {
   const [reservations, setReservations] = useState([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [reservationToDelete, setReservationToDelete] = useState(null);
-  const [isMounted, setIsMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Fetch reservations on mount
   useEffect(() => {
-    setIsMounted(true);
     const fetchReservations = async () => {
       try {
-        const userId = sessionStorage.getItem("userId"); // Assume userId is stored in sessionStorage
+        const userId = sessionStorage.getItem("userId");
+        if (!userId) {
+          setError("User ID is missing. Please log in again.");
+          setLoading(false);
+          return;
+        }
+
         const response = await fetch(
           `/api/renterFetchReservation?userId=${userId}`
         );
+
         if (!response.ok) {
           if (response.status === 404) {
-            setReservations([]); // Set reservations to an empty array
+            setReservations([]);
+            setLoading(false);
             return;
           }
-          throw new Error("Failed to fetch reservations");
+          throw new Error("Failed to fetch reservations.");
         }
+
         const { reservationDetails } = await response.json();
-
-        // Calculate duration in days and hours for each reservation
-        const updatedReservations = reservationDetails.map((reservation) => {
-          const startTime = new Date(reservation.start_time);
-          const endTime = new Date(reservation.end_time);
-
-          // Calculate duration in hours
-          const durationInHours = Math.ceil(
-            (endTime - startTime) / (1000 * 60 * 60)
-          );
-
-          // Convert hours to days and remaining hours
-          const days = Math.floor(durationInHours / 24);
-          const hours = durationInHours % 24;
-
-          // Format duration
-          const durationFormatted =
-            days > 0
-              ? `${days} day${days > 1 ? "s" : ""} ${hours} hour${
-                  hours > 1 ? "s" : ""
-                }`
-              : `${hours} hour${hours !== 1 ? "s" : ""}`;
-
-          return { ...reservation, duration_formatted: durationFormatted }; // Add formatted duration
-        });
-
-        setReservations(updatedReservations);
-      } catch (error) {
-        console.error("Error fetching reservations:", error.message);
+        setReservations(reservationDetails);
+      } catch (err) {
+        console.error("Error fetching reservations:", err.message);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchReservations();
   }, []);
 
+  // Handle reservation deletion
   const handleDeleteClick = (reservation) => {
-    const currentTime = new Date(); // Get current real-time
-    const startTime = new Date(reservation.start_time); // Convert start_time to a Date object
+    const currentTime = new Date();
+    const startTime = new Date(reservation.start_time);
 
-    // Calculate the time difference in hours
-    const timeDifferenceInHours = (startTime - currentTime) / (1000 * 60 * 60);
-
-    if (timeDifferenceInHours > 24) {
-      // Allow cancellation if the start_time is more than 24 hours away
+    // Allow deletion only if start time is more than 24 hours away
+    if ((startTime - currentTime) / (1000 * 60 * 60) > 24) {
       setReservationToDelete(reservation);
       setShowConfirmation(true);
     } else {
-      // Show alert if the start_time is within 24 hours
       alert(
         "Reservations with a start time less than 24 hours from now cannot be canceled."
       );
@@ -77,31 +61,38 @@ const ReservationCard = () => {
   };
 
   const confirmDelete = async () => {
-    if (reservationToDelete) {
-      try {
-        const response = await fetch(
-          `/api/renterFetchReservation?reservationId=${reservationToDelete.reservation_id}`,
-          { method: "DELETE" }
-        );
+    if (!reservationToDelete) return;
 
-        if (!response.ok) {
-          throw new Error("Failed to delete reservation");
-        }
+    try {
+      const response = await fetch(
+        `/api/renterFetchReservation?reservationId=${reservationToDelete.reservation_id}`,
+        { method: "DELETE" }
+      );
 
-        setReservations(
-          reservations.filter(
-            (res) => res.reservation_id !== reservationToDelete.reservation_id
-          )
-        );
-        setShowConfirmation(false);
-        setReservationToDelete(null);
-      } catch (error) {
-        console.error("Error deleting reservation:", error.message);
+      if (!response.ok) {
+        throw new Error("Failed to delete reservation.");
       }
+
+      setReservations(
+        reservations.filter(
+          (res) => res.reservation_id !== reservationToDelete.reservation_id
+        )
+      );
+      setShowConfirmation(false);
+      setReservationToDelete(null);
+    } catch (err) {
+      console.error("Error deleting reservation:", err.message);
+      setError("Failed to delete reservation. Please try again.");
     }
   };
 
-  if (!isMounted) return null;
+  if (loading) {
+    return <div className="text-center text-gray-500">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500">{error}</div>;
+  }
 
   return (
     <div className="overflow-x-auto py-4">
@@ -169,7 +160,6 @@ const ReservationCard = () => {
                   )}`}
                 </p>
               </div>
-
               <div className="flex justify-between items-center w-full mt-3">
                 <button
                   onClick={() => handleDeleteClick(reservation)}
@@ -178,14 +168,17 @@ const ReservationCard = () => {
                   Cancel
                 </button>
                 <div className="text-right text-[16px] font-bold">
-                  {reservation.duration_formatted}
+                  {`${reservation.duration_day} day${
+                    reservation.duration_day > 1 ? "s" : ""
+                  } ${reservation.duration_hour} hour${
+                    reservation.duration_hour > 1 ? "s" : ""
+                  }`}
                 </div>
               </div>
             </div>
           ))
         )}
       </div>
-
       {showConfirmation && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg">

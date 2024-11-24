@@ -5,40 +5,42 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 
-    const query = userId
-      ? sql`
-        SELECT 
-          r.reservation_id, 
-          r.user_id, 
-          r.start_time, 
-          r.end_time, 
-          r.total_price, 
-          r.parking_lot_id, 
-          COALESCE(c.car_model, 'No car available, please insert') AS car_model,
-          p.location_name,
-          p.address AS location_address
-        FROM reservation r
-        LEFT JOIN car c ON r.car_id = c.car_id
-        LEFT JOIN parking_lot p ON r.parking_lot_id = p.parking_lot_id
-        WHERE r.user_id = ${userId}
-      `
-      : sql`
-        SELECT 
-          r.reservation_id, 
-          r.user_id, 
-          r.start_time, 
-          r.end_time, 
-          r.total_price, 
-          r.parking_lot_id, 
-          COALESCE(c.car_model, 'No car available, please insert') AS car_model,
-          p.location_name,
-          p.address AS location_address
-        FROM reservation r
-        LEFT JOIN car c ON r.car_id = c.car_id
-        LEFT JOIN parking_lot p ON r.parking_lot_id = p.parking_lot_id
-      `;
+    // Update status to 'Complete' if both duration_hour and duration_day are zero or less
+    await sql`
+      UPDATE reservation
+      SET status = 'Complete'
+      WHERE (duration_hour <= 0 AND duration_day <= 0) AND status != 'Complete'
+    `;
 
-    const reservationResult = await query;
+    // Base query
+    let query = sql`
+      SELECT 
+        r.reservation_id, 
+        r.user_id, 
+        r.start_time, 
+        r.end_time, 
+        r.total_price, 
+        r.parking_lot_id, 
+        r.duration_day, 
+        r.duration_hour, 
+        r.status, 
+        COALESCE(c.car_model, 'No car available, please insert') AS car_model,
+        p.location_name,
+        p.address AS location_address
+      FROM reservation r
+      LEFT JOIN car c ON r.car_id = c.car_id
+      LEFT JOIN parking_lot p ON r.parking_lot_id = p.parking_lot_id
+      WHERE r.status != 'Complete'
+    `;
+
+    // Add userId condition if provided
+    if (userId) {
+      query = sql`
+        ${query} AND r.user_id = ${userId}
+      `;
+    }
+
+    const reservationResult = await sql`${query}`; // Execute the final query
 
     // Return an empty array if no reservations are found
     if (reservationResult.length === 0) {
@@ -47,7 +49,7 @@ export async function GET(req) {
 
     return new Response(JSON.stringify({ reservationDetails: reservationResult }), { status: 200 });
   } catch (error) {
-    console.error('Error fetching reservations:', error);
+    console.error('Error fetching reservations:', error.message);
     return new Response(JSON.stringify({ error: 'Error fetching data', details: error.message }), { status: 500 });
   }
 }

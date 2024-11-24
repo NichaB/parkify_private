@@ -27,23 +27,20 @@ export async function POST(req) {
       );
     }
 
-    // Get the current timestamp for reservationDate
-    const reservationDateTime = new Date();
+    // Log received input for debugging
+    console.log("Received startTime:", startTime);
+    console.log("Received endTime:", endTime);
 
-    // Convert startTime and endTime into full Date objects
-    const startDateTime = new Date(
-      `${reservationDateTime.toISOString().split("T")[0]}T${startTime}:00+07:00`
-    );
-    const endDateTime = new Date(
-      `${reservationDateTime.toISOString().split("T")[0]}T${endTime}:00+07:00`
-    );
+    // Parse startTime and endTime as Date objects
+    const startDateTime = new Date(startTime);
+    const endDateTime = new Date(endTime);
 
-    if (isNaN(startDateTime) || isNaN(endDateTime)) {
-      console.error("Validation Error: Invalid start or end time format.");
+    if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+      console.error("Validation Error: Invalid datetime format.");
       return new Response(
         JSON.stringify({
           status: "error",
-          message: "Invalid start or end time format.",
+          message: "Invalid datetime format. Ensure startTime and endTime are correct.",
         }),
         { status: 200 }
       );
@@ -52,6 +49,14 @@ export async function POST(req) {
     // Calculate total hours and price
     const totalHours = Math.abs((endDateTime - startDateTime) / (1000 * 60 * 60));
     const totalPrice = totalHours * pricePerHour;
+
+    // Get the current timestamp for reservationDate
+    const reservationDateTime = new Date();
+
+    console.log("Parsed startDateTime:", startDateTime);
+    console.log("Parsed endDateTime:", endDateTime);
+    console.log("Total hours:", totalHours);
+    console.log("Total price:", totalPrice);
 
     // Transaction for consistency
     let reservationId = null;

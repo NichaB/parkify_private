@@ -15,7 +15,7 @@ const ActionButtons = ({ parkingDetails, reservationData }) => {
     parkingDetails || {};
 
   // Extract reservation data
-  const { reservationDate, startTime, endTime } = reservationData || {};
+  const { start, end } = reservationData || {};
 
   // Extract renterId and carId from sessionStorage
   const renterId = sessionStorage.getItem("userId");
@@ -61,14 +61,12 @@ const ActionButtons = ({ parkingDetails, reservationData }) => {
 
   const validateInputs = () => {
     const errors = [];
-    if (!reservationDate) errors.push("Reservation date is missing.");
-    if (!startTime) errors.push("Start time is missing.");
-    if (!endTime) errors.push("End time is missing.");
+    if (!start) errors.push("Start datetime is missing.");
+    if (!end) errors.push("End datetime is missing.");
     if (!price) errors.push("Price is missing.");
     if (!renterId) errors.push("Renter ID is missing.");
     if (!carId) errors.push("Car ID is missing.");
     if (!parkingLotId) errors.push("Parking Lot ID is missing.");
-
     return errors;
   };
 
@@ -91,22 +89,27 @@ const ActionButtons = ({ parkingDetails, reservationData }) => {
       return;
     }
 
-    // Extract start and end dates
-    const start = new Date(`${reservationDate.split(" - ")[0]}T${startTime}`);
-    const end = new Date(`${reservationDate.split(" - ")[1]}T${endTime}`);
-    const today = new Date();
+    // Parse the full datetime strings
+    const startDateTime = new Date(start);
+    const endDateTime = new Date(end);
 
-    // Reset time for today to midnight
-    today.setHours(0, 0, 0, 0);
+    if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
+      toast.error("Invalid reservation details. Please check your input.");
+      return;
+    }
 
     // Validate that the start date is not earlier than today
-    if (start < today || start == today) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset today's time to midnight
+
+    if (startDateTime < today) {
       toast.error("Reservation start date cannot be earlier than today.");
       return;
     }
 
-    const durationInHours = (end - start) / (1000 * 60 * 60); // Calculate hours
-    const pricePerHour = parseFloat(price.split(" ")[0]); // Extract price per hour from string
+    // Calculate duration and total price
+    const durationInHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
+    const pricePerHour = parseFloat(price.split(" ")[0]);
 
     if (
       !isNaN(durationInHours) &&
@@ -116,7 +119,7 @@ const ActionButtons = ({ parkingDetails, reservationData }) => {
       setTotalPrice(durationInHours * pricePerHour); // Set the total price
       setIsConfirmPopupVisible(true); // Show the modal
     } else {
-      alert(
+      toast.error(
         "Invalid reservation details. Please ensure dates and times are correct."
       );
     }
@@ -132,9 +135,8 @@ const ActionButtons = ({ parkingDetails, reservationData }) => {
         body: JSON.stringify({
           parkingLotId,
           userId: renterId,
-          reservationDate,
-          startTime,
-          endTime,
+          startTime: start,
+          endTime: end,
           pricePerHour: parseFloat(price.split(" ")[0]),
           carId,
         }),
@@ -220,9 +222,8 @@ const ActionButtons = ({ parkingDetails, reservationData }) => {
       {isPaymentSuccessVisible && (
         <PaymentSuccess
           reservationData={{
-            reservationDate,
-            startTime,
-            endTime,
+            start,
+            end,
             pricePerHour: parseFloat(price.split(" ")[0]), // Ensure price is parsed
           }}
           totalPrice={totalPrice}

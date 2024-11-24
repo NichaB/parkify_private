@@ -11,9 +11,18 @@ const PaymentSuccess = ({
   const [bookerName, setBookerName] = useState("Loading...");
   const [location, setLocation] = useState("Loading...");
 
-  const { reservationDate, startTime, endTime, pricePerHour } =
-    reservationData || {};
+  const { start, end, pricePerHour } = reservationData || {};
   const { address, lessorDetails } = parkingDetails || {};
+
+  // Format start and end datetime for display
+  const formattedStart = new Date(start).toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  const formattedEnd = new Date(end).toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,12 +97,10 @@ const PaymentSuccess = ({
             </p>
             <div className="text-right pl-5">
               <p>
-                <span className="text-white">{reservationDate}</span>
+                <span className="text-white">Start: {formattedStart}</span>
               </p>
               <p>
-                <span className="text-white">
-                  {startTime} - {endTime}
-                </span>
+                <span className="text-white">End: {formattedEnd}</span>
               </p>
             </div>
           </div>

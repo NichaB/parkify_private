@@ -7,8 +7,8 @@ import PaymentSuccess from "./PaymentSuccess";
 const ReservationSection = ({ parkingDetails, selectedCarId }) => {
   const [reservationData, setReservationData] = useState({
     reservationDate: "",
-    startTime: "",
-    endTime: "",
+    start: "",
+    end: "",
     total: "0 Hours",
     totalPrice: 0,
   });

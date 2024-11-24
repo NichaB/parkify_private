@@ -13,9 +13,8 @@ const CalculateInput = ({ onReservationChange, pricePerHour }) => {
   useEffect(() => {
     validateAndCalculateTotal();
     onReservationChange({
-      reservationDate: `${startDate} - ${endDate}`,
-      startTime,
-      endTime,
+      start: `${startDate}T${startTime}:00`,
+      end: `${endDate}T${endTime}:00`,
       total,
       totalPrice,
     });
