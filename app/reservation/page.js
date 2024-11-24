@@ -12,23 +12,13 @@ const ParkingDetail = () => {
   const [error, setError] = useState(null);
   const router = useRouter();
   
-    // Check for userId in sessionStorage and redirect if missing
-useEffect(() => {
-const storedRenterId = sessionStorage.getItem("userId"); 
-// Hardcoded for testing; replace with session storage if needed
-if (storedRenterId) {
-    setRenterId(storedRenterId);
-} else {
-    toast.error("Renter ID not found");
-    router.push("/login_renter");
-}
-}, []);
 
   useEffect(() => {
     const fetchParkingDetails = async () => {
       try {
         const parkingLotId = sessionStorage.getItem('parkingLotId');
         if (!parkingLotId) {
+          router.push('/login_renter');
           throw new Error('Parking lot ID is missing in session storage.');
         }
 
@@ -54,6 +44,7 @@ if (storedRenterId) {
         const userId = sessionStorage.getItem('userId');
         if (!userId) {
           throw new Error('User ID is missing in session storage.');
+          router.push('/login_renter');
         }
 
         const response = await fetch(`/api/renterFetchCar?userId=${userId}`);
