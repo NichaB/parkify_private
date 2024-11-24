@@ -5,11 +5,17 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 
-    // Update status to 'Complete' if both duration_hour and duration_day are zero or less
+    // Update status to 'Complete' and increment available slots if necessary
     await sql`
-      UPDATE reservation
-      SET status = 'Complete'
-      WHERE (duration_hour <= 0 AND duration_day <= 0) AND status != 'Complete'
+      WITH updated_reservations AS (
+        UPDATE reservation
+        SET status = 'Complete'
+        WHERE (duration_hour <= 0 AND duration_day <= 0) AND status != 'Complete'
+        RETURNING parking_lot_id
+      )
+      UPDATE parking_lot
+      SET available_slots = available_slots + 1
+      WHERE parking_lot_id IN (SELECT parking_lot_id FROM updated_reservations)
     `;
 
     // Base query
@@ -64,17 +70,41 @@ export async function DELETE(req) {
       return new Response(JSON.stringify({ error: 'Reservation ID is required.' }), { status: 400 });
     }
 
-    const deleteResult = await sql`
-      DELETE FROM reservation
-      WHERE reservation_id = ${reservationId}
-      RETURNING reservation_id
-    `;
+    // Use a transaction to safely delete the reservation and update available_slots
+    await sql.begin(async (tx) => {
+      // Step 1: Retrieve the parking_lot_id of the reservation being deleted
+      const reservationData = await tx`
+        SELECT parking_lot_id 
+        FROM reservation
+        WHERE reservation_id = ${reservationId}
+      `;
 
-    if (deleteResult.length === 0) {
-      return new Response(JSON.stringify({ error: 'Reservation not found or could not be deleted.' }), { status: 404 });
-    }
+      if (reservationData.length === 0) {
+        throw new Error('Reservation not found.');
+      }
 
-    return new Response(JSON.stringify({ message: 'Reservation deleted successfully.' }), { status: 200 });
+      const parkingLotId = reservationData[0].parking_lot_id;
+
+      // Step 2: Delete the reservation
+      const deleteResult = await tx`
+        DELETE FROM reservation
+        WHERE reservation_id = ${reservationId}
+        RETURNING reservation_id
+      `;
+
+      if (deleteResult.length === 0) {
+        throw new Error('Reservation could not be deleted.');
+      }
+
+      // Step 3: Update available_slots in parking_lot
+      await tx`
+        UPDATE parking_lot
+        SET available_slots = available_slots + 1
+        WHERE parking_lot_id = ${parkingLotId}
+      `;
+    });
+
+    return new Response(JSON.stringify({ message: 'Reservation deleted and available_slots updated successfully.' }), { status: 200 });
   } catch (error) {
     console.error('Error deleting reservation:', error);
     return new Response(JSON.stringify({ error: 'Error deleting data', details: error.message }), { status: 500 });
