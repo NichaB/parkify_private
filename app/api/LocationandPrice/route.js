@@ -22,7 +22,7 @@ export async function GET(req) {
         pl.address,
         pl.location_url,
         pl.location_image,
-        l.lessor_firstname AS lessor_name, 
+        l.lessor_firstname || ' ' || l.lessor_lastname  AS lessor_name, 
         l.lessor_email, 
         l.lessor_phone_number AS lessor_phone,
         l.lessor_profile_pic

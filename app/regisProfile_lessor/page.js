@@ -16,10 +16,18 @@ const [password, setPassword] = useState("");
 
 useEffect(() => {
   if (typeof window !== "undefined") {
-    setEmail(sessionStorage.getItem("userEmail") || "");
-    setPassword(sessionStorage.getItem("userPassword") || "");
+    const storedEmail = sessionStorage.getItem("userEmail") || "";
+    const storedPassword = sessionStorage.getItem("userPassword") || "";
+    setEmail(storedEmail);
+    setPassword(storedPassword);
+    setUserData((prev) => ({
+      ...prev,
+      email: storedEmail,
+      password: storedPassword,
+    }));
   }
 }, []);
+
 
 
   const [userData, setUserData] = useState({

@@ -58,53 +58,36 @@ export async function GET(req) {
 
 
 
-
 export async function DELETE(req) {
   try {
     const { searchParams } = new URL(req.url);
     const reservationId = searchParams.get('reservationId');
 
+    // Validate that reservationId is provided
     if (!reservationId) {
       return new Response(JSON.stringify({ error: 'Reservation ID is required.' }), { status: 400 });
     }
 
-    // Use a transaction to safely delete the reservation and update available_slots
-    await sql.begin(async (tx) => {
-      // Step 1: Retrieve the parking_lot_id of the reservation being deleted
-      const reservationData = await tx`
-        SELECT parking_lot_id 
-        FROM reservation
-        WHERE reservation_id = ${reservationId}
-      `;
+    // Safely delete the reservation
+    const deleteResult = await sql`
+      DELETE FROM reservation
+      WHERE reservation_id = ${reservationId}
+      RETURNING reservation_id
+    `;
 
-      if (reservationData.length === 0) {
-        throw new Error('Reservation not found.');
-      }
+    if (deleteResult.length === 0) {
+      throw new Error('Reservation not found or could not be deleted.');
+    }
 
-      const parkingLotId = reservationData[0].parking_lot_id;
-
-      // Step 2: Delete the reservation
-      const deleteResult = await tx`
-        DELETE FROM reservation
-        WHERE reservation_id = ${reservationId}
-        RETURNING reservation_id
-      `;
-
-      if (deleteResult.length === 0) {
-        throw new Error('Reservation could not be deleted.');
-      }
-
-      // Step 3: Update available_slots in parking_lot
-      await tx`
-        UPDATE parking_lot
-        SET available_slots = available_slots + 1
-        WHERE parking_lot_id = ${parkingLotId}
-      `;
-    });
-
-    return new Response(JSON.stringify({ message: 'Reservation deleted and available_slots updated successfully.' }), { status: 200 });
+    return new Response(
+      JSON.stringify({ message: 'Reservation deleted successfully.' }),
+      { status: 200 }
+    );
   } catch (error) {
-    console.error('Error deleting reservation:', error);
-    return new Response(JSON.stringify({ error: 'Error deleting data', details: error.message }), { status: 500 });
+    console.error('Error deleting reservation:', error.message);
+    return new Response(
+      JSON.stringify({ error: 'Error deleting data', details: error.message }),
+      { status: 500 }
+    );
   }
 }
