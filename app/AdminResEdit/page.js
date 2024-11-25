@@ -126,32 +126,36 @@ const EditReservation = () => {
   const handleEditClick = () => setIsEditing(true);
 
   const handleSaveClick = async () => {
-    try {
-      const response = await fetch(`/api/adFetchIssue`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          issue_id: formData.issue_id,
-          admin_id: formData.admin_id,
-          issue_header: formData.issue_header,
-          issue_detail: formData.issue_detail,
-          resolved_by: formData.resolved_by || null,
-          status: formData.status, // Ensure this is passed
-        }),
-      });
+  try {
+    const response = await fetch(`/api/adFetchRes`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        reservation_id: formData.reservation_id,
+        parking_lot_id: formData.parking_lot_id,
+        user_id: formData.user_id,
+        start_time: formData.start_datetime,
+        end_time: formData.end_datetime,
+        total_price: formData.total_price,
+        duration_hour: formData.duration_hour,
+        duration_day: formData.duration_day,
+        car_id: formData.car_id,
+      }),
+    });
 
-      if (!response.ok) {
-        const errorDetails = await response.json();
-        throw new Error(`Failed to update issue: ${errorDetails.error}`);
-      }
-
-      toast.success("Issue information updated successfully");
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Save error:", error);
-      toast.error(error.message || "Error saving data");
+    if (!response.ok) {
+      const errorDetails = await response.json();
+      throw new Error(`Failed to update reservation: ${errorDetails.error}`);
     }
-  };
+
+    toast.success("Reservation updated successfully");
+    setIsEditing(false); // Exit editing mode
+  } catch (error) {
+    console.error("Save error:", error);
+    toast.error(error.message || "Error saving reservation");
+  }
+};
+
 
   const handleDeleteClick = () => {
     const toastId = toast(
