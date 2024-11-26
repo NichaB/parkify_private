@@ -68,15 +68,12 @@ export async function POST(req) {
       { expiresIn: "1h" } // Token expiration time
     );
 
-    // Set the JWT token in a cookie
-    const cookie = `token=${token}; HttpOnly; Path=/; Max-Age=3600; SameSite=Strict; Secure`;
-
+    // Return the token in the response body
     return new Response(
       JSON.stringify({ admin_id: admin.admin_id, token }),
       {
         status: 200,
         headers: {
-          'Set-Cookie': cookie,
           'Content-Type': 'application/json',
         },
       }
@@ -84,6 +81,9 @@ export async function POST(req) {
 
   } catch (error) {
     console.error("Error during login:", error);
-    return new Response(JSON.stringify({ error: "An error occurred during login.", details: error.message }), { status: 500 });
+    return new Response(
+      JSON.stringify({ error: "An error occurred during login.", details: error.message }),
+      { status: 500 }
+    );
   }
 }

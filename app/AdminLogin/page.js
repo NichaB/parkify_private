@@ -1,7 +1,7 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import supabase from "../../config/supabaseClient";
 import { toast, Toaster } from "react-hot-toast";
 
 const AdminLogin = () => {
@@ -12,22 +12,19 @@ const AdminLogin = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [lockoutTimeLeft, setLockoutTimeLeft] = useState(null);
 
+  // Manage lockout logic
   useEffect(() => {
-
-    // Initialize lockout time immediately on mount
     const lockoutEnd = localStorage.getItem("lockoutEnd");
     if (lockoutEnd) {
       const timeLeft = parseInt(lockoutEnd) - Date.now();
       if (timeLeft > 0) {
-        setLockoutTimeLeft(timeLeft); // Set initial countdown without refresh
+        setLockoutTimeLeft(timeLeft);
       } else {
-        // Clear lockout if expired
         localStorage.removeItem("lockoutEnd");
-        localStorage.setItem("failedAttempts", 0); // Reset failed attempts
+        localStorage.setItem("failedAttempts", 0);
       }
     }
 
-    // Start countdown if lockout is active
     const timer = setInterval(() => {
       const lockoutEnd = localStorage.getItem("lockoutEnd");
       if (lockoutEnd) {
@@ -35,7 +32,7 @@ const AdminLogin = () => {
         if (timeLeft <= 0) {
           clearInterval(timer);
           localStorage.removeItem("lockoutEnd");
-          localStorage.setItem("failedAttempts", 0); // Reset failed attempts after lockout
+          localStorage.setItem("failedAttempts", 0);
           setLockoutTimeLeft(null);
         } else {
           setLockoutTimeLeft(timeLeft);
@@ -46,11 +43,12 @@ const AdminLogin = () => {
     return () => clearInterval(timer);
   }, []);
 
-
+  // Toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
+  // Handle login process
   const handleLogin = async () => {
     if (lockoutTimeLeft) return;
 
@@ -81,11 +79,12 @@ const AdminLogin = () => {
           toast.error("Too many failed attempts. Try again in 30 seconds.");
         }
       } else {
-        // Login successful
+        // Successful login
         setErrorMessage("");
         localStorage.removeItem("failedAttempts");
         localStorage.removeItem("lockoutEnd");
-        sessionStorage.setItem("admin_id", result.admin_id);
+        sessionStorage.setItem("jwtToken", result.token); // Save JWT token
+        sessionStorage.setItem("admin_id", result.admin_id); // Save admin_id
         toast.success("Login successful!");
         router.push("/AdminMenu");
       }
@@ -98,9 +97,8 @@ const AdminLogin = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white">
-
       <button
-        onClick={() => router.push('/landing')}
+        onClick={() => router.push("/landing")}
         className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black"
       >
         <svg

@@ -11,20 +11,27 @@ const Renters = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // Fetch users from Supabase
-// Replace existing fetching logic in useEffect with this:
-useEffect(() => {
+  // Fetch renters from the backend
+  useEffect(() => {
+    if (!sessionStorage.getItem("jwtToken")) {
+      toast.error("Authentication token not found. Please log in.");
+      router.push("/AdminLogin");
+      return;
+    }
 
-    if (!sessionStorage.getItem("admin_id")) {
-        toast.error("Admin ID not found. Please log in.");
-        router.push("/AdminLogin");
-        return;
-      }
     const fetchRenters = async () => {
       try {
-        const response = await fetch(`/api/adFetchRenter`);
+        const token = sessionStorage.getItem("jwtToken"); // Get the token from sessionStorage
+
+        const response = await fetch(`/api/adFetchRenter`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`, // Add token to Authorization header
+          },
+        });
+
         if (!response.ok) throw new Error("Failed to fetch renters");
-        
+
         const { renterDetails } = await response.json();
         setRenters(renterDetails);
       } catch (error) {
@@ -32,10 +39,9 @@ useEffect(() => {
         toast.error("Failed to fetch renters.");
       }
     };
-  
+
     fetchRenters();
   }, []);
-  
 
   // Filter renters based on search query
   const filteredRenters = renters.filter((renter) =>

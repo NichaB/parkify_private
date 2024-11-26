@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
@@ -19,12 +19,13 @@ const EditUser = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-        if (!sessionStorage.getItem("admin_id")) {
-        toast.error("Admin ID not found. Please log in.");
-        router.push("/AdminLogin");
-        return;
-      }
-      
+    const jwtToken = sessionStorage.getItem("jwtToken");
+    if (!jwtToken) {
+      toast.error("Authentication token not found. Please log in.");
+      router.push("/AdminLogin");
+      return;
+    }
+
     const fetchUserData = async () => {
       const userId = sessionStorage.getItem("user_id");
       if (!userId) {
@@ -32,17 +33,22 @@ const EditUser = () => {
         router.push("/AdminRenter");
         return;
       }
-  
+
       try {
-        const response = await fetch(`/api/adFetchRenter?userId=${userId}`);
-        
+        const response = await fetch(`/api/adFetchRenter?userId=${userId}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${jwtToken}`, // Include the JWT token in the header
+          },
+        });
+
         if (!response.ok) {
           const errorDetails = await response.json();
           throw new Error(`Error ${response.status}: ${errorDetails.error}`);
         }
-  
+
         const { renterDetails } = await response.json();
-  
+
         setFormData({
           userId: renterDetails[0].user_id,
           firstName: renterDetails[0].first_name,
@@ -59,18 +65,27 @@ const EditUser = () => {
         router.push("/AdminRenter");
       }
     };
-  
+
     fetchUserData();
   }, [router]);
-  
 
   const handleEditClick = () => setIsEditing(true);
 
   const handleSaveClick = async () => {
+    const jwtToken = sessionStorage.getItem("jwtToken");
+    if (!jwtToken) {
+      toast.error("Authentication token not found. Please log in.");
+      router.push("/AdminLogin");
+      return;
+    }
+
     try {
       const response = await fetch(`/api/adFetchRenter`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwtToken}`, // Include the JWT token in the header
+        },
         body: JSON.stringify({
           userId: formData.userId,
           firstName: formData.firstName,
@@ -78,12 +93,18 @@ const EditUser = () => {
           phoneNumber: formData.phoneNumber,
         }),
       });
-  
+
+      // Check if response is not OK and has no content
       if (!response.ok) {
-        const errorDetails = await response.json();
+        let errorDetails;
+        try {
+          errorDetails = await response.json(); // Try parsing JSON
+        } catch (err) {
+          errorDetails = { error: `HTTP ${response.status}: No additional details provided` }; // Fallback if JSON is missing
+        }
         throw new Error(`Failed to update user: ${errorDetails.error}`);
       }
-  
+
       toast.success("User information updated successfully");
       setIsEditing(false);
     } catch (error) {
@@ -91,7 +112,7 @@ const EditUser = () => {
       toast.error(`Failed to update user: ${error.message}`);
     }
   };
-  
+
 
   const handleDeleteClick = () => {
     toast.warn(
@@ -124,20 +145,27 @@ const EditUser = () => {
 
   const confirmDelete = async (isConfirmed) => {
     if (isConfirmed) {
+      const jwtToken = sessionStorage.getItem("jwtToken");
+      if (!jwtToken) {
+        toast.error("Authentication token not found. Please log in.");
+        router.push("/AdminLogin");
+        return;
+      }
+
       try {
         const response = await fetch(`/api/adFetchRenter?userId=${formData.userId}`, {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${jwtToken}`, // Include the JWT token in the header
+          },
         });
-  
-        // Log response status and potential errors
-        console.log("DELETE response status:", response.status);
-  
+
         if (!response.ok) {
           const errorDetails = await response.json();
           console.error("Error deleting user:", errorDetails.error);
           throw new Error(`Failed to delete user: ${errorDetails.error}`);
         }
-  
+
         toast.success("User deleted successfully");
         router.push("/AdminRenter");
       } catch (error) {
@@ -148,8 +176,7 @@ const EditUser = () => {
       toast.dismiss("delete-confirm-toast");
     }
   };
-  
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -157,10 +184,8 @@ const EditUser = () => {
 
   if (loading) return <p>Loading...</p>;
 
-
   return (
     <div className="p-6 max-w-md mx-auto">
-      {/* Back Button */}
       <button
         onClick={() => router.push("/AdminRenter")}
         className="absolute top-10 left-4 flex items-center justify-center w-12 h-12 rounded-lg border border-gray-200 shadow-sm text-black"
@@ -222,9 +247,8 @@ const EditUser = () => {
           value={formData.firstName}
           onChange={handleChange}
           readOnly={!isEditing}
-          className={`w-full p-2 rounded border ${
-            isEditing ? "border-blue-400" : "border-gray-300"
-          }`}
+          className={`w-full p-2 rounded border ${isEditing ? "border-blue-400" : "border-gray-300"
+            }`}
         />
       </div>
       <div className="mb-4">
@@ -235,9 +259,8 @@ const EditUser = () => {
           value={formData.lastName}
           onChange={handleChange}
           readOnly={!isEditing}
-          className={`w-full p-2 rounded border ${
-            isEditing ? "border-blue-400" : "border-gray-300"
-          }`}
+          className={`w-full p-2 rounded border ${isEditing ? "border-blue-400" : "border-gray-300"
+            }`}
         />
       </div>
       <div className="mb-4">
@@ -248,9 +271,8 @@ const EditUser = () => {
           value={formData.phoneNumber}
           onChange={handleChange}
           readOnly={!isEditing}
-          className={`w-full p-2 rounded border ${
-            isEditing ? "border-blue-400" : "border-gray-300"
-          }`}
+          className={`w-full p-2 rounded border ${isEditing ? "border-blue-400" : "border-gray-300"
+            }`}
         />
       </div>
 
@@ -264,7 +286,6 @@ const EditUser = () => {
           className="w-full p-2 rounded border border-gray-300 bg-gray-100"
         />
       </div>
-      {/* Toast Container */}
       <ToastContainer position="top-center" autoClose={3000} />
     </div>
   );
