@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { FaMapMarkerAlt, FaPen, FaSearch } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import supabase from "../../config/supabaseClient";
 import { Toaster, toast } from "react-hot-toast";
 
 const ParkingLots = () => {
@@ -11,28 +10,39 @@ const ParkingLots = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // Fetch parking lots from Supabase
+  // Fetch parking lots using JWT token
   useEffect(() => {
+    const jwtToken = sessionStorage.getItem("jwtToken");
+    if (!jwtToken) {
+      toast.error("Authentication token not found. Please log in.");
+      router.push("/AdminLogin");
+      return;
+    }
 
-    if (!sessionStorage.getItem("admin_id")) {
-        toast.error("Admin ID not found. Please log in.");
-        router.push("/AdminLogin");
-        return;
-      }
-      const fetchParkingLots = async () => {
-        try {
-          const response = await fetch(`/api/adFetchPark`);
-          if (!response.ok) throw new Error("Failed to fetch parking lots");
-          const { parkingLotDetails } = await response.json();
-          setParkingLots(parkingLotDetails);
-        } catch (error) {
-          console.error("Error fetching parking lots:", error);
-          toast.error("Failed to fetch parking lots.");
+    const fetchParkingLots = async () => {
+      try {
+        const response = await fetch(`/api/adFetchPark`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${jwtToken}`, // Add token to Authorization header
+          },
+        });
+
+        if (!response.ok) {
+          const errorDetails = await response.json();
+          throw new Error(`Failed to fetch parking lots: ${errorDetails.error}`);
         }
-      };
+
+        const { parkingLotDetails } = await response.json();
+        setParkingLots(parkingLotDetails);
+      } catch (error) {
+        console.error("Error fetching parking lots:", error.message);
+        toast.error(`Failed to fetch parking lots: ${error.message}`);
+      }
+    };
 
     fetchParkingLots();
-  }, []);
+  }, [router]);
 
   // Filter parking lots based on search query
   const filteredParkingLots = parkingLots.filter((lot) =>

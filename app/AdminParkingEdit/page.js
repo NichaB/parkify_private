@@ -23,12 +23,13 @@ const EditParkingLot = () => {
 
   // Fetch parking lot data
   useEffect(() => {
-        if (!sessionStorage.getItem("admin_id")) {
-        toast.error("Admin ID not found. Please log in.");
-        router.push("/AdminLogin");
-        return;
-      }
-      
+    const jwtToken = sessionStorage.getItem("jwtToken");
+    if (!jwtToken) {
+      toast.error("Authentication token not found. Please log in.");
+      router.push("/AdminLogin");
+      return;
+    }
+
     const parkingLotId = sessionStorage.getItem("parking_lot_id");
     if (!parkingLotId) {
       toast.error("Parking lot ID not found");
@@ -38,11 +39,18 @@ const EditParkingLot = () => {
 
     const fetchParkingLotData = async () => {
       try {
-        const response = await fetch(`/api/adFetchPark?parkingLotId=${parkingLotId}`);
+        const response = await fetch(`/api/adFetchPark?parkingLotId=${parkingLotId}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${jwtToken}`, // Include JWT in header
+          },
+        });
+
         if (!response.ok) throw new Error("Failed to fetch parking lot data");
+
         const { parkingLotDetails } = await response.json();
         const data = parkingLotDetails[0];
-        
+
         setFormData({
           parking_lot_id: data.parking_lot_id,
           location_name: data.location_name,
@@ -67,6 +75,13 @@ const EditParkingLot = () => {
 
   const handleSaveClick = async () => {
     try {
+      const jwtToken = sessionStorage.getItem("jwtToken");
+      if (!jwtToken) {
+        toast.error("Authentication token not found. Please log in.");
+        router.push("/AdminLogin");
+        return;
+      }
+
       let newImagePath = formData.location_image;
       const fileInput = fileUploadRef.current;
 
@@ -79,18 +94,24 @@ const EditParkingLot = () => {
 
         const uploadResponse = await fetch("/api/uploadParking", {
           method: "POST",
+          headers: {
+            Authorization: `Bearer ${jwtToken}`, // Include JWT in header
+          },
           body: formDataUpload,
         });
 
         if (!uploadResponse.ok) throw new Error("File upload failed");
-        
+
         const uploadResult = await uploadResponse.json();
         newImagePath = uploadResult.publicUrl;
       }
 
       const response = await fetch("/api/adFetchPark", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwtToken}`, // Include JWT in header
+        },
         body: JSON.stringify({
           parkingLotId: formData.parking_lot_id,
           locationName: formData.location_name,
@@ -144,9 +165,20 @@ const EditParkingLot = () => {
   const confirmDelete = async (isConfirmed, toastId) => {
     if (isConfirmed) {
       try {
+        const jwtToken = sessionStorage.getItem("jwtToken");
+        if (!jwtToken) {
+          toast.error("Authentication token not found. Please log in.");
+          router.push("/AdminLogin");
+          return;
+        }
+
         const response = await fetch(`/api/adFetchPark?parkingLotId=${formData.parking_lot_id}`, {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${jwtToken}`, // Include JWT in header
+          },
         });
+
         if (!response.ok) throw new Error("Failed to delete parking lot");
 
         toast.success("Parking lot deleted successfully");
@@ -188,8 +220,6 @@ const EditParkingLot = () => {
           />
         </svg>
       </button>
-
-
 
       {formData.location_image && (
         <div className="mb-4 mt-20">
@@ -281,9 +311,8 @@ const EditParkingLot = () => {
           ref={fileUploadRef}
           type="file"
           accept="image/*"
-          className={`w-full p-2 rounded border ${
-            isEditing ? "border-blue-400" : "border-gray-300"
-          }`}
+          className={`w-full p-2 rounded border ${isEditing ? "border-blue-400" : "border-gray-300"
+            }`}
           disabled={!isEditing}
         />
       </div>
