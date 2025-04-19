@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import sql from '../../../config/db';
 
 export async function POST(req) {
