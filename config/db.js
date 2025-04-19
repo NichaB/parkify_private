@@ -1,7 +1,7 @@
-// db.js
 import postgres from 'postgres';
 
-const connectionString = 'postgres://postgres:parkify@db.zybbclwbgzdkznvjohko.supabase.co:5432/postgres';
+const connectionString = process.env.DATABASE_URL; // Use env variable
+
 const sql = postgres(connectionString, {
   ssl: 'require',
 });
