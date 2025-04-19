@@ -83,11 +83,20 @@ const IssueReportPage = () => {
     fetchIssues();
   }, []);
 
-  const filteredIssues = searchTerm
+  const statusPriority = {
+    "Not Started": 0,
+    "In Progress": 1,
+    "Completed": 2,
+  };
+
+  const filteredIssues = (searchTerm
     ? issues.filter((issue) =>
         issue.issue_header.toLowerCase().includes(searchTerm.toLowerCase())
       )
-    : issues;
+    : issues
+  ).sort((a, b) => {
+    return statusPriority[a.status] - statusPriority[b.status];
+  });
 
   const handleLogout = () => {
     sessionStorage.clear();

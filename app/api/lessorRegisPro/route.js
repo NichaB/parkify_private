@@ -20,7 +20,7 @@ export async function POST(req) {
 
     const fileName = `${uuidv4()}.jpg`;
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('lessor_image')
+      .from('lessorimage')
       .upload(fileName, file);
 
     if (uploadError) {
@@ -29,7 +29,7 @@ export async function POST(req) {
     }
 
     const { data: urlData } = supabase.storage
-      .from('lessor_image')
+      .from('lessorimage')
       .getPublicUrl(fileName);
 
     const insertResult = await sql`

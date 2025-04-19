@@ -12,7 +12,7 @@ export async function POST(req) {
   try {
     const formData = await req.formData();
     const file = formData.get('file');
-    const storageBucket = 'lessor_image'; 
+    const storageBucket = 'lessorimage'; 
     const lessorId = formData.get('lessorId');
     const oldImagePath = formData.get('oldImagePath');
 

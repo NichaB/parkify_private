@@ -112,7 +112,7 @@ export default function EditCar() {
         const file = fileInput.files[0];
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("storageBucket", "car_image");
+        formData.append("storageBucket", "carimage");
         formData.append("car_id", carId);
 
         const uploadResponse = await fetch("/api/uploadCarImage", {

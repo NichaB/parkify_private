@@ -9,7 +9,7 @@ export async function GET(req) {
       return new Response(JSON.stringify({ error: 'User ID is required' }), { status: 400 });
     }
 
-    // Update status to 'Complete' for all reservations where the end_time has passed today and increment available_slots
+    // Auto-complete old reservations
     await sql`
       WITH updated_reservations AS (
         UPDATE reservation
@@ -22,7 +22,7 @@ export async function GET(req) {
       WHERE parking_lot_id IN (SELECT parking_lot_id FROM updated_reservations)
     `;
 
-    // Query reservations for the provided userId and exclude those where end_time < today
+    // Get upcoming and active reservations for this user
     const reservationResult = await sql`
       SELECT 
         r.reservation_id, 
@@ -41,12 +41,11 @@ export async function GET(req) {
       LEFT JOIN car c ON r.car_id = c.car_id
       LEFT JOIN parking_lot p ON r.parking_lot_id = p.parking_lot_id
       WHERE r.user_id = ${userId}
-        AND r.end_time >= CURRENT_DATE -- Exclude reservations where end_time has already passed
+        AND r.end_time >= CURRENT_DATE
     `;
 
-    // Return an empty array if no reservations are found
     if (reservationResult.length === 0) {
-      return new Response(JSON.stringify({ reservationDetails: [] }), { status: 200 });
+      return new Response(JSON.stringify({ message: 'No reservations found yet.', reservationDetails: [] }), { status: 200 });
     }
 
     return new Response(JSON.stringify({ reservationDetails: reservationResult }), { status: 200 });

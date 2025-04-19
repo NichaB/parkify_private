@@ -147,7 +147,7 @@ export default function RegisterInformationPage() {
             <h2 className="text-gray-600 font-semibold mb-2">Car Image</h2>
             <FileUpload
               ref={fileUploadRef}
-              storageBucket="car_image"
+              storageBucket="carimage"
               fileName={`${uuidv4()}.jpg`}
               setFileURL={setFileURL}
             />

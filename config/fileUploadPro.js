@@ -2,7 +2,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import toast from 'react-hot-toast';
 
-const FileUploadPro = forwardRef(({ storageBucket = 'lessor_image', lessorId, oldImagePath }, ref) => {
+const FileUploadPro = forwardRef(({ storageBucket = 'lessorimage', lessorId, oldImagePath }, ref) => {
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
 
