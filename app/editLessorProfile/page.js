@@ -130,7 +130,7 @@ export default function EditLessor() {
         lessor_password: "", // Clear the password field
       }));
 
-      toast.success("Renter details updated successfully!");
+      toast.success("Lessor details updated successfully!");
     } catch {
       // Display a generic toast error for unexpected issues
       toast.error("An unexpected error occurred while saving data");
